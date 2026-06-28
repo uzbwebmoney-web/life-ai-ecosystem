@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+from app.core.config import settings
+
+
+from app.core.i18n import ai_reply_language, normalize_lang
+
+
+async def ask_ai(
+    *,
+    user_message: str,
+    module_hint: str = "",
+    memory_context: str = "",
+    language: str = "ru",
+) -> str:
+    if not settings.openai_api_key.strip():
+        return (
+            "⚠️ OPENAI_API_KEY не задан в .env\n\n"
+            f"Ваш запрос: {user_message[:500]}\n\n"
+            f"Контекст модуля: {module_hint or 'общий AI-чат'}"
+        )
+
+    from openai import AsyncOpenAI
+
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    reply_lang = ai_reply_language(language)
+    system = (
+        "Ты — персональный AI-помощник экосистемы Life AI. "
+        "Помогаешь человеку в повседневной жизни. "
+        f"Отвечай на {reply_lang} языке, структурированно и практично. "
+        "Если задан контекст модуля — строго придерживайся его темы. "
+        f"{module_hint}"
+    )
+    if memory_context:
+        system += f"\n\nКонтекст из памяти пользователя:\n{memory_context}"
+
+    response = await client.chat.completions.create(
+        model=settings.openai_model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_message},
+        ],
+        max_tokens=1200,
+    )
+    return (response.choices[0].message.content or "").strip()

@@ -1,0 +1,64 @@
+from __future__ import annotations
+
+import io
+
+from aiogram import Bot
+from openai import AsyncOpenAI
+
+from app.core.config import settings
+
+
+async def transcribe_voice(bot: Bot, file_id: str) -> str:
+    if not settings.openai_api_key.strip():
+        return ""
+    file = await bot.get_file(file_id)
+    buffer = io.BytesIO()
+    await bot.download_file(file.file_path, buffer)
+    buffer.seek(0)
+    buffer.name = "voice.ogg"
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    result = await client.audio.transcriptions.create(model="whisper-1", file=buffer)
+    return (result.text or "").strip()
+
+
+async def analyze_image_url(image_url: str, prompt: str) -> str:
+    if not settings.openai_api_key.strip():
+        return "⚠️ OPENAI_API_KEY не задан — OCR/vision недоступен."
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    response = await client.chat.completions.create(
+        model=settings.openai_model,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": image_url}},
+                ],
+            }
+        ],
+        max_tokens=1500,
+    )
+    return (response.choices[0].message.content or "").strip()
+
+
+async def get_telegram_image_url(bot: Bot, file_id: str) -> str:
+    file = await bot.get_file(file_id)
+    return f"https://api.telegram.org/file/bot{settings.bot_token}/{file.file_path}"
+
+
+async def generate_image(prompt: str) -> bytes | None:
+    if not settings.openai_api_key.strip():
+        return None
+    import base64
+
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    response = await client.images.generate(
+        model="dall-e-3",
+        prompt=prompt[:4000],
+        size="1024x1024",
+        quality="standard",
+        n=1,
+        response_format="b64_json",
+    )
+    data = response.data[0].b64_json if response.data else None
+    return base64.b64decode(data) if data else None

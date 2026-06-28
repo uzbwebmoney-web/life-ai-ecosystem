@@ -1,0 +1,8 @@
+services:
+  life-ai-bot:
+    build: .
+    container_name: life-ai-ecosystem
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data
