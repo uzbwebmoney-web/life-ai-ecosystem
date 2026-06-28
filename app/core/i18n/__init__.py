@@ -645,14 +645,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ast_doc_saved": "📎 Документ «{name}» сохранён.",
         "ast_doc_caption_note": "Задайте вопрос по документу текстом — AI поможет.",
         "vlt_module_intro": (
-            "🔐 <b>Личное хранилище</b> — ваши данные в одном месте:\n\n"
-            "• Документы\n"
-            "• Паспортные данные (по желанию)\n"
-            "• Полисы\n"
-            "• Гарантийные талоны\n"
-            "• Чеки\n"
-            "• Важные заметки\n\n"
-            "<i>Данные хранятся только у вас в боте.</i>"
+            "🔐 <b>Личное хранилище</b> — ваши документы и заметки.\n\n"
+            "Как добавить запись:\n"
+            "1️⃣ Откройте раздел (чеки, документы…)\n"
+            "2️⃣ Нажмите ➕ <b>Добавить</b>\n"
+            "3️⃣ Название → описание → сумма (для чека) → фото или файл\n\n"
+            "Чтобы открыть запись — нажмите 📂 в списке: увидите название, описание, сумму и файл."
         ),
         "vlt_documents_title": "📄 <b>Документы</b>",
         "vlt_passport_title": "🛂 <b>Паспортные данные</b>",
@@ -665,15 +663,25 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_not_found": "Не найдено",
         "vlt_deleted": "Удалено",
         "vlt_saved": "✅ Сохранено",
+        "vlt_saved_with_file": "✅ Сохранено с файлом",
         "vlt_default_title": "Запись",
         "vlt_title_prompt": "Название записи:",
+        "vlt_title_short": "Название слишком короткое (минимум 2 символа).",
         "vlt_body_prompt": "Описание или детали (или «-»):",
         "vlt_amount_prompt": "Сумма чека (или «-»):",
         "vlt_amount_error": "Введите число или «-»",
+        "vlt_attach_prompt": "📎 Отправьте фото или документ.\nИли «-», если файл не нужен.",
+        "vlt_attach_file_btn": "📎 Прикрепить файл",
+        "vlt_list_hint": "📂 — открыть запись · ➕ — добавить новую",
+        "vlt_label_description": "Описание:",
+        "vlt_label_amount": "Сумма:",
+        "vlt_has_file": "Файл прикреплён",
+        "vlt_use_add_flow": "Чтобы сохранить в хранилище, откройте раздел и нажмите ➕ Добавить — затем название, описание и фото.",
+        "vlt_passport_hidden": "данные скрыты",
         "vlt_passport_hint": "⚠️ Хранение паспортных данных — только по вашему желанию. Не делитесь ботом с посторонними.",
         "vlt_passport_title_prompt": "Название (например «Загранпаспорт»):",
         "vlt_passport_body_prompt": "Данные паспорта (серия, номер, срок — или «-»):",
-        "vlt_file_hint": "📎 Отправьте фото или файл — сохранится автоматически.\n👆 Нажмите 📎 в списке, чтобы открыть файл.",
+        "vlt_file_hint": "➕ Добавить — название, описание, затем фото или файл.",
         "btn_notifications": "🔔 Уведомления",
         "btn_ecosystem": "🌐 Экосистема",
         "btn_add_reminder": "➕ Напоминание",
@@ -779,7 +787,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_oil_hint": "🚗 Раздел «Авто → ТО» открыт. Напишите, когда меняли масло, или добавьте через меню.",
         "vlt_delete_confirm": "🗑 Удалить эту запись? Это действие нельзя отменить.",
         "vlt_file_expired": "⚠️ Файл недоступен (Telegram хранит файлы ограниченное время). Загрузите снова.",
-        "vlt_no_file_attached": "К файлу не прикреплено фото.\n\nОткройте раздел «Чеки» и отправьте 📷 фото чека — оно сохранится с файлом.",
+        "vlt_no_file_attached": "Файл не прикреплён. Нажмите «📎 Прикрепить файл» или добавьте запись через ➕ Добавить.",
         "vlt_confirm_yes": "✅ Да, удалить",
     },
     "uz": {
@@ -1418,14 +1426,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ast_doc_saved": "📎 «{name}» hujjati saqlandi.",
         "ast_doc_caption_note": "Hujjat bo'yicha savol yozing — AI yordam beradi.",
         "vlt_module_intro": (
-            "🔐 <b>Shaxsiy ombor</b> — ma'lumotlaringiz bir joyda:\n\n"
-            "• Hujjatlar\n"
-            "• Pasport ma'lumotlari (ixtiyoriy)\n"
-            "• Polislar\n"
-            "• Kafolat talonlari\n"
-            "• Cheklar\n"
-            "• Muhim qaydlar\n\n"
-            "<i>Ma'lumotlar faqat botda saqlanadi.</i>"
+            "🔐 <b>Shaxsiy ombor</b> — hujjatlar va qaydlaringiz.\n\n"
+            "Qo'shish tartibi:\n"
+            "1️⃣ Bo'limni oching (cheklar, hujjatlar…)\n"
+            "2️⃣ ➕ <b>Qo'shish</b> tugmasini bosing\n"
+            "3️⃣ Nom → tavsif → summa (chek uchun) → foto yoki fayl\n\n"
+            "Yozuvni ochish — ro'yxatdagi 📂: nom, tavsif, summa va fayl ko'rinadi."
         ),
         "vlt_documents_title": "📄 <b>Hujjatlar</b>",
         "vlt_passport_title": "🛂 <b>Pasport ma'lumotlari</b>",
@@ -1438,15 +1444,25 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_not_found": "Topilmadi",
         "vlt_deleted": "O'chirildi",
         "vlt_saved": "✅ Saqlandi",
+        "vlt_saved_with_file": "✅ Fayl bilan saqlandi",
         "vlt_default_title": "Yozuv",
         "vlt_title_prompt": "Yozuv nomi:",
+        "vlt_title_short": "Nom juda qisqa (kamida 2 belgi).",
         "vlt_body_prompt": "Tavsif yoki tafsilotlar (yoki «-»):",
         "vlt_amount_prompt": "Chek summasi (yoki «-»):",
         "vlt_amount_error": "Raqam yoki «-» kiriting",
+        "vlt_attach_prompt": "📎 Foto yoki hujjat yuboring.\nYoki «-», agar fayl kerak bo'lmasa.",
+        "vlt_attach_file_btn": "📎 Fayl biriktirish",
+        "vlt_list_hint": "📂 — yozuvni ochish · ➕ — yangi qo'shish",
+        "vlt_label_description": "Tavsif:",
+        "vlt_label_amount": "Summa:",
+        "vlt_has_file": "Fayl biriktirilgan",
+        "vlt_use_add_flow": "Saqlash uchun bo'limni oching va ➕ Qo'shish bosing — nom, tavsif va foto.",
+        "vlt_passport_hidden": "ma'lumot yashirilgan",
         "vlt_passport_hint": "⚠️ Pasport ma'lumotlarini saqlash — faqat sizning xohishingiz bilan. Botni begonalar bilan ulashmang.",
         "vlt_passport_title_prompt": "Nomi (masalan «Xorijiy pasport»):",
         "vlt_passport_body_prompt": "Pasport ma'lumotlari (seriya, raqam, muddat — yoki «-»):",
-        "vlt_file_hint": "📎 Foto yoki fayl yuboring — saqlanadi.\n👆 Ro'yxatdagi 📎 tugmasini bosing.",
+        "vlt_file_hint": "➕ Qo'shish — nom, tavsif, keyin foto yoki fayl.",
         "btn_notifications": "🔔 Bildirishnomalar",
         "btn_ecosystem": "🌐 Ekotizim",
         "btn_add_reminder": "➕ Eslatma",
@@ -1553,7 +1569,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_oil_hint": "🚗 «Avto → TO» bo'limi ochildi. Yog' almashtirish sanasini yozing yoki menyudan qo'shing.",
         "vlt_delete_confirm": "🗑 Bu yozuvni o'chirish?",
         "vlt_file_expired": "⚠️ Fayl mavjud emas (Telegram vaqtinchalik saqlaydi). Qayta yuklang.",
-        "vlt_no_file_attached": "Fayl biriktirilmagan.\n\n«Cheklar» bo'limini ochib, 📷 chek rasmini yuboring.",
+        "vlt_no_file_attached": "Fayl biriktirilmagan. «📎 Fayl biriktirish» yoki ➕ Qo'shish orqali qo'shing.",
         "vlt_confirm_yes": "✅ Ha, o'chirish",
     },
     "en": {
@@ -2192,14 +2208,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ast_doc_saved": "📎 Document «{name}» saved.",
         "ast_doc_caption_note": "Ask a question about the document in text — AI will help.",
         "vlt_module_intro": (
-            "🔐 <b>Personal vault</b> — your data in one place:\n\n"
-            "• Documents\n"
-            "• Passport data (optional)\n"
-            "• Policies\n"
-            "• Warranty cards\n"
-            "• Receipts\n"
-            "• Important notes\n\n"
-            "<i>Data is stored only in your bot.</i>"
+            "🔐 <b>Personal vault</b> — your documents and notes.\n\n"
+            "How to add an entry:\n"
+            "1️⃣ Open a section (receipts, documents…)\n"
+            "2️⃣ Tap ➕ <b>Add</b>\n"
+            "3️⃣ Title → description → amount (for receipts) → photo or file\n\n"
+            "Tap 📂 in the list to open: you'll see title, description, amount, and file."
         ),
         "vlt_documents_title": "📄 <b>Documents</b>",
         "vlt_passport_title": "🛂 <b>Passport data</b>",
@@ -2212,15 +2226,25 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_not_found": "Not found",
         "vlt_deleted": "Deleted",
         "vlt_saved": "✅ Saved",
+        "vlt_saved_with_file": "✅ Saved with file",
         "vlt_default_title": "Entry",
         "vlt_title_prompt": "Entry title:",
+        "vlt_title_short": "Title too short (at least 2 characters).",
         "vlt_body_prompt": "Description or details (or «-»):",
         "vlt_amount_prompt": "Receipt amount (or «-»):",
         "vlt_amount_error": "Enter a number or «-»",
+        "vlt_attach_prompt": "📎 Send a photo or document.\nOr «-» if no file is needed.",
+        "vlt_attach_file_btn": "📎 Attach file",
+        "vlt_list_hint": "📂 — open entry · ➕ — add new",
+        "vlt_label_description": "Description:",
+        "vlt_label_amount": "Amount:",
+        "vlt_has_file": "File attached",
+        "vlt_use_add_flow": "To save to the vault, open a section and tap ➕ Add — then title, description, and photo.",
+        "vlt_passport_hidden": "data hidden",
         "vlt_passport_hint": "⚠️ Storing passport data is optional — only if you choose. Do not share the bot with others.",
         "vlt_passport_title_prompt": "Title (e.g. «Foreign passport»):",
         "vlt_passport_body_prompt": "Passport details (series, number, expiry — or «-»):",
-        "vlt_file_hint": "📎 Send a photo or file — it saves automatically.\n👆 Tap 📎 in the list to open the file.",
+        "vlt_file_hint": "➕ Add — title, description, then photo or file.",
         "btn_notifications": "🔔 Notifications",
         "btn_ecosystem": "🌐 Ecosystem",
         "btn_add_reminder": "➕ Reminder",
@@ -2327,7 +2351,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_oil_hint": "🚗 Car → Service is open. Tell me when you changed the oil, or add it via the menu.",
         "vlt_delete_confirm": "🗑 Delete this entry?",
         "vlt_file_expired": "⚠️ File unavailable (Telegram stores files for a limited time). Upload again.",
-        "vlt_no_file_attached": "No file attached.\n\nOpen «Receipts» and send a 📷 photo of the receipt.",
+        "vlt_no_file_attached": "No file attached. Tap «📎 Attach file» or add via ➕ Add.",
         "vlt_confirm_yes": "✅ Yes, delete",
     },
 }

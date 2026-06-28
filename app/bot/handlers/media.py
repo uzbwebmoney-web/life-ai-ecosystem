@@ -27,6 +27,7 @@ from app.services.vault_service import (
     vault_folder_for_submodule,
     vault_search_tags,
 )
+from app.bot.states import VaultStates
 
 router = Router()
 
@@ -72,6 +73,19 @@ async def _process_photo(
     universal_scan: bool = False,
 ) -> None:
     lang = user.language
+    if (
+        not universal_scan
+        and user.active_module_id == "vault"
+        and user.active_submodule_id in VAULT_FILE_SUBMODULES
+    ):
+        if state is None:
+            await message.answer(t(lang, "vlt_use_add_flow"))
+            return
+        current = await state.get_state()
+        if current == VaultStates.waiting_attachment.state:
+            return
+        await message.answer(t(lang, "vlt_use_add_flow"))
+        return
     file_id = message.photo[-1].file_id
     caption = (message.caption or "").strip()
     loading = await message.answer(t(lang, "photo_analyzing"))
@@ -215,12 +229,23 @@ async def handle_photo(message: Message, bot: Bot, user: User, session: AsyncSes
 
 
 @router.message(F.document)
-async def handle_document(message: Message, user: User, session: AsyncSession) -> None:
+async def handle_document(
+    message: Message,
+    user: User,
+    session: AsyncSession,
+    state: FSMContext,
+) -> None:
     lang = user.language
+    vault_docs = user.active_module_id == "vault" and user.active_submodule_id in VAULT_FILE_SUBMODULES
+    if vault_docs:
+        current = await state.get_state()
+        if current == VaultStates.waiting_attachment.state:
+            return
+        await message.answer(t(lang, "vlt_use_add_flow"))
+        return
     doc = message.document
     name = doc.file_name or "document"
     assistant_docs = user.active_module_id == "ai_assistant" and user.active_submodule_id == "documents"
-    vault_docs = user.active_module_id == "vault" and user.active_submodule_id in VAULT_FILE_SUBMODULES
     if vault_docs:
         module_id, sub_id = "vault", user.active_submodule_id
     elif assistant_docs:

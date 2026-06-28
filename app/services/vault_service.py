@@ -96,6 +96,7 @@ async def add_vault_item(
     body: str = "",
     amount: float | None = None,
     profile_id: int | None = None,
+    meta_json: str | None = None,
 ) -> LifeRecord:
     tagged_body = body.strip()
     tags = vault_search_tags(submodule_id)
@@ -113,7 +114,27 @@ async def add_vault_item(
         amount=amount,
         currency="UZS" if amount else None,
         profile_id=profile_id,
+        meta_json=meta_json,
     )
+
+
+async def attach_file_to_record(
+    session: AsyncSession,
+    record: LifeRecord,
+    *,
+    file_id: str,
+    mime: str | None = None,
+    kind: str | None = None,
+) -> LifeRecord:
+    record.meta_json = vault_file_meta(
+        record.submodule_id,
+        file_id,
+        mime=mime,
+        kind=kind,
+    )
+    await session.commit()
+    await session.refresh(record)
+    return record
 
 
 async def list_vault_items(
@@ -121,7 +142,7 @@ async def list_vault_items(
     user_id: int,
     submodule_id: str,
     *,
-    limit: int = 15,
+    limit: int = 50,
 ) -> list[LifeRecord]:
     rows = (
         await session.execute(
@@ -194,16 +215,22 @@ def vault_text_body(record: LifeRecord) -> str:
 def format_vault_text_view(record: LifeRecord, lang: str) -> str:
     from app.core.i18n import t
 
-    lines = [f"<b>{record.title}</b>"]
+    lines = [f"📋 <b>{record.title}</b>"]
+    desc = vault_description(record)
+    if desc:
+        lines.append(f"<i>{t(lang, 'vlt_label_description')}</i>\n{desc}")
     if record.amount is not None:
         cur = record.currency or "UZS"
-        lines.append(f"💰 {record.amount:,.0f} {cur}".replace(",", " "))
-    body = vault_text_body(record)
-    if body:
-        lines.append(body)
-    elif record.amount is None:
+        lines.append(f"💰 <i>{t(lang, 'vlt_label_amount')}</i> {record.amount:,.0f} {cur}".replace(",", " "))
+    if record_has_file(record):
+        lines.append(f"📎 {t(lang, 'vlt_has_file')}")
+    elif not desc and record.amount is None:
         lines.append(t(lang, "vlt_no_file_attached"))
     return "\n\n".join(lines)
+
+
+def vault_description(record: LifeRecord) -> str:
+    return vault_text_body(record)
 
 
 def is_image_file(mime: str | None, *, kind: str | None = None) -> bool:
@@ -233,19 +260,21 @@ async def delete_vault_item(session: AsyncSession, user_id: int, record_id: int)
     return True
 
 
-def format_vault_line(record: LifeRecord, submodule_id: str) -> str:
+def format_vault_line(record: LifeRecord, submodule_id: str, *, lang: str = "ru") -> str:
+    from app.core.i18n import t
+
     icon = SUBMODULE_ICONS.get(submodule_id, "🔐")
     line = f"{icon} <b>{record.title}</b>"
-    if submodule_id == "passport":
-        line += " — <i>🔒 данные скрыты</i>"
-    elif record.amount:
+    if record.amount is not None:
         line += f" — {record.amount:,.0f} UZS".replace(",", " ")
-    elif record.body:
-        if record_has_file(record):
-            line += " — <i>📎 файл</i>"
+    desc = vault_description(record)
+    if desc:
+        if submodule_id == "passport":
+            line += f"\n  <i>🔒 {t(lang, 'vlt_passport_hidden')}</i>"
         else:
-            preview = record.body.replace("\n", " ")[:80]
-            line += f"\n  <i>{preview}</i>"
+            line += f"\n  <i>{desc.replace(chr(10), ' ')[:70]}</i>"
+    if record_has_file(record):
+        line += "\n  📎"
     return line
 
 

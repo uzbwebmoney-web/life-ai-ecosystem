@@ -99,6 +99,7 @@ class VaultStates(StatesGroup):
     waiting_title = State()
     waiting_body = State()
     waiting_amount = State()
+    waiting_attachment = State()
 
 
 class OrganizerStates(StatesGroup):
