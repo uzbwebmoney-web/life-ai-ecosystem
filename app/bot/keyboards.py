@@ -31,28 +31,24 @@ def _module_btn(mod: ModuleDef, lang: str) -> InlineKeyboardButton:
 
 
 def dashboard_kb(lang: str = "ru") -> InlineKeyboardMarkup:
-    quick_ids = ("health", "car", "legal", "finance", "ai_assistant")
-    row1 = []
-    for mid in quick_ids:
-        mod = MODULE_BY_ID.get(mid)
-        if mod:
-            row1.append(_module_btn(mod, lang))
-    rows: list[list[InlineKeyboardButton]] = []
-    for i in range(0, len(row1), 2):
-        rows.append(row1[i : i + 2])
+    rows: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text=t(lang, "btn_sos"), callback_data="hub:sos")],
+    ]
+    pair: list[InlineKeyboardButton] = []
+    for mod in MODULES:
+        pair.append(_module_btn(mod, lang))
+        if len(pair) == 2:
+            rows.append(pair)
+            pair = []
+    if pair:
+        rows.append(pair)
     rows.append(
         [
             InlineKeyboardButton(text=t(lang, "btn_search"), callback_data="hub:search"),
             InlineKeyboardButton(text=t(lang, "btn_scan"), callback_data="hub:scan"),
         ]
     )
-    rows.append([InlineKeyboardButton(text=t(lang, "btn_sos"), callback_data="hub:sos")])
-    rows.append(
-        [
-            InlineKeyboardButton(text=t(lang, "btn_all_modules_short"), callback_data="hub:all_modules"),
-            InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings"),
-        ]
-    )
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 

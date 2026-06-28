@@ -71,6 +71,11 @@ EXTRA_RU: dict[str, str] = {
     "sos_passport": "🛂 <b>Потеря паспорта</b>\n\n1. Заявление в полицию\n2. Обратитесь в консульство / MVD\n3. Сохраните справку о потере\n4. Проверьте срок загранпаспорта заранее",
     "sos_poison": "☠️ <b>Отравление</b>\n\n1. Вызовите 103\n2. Не вызывайте рвоту без указания врача\n3. Сохраните упаковку / остатки\n4. Пейте воду только если в сознании",
     "sos_burn": "🔥 <b>Ожог</b>\n\n1. Охладите водой 15–20 мин\n2. Не лопайте пузыри\n3. Не мажьте маслом\n4. При большой площади — 103",
+    "weather_unavailable": "Погода временно недоступна.",
+    "weather_now": "🌤 Сейчас: {temp}°C, влажность {humidity}%, ветер {wind} м/с",
+    "weather_today_range": "📈 Сегодня: {tmin}°…{tmax}°C",
+    "weather_uv": "☀️ UV-индекс: {uv}",
+    "profile_facts_header": "Известные факты о пользователе:",
 }
 
 EXTRA_UZ: dict[str, str] = {
@@ -139,6 +144,11 @@ EXTRA_UZ: dict[str, str] = {
     "sos_passport": "🛂 Pasport yo'qolsa: politsiya, MVD.",
     "sos_poison": "☠️ 103. Qusishni majbur qilmang.",
     "sos_burn": "🔥 Suv bilan sovuting 15–20 daq.",
+    "weather_unavailable": "Ob-havo vaqtincha mavjud emas.",
+    "weather_now": "🌤 Hozir: {temp}°C, namlik {humidity}%, shamol {wind} m/s",
+    "weather_today_range": "📈 Bugun: {tmin}°…{tmax}°C",
+    "weather_uv": "☀️ UV indeksi: {uv}",
+    "profile_facts_header": "Foydalanuvchi haqida ma'lum narsalar:",
 }
 
 EXTRA_EN: dict[str, str] = {
@@ -207,4 +217,9 @@ EXTRA_EN: dict[str, str] = {
     "sos_passport": "🛂 Lost passport: police report, embassy/MVD.",
     "sos_poison": "☠️ Call 103. Don't induce vomiting unless told.",
     "sos_burn": "🔥 Cool with water 15–20 min. Call 103 if severe.",
+    "weather_unavailable": "Weather temporarily unavailable.",
+    "weather_now": "🌤 Now: {temp}°C, humidity {humidity}%, wind {wind} m/s",
+    "weather_today_range": "📈 Today: {tmin}°…{tmax}°C",
+    "weather_uv": "☀️ UV index: {uv}",
+    "profile_facts_header": "Known facts about the user:",
 }

@@ -6,6 +6,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.i18n import t
 from app.models.entities import LifeProfileFact
 
 REMEMBER_PREFIXES: tuple[tuple[str, str], ...] = (
@@ -87,7 +88,7 @@ async def build_profile_context(session: AsyncSession, user_id: int, lang: str =
     facts = await list_profile_facts(session, user_id)
     if not facts:
         return ""
-    lines = ["Известные факты о пользователе:" if lang == "ru" else "Known user facts:"]
+    lines = [t(lang, "profile_facts_header")]
     for fact in facts[:20]:
         lines.append(f"- {fact.fact_key}: {fact.fact_value}")
     return "\n".join(lines)

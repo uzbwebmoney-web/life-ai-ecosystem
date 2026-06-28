@@ -102,7 +102,7 @@ async def build_dashboard(session: AsyncSession, user: User, lang: str, *, displ
     if timeline_lines:
         lines.extend(["", f"🗓 <b>{t(lang, 'dash_timeline')}</b>", *timeline_lines[:6]])
 
-    weather = await fetch_weather_summary()
+    weather = await fetch_weather_summary(lang=lang)
     if weather:
         lines.extend(["", f"🌦 {weather.split(chr(10))[0]}"])
 
