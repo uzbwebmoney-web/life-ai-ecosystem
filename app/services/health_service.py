@@ -246,6 +246,67 @@ def _notify_key(med_id: int, local_dt: datetime, time_str: str) -> str:
     return f"{med_id}:{local_dt.strftime('%Y-%m-%d')}:{time_str}"
 
 
+def _snooze_notify_key(med_id: int, snooze_until: datetime) -> str:
+    return f"snooze:{med_id}:{snooze_until.strftime('%Y%m%d%H%M')}"
+
+
+def parse_snooze_minutes(raw: str) -> int | None:
+    s = raw.strip().lower().replace("через", "").strip()
+    if not s:
+        return None
+    if s.isdigit():
+        minutes = int(s)
+        return minutes if 1 <= minutes <= 1440 else None
+    m = re.match(r"^(\d+)\s*(м|min|m|мин|minute|minutes|daq|minut)\b", s)
+    if m:
+        minutes = int(m.group(1))
+        return minutes if 1 <= minutes <= 1440 else None
+    m = re.match(r"^(\d+)\s*(ч|h|час|hour|hours|soat)\b", s)
+    if m:
+        minutes = int(m.group(1)) * 60
+        return minutes if 1 <= minutes <= 1440 else None
+    m = re.match(r"^(\d+):(\d+)$", s)
+    if m:
+        minutes = int(m.group(1)) * 60 + int(m.group(2))
+        return minutes if 1 <= minutes <= 1440 else None
+    return None
+
+
+def format_snooze_delay(minutes: int, lang: str = "ru") -> str:
+    if minutes < 60:
+        return t(lang, "health_med_snooze_delay_min", n=minutes)
+    hours = minutes // 60
+    mins = minutes % 60
+    if mins:
+        return t(lang, "health_med_snooze_delay_hm", h=hours, m=mins)
+    return t(lang, "health_med_snooze_delay_h", h=hours)
+
+
+async def schedule_med_snooze(
+    session: AsyncSession,
+    user_id: int,
+    med_id: int,
+    minutes: int,
+) -> HealthMedication | None:
+    if minutes <= 0 or minutes > 1440:
+        return None
+    med = await get_health_medication(session, user_id, med_id)
+    if not med:
+        return None
+    med.snooze_until = datetime.utcnow() + timedelta(minutes=minutes)
+    await session.commit()
+    await session.refresh(med)
+    return med
+
+
+async def clear_med_snooze(session: AsyncSession, user_id: int, med_id: int) -> None:
+    med = await get_health_medication(session, user_id, med_id)
+    if not med:
+        return
+    med.snooze_until = None
+    await session.commit()
+
+
 async def fetch_med_reminders_due(
     session: AsyncSession,
     *,
@@ -270,6 +331,10 @@ async def fetch_med_reminders_due(
             if med.last_notified_key == key:
                 continue
             due.append((med, user, key))
+        if med.snooze_until and now >= med.snooze_until:
+            key = _snooze_notify_key(med.id, med.snooze_until)
+            if med.last_notified_key != key:
+                due.append((med, user, key))
     return due
 
 
@@ -307,7 +372,10 @@ def health_submodule_description(sub_id: str, lang: str) -> str:
 
 
 async def mark_med_notified(session: AsyncSession, med_id: int, notify_key: str) -> None:
+    values: dict = {"last_notified_key": notify_key}
+    if notify_key.startswith("snooze:"):
+        values["snooze_until"] = None
     await session.execute(
-        update(HealthMedication).where(HealthMedication.id == med_id).values(last_notified_key=notify_key)
+        update(HealthMedication).where(HealthMedication.id == med_id).values(**values)
     )
     await session.commit()

@@ -98,6 +98,12 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
     },
 
+    "health_medications": {
+
+        "snooze_until": "DATETIME",
+
+    },
+
 }
 
 

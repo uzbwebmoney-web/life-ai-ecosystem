@@ -233,6 +233,7 @@ class HealthMedication(Base):
     reminder_times: Mapped[str] = mapped_column(String(128))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_notified_key: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    snooze_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 

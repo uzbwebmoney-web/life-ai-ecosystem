@@ -42,6 +42,7 @@ class HealthStates(StatesGroup):
     waiting_med_edit_name = State()
     waiting_med_edit_dosage = State()
     waiting_med_edit_times = State()
+    waiting_med_snooze_delay = State()
     waiting_visit_title = State()
     waiting_visit_datetime = State()
     waiting_doc_title = State()
@@ -134,6 +135,11 @@ class ScanStates(StatesGroup):
 
 class PaymentStates(StatesGroup):
     waiting_receipt = State()
+
+
+class AdminStates(StatesGroup):
+    waiting_user_search = State()
+    waiting_bonus_amount = State()
 
 
 class OnboardingStates(StatesGroup):

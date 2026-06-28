@@ -38,16 +38,12 @@ async def reply_with_generated_image(message: Message, user: User, session: Asyn
     if quota_msg:
         await message.answer(quota_msg)
         return
-    loading = await message.answer(t(lang, "ast_image_generating"))
+    wait_msg = await message.answer(t(lang, "ast_image_generating"))
     image_bytes = await generate_image(text)
     if not image_bytes:
-        await loading.edit_text(t(lang, "ast_image_failed"), reply_markup=kb)
+        await wait_msg.edit_text(t(lang, "ast_image_failed"), reply_markup=kb)
         return
     await consume_image_generation(session, user)
-    try:
-        await loading.delete()
-    except Exception:
-        pass
     from aiogram.types import BufferedInputFile
 
     await message.answer_photo(

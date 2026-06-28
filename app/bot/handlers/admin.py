@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from aiogram import Bot, F, Router
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards_admin import admin_back_kb, admin_menu_kb
+from app.bot.keyboards_admin import admin_back_kb, admin_menu_kb, admin_user_kb, admin_user_search_results_kb
 from app.bot.keyboards_payment import admin_order_kb, admin_orders_list_kb
+from app.bot.states import AdminStates
 from app.core.config import settings
 from app.core.i18n import t
 from app.models.entities import PaymentOrder, User
@@ -18,6 +20,18 @@ from app.services.admin_service import (
     list_recent_users,
 )
 from app.services.ai_usage_service import fetch_ai_cost_stats, format_ai_cost_stats_message
+from app.core.plans import PLANS
+from app.services.admin_user_service import (
+    admin_add_ai_bonus,
+    admin_extend_plan,
+    admin_extend_trial,
+    admin_reset_usage,
+    admin_set_user_plan,
+    format_admin_user_card,
+    format_user_search_results,
+    get_user_by_id,
+    search_users,
+)
 from app.services.payment_service import (
     approve_payment_order,
     count_pending_orders,
@@ -98,6 +112,201 @@ async def admin_users(callback: CallbackQuery, user: User, session: AsyncSession
         reply_markup=admin_back_kb(lang),
     )
     await callback.answer()
+
+
+async def _show_user_card(
+    target: Message,
+    session: AsyncSession,
+    user_id: int,
+    lang: str,
+    *,
+    edit: bool = False,
+) -> bool:
+    target_user = await get_user_by_id(session, user_id)
+    if not target_user:
+        return False
+    text = await format_admin_user_card(session, target_user, lang=lang)
+    kb = admin_user_kb(user_id, lang)
+    if edit:
+        await target.edit_text(text, reply_markup=kb)
+    else:
+        await target.answer(text, reply_markup=kb)
+    return True
+
+
+@router.callback_query(F.data == "adm:search")
+async def admin_search_start(callback: CallbackQuery, user: User, state: FSMContext) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    await state.set_state(AdminStates.waiting_user_search)
+    await callback.message.edit_text(t(lang, "admin_user_search_prompt"), reply_markup=admin_back_kb(lang))
+    await callback.answer()
+
+
+@router.message(AdminStates.waiting_user_search)
+async def admin_search_query(message: Message, user: User, session: AsyncSession, state: FSMContext) -> None:
+    if not is_admin(user):
+        return
+    lang = user.language
+    query = (message.text or "").strip()
+    users = await search_users(session, query)
+    await state.clear()
+    if not users:
+        await message.answer(t(lang, "admin_user_not_found"), reply_markup=admin_back_kb(lang))
+        return
+    if len(users) == 1:
+        await _show_user_card(message, session, users[0].id, lang)
+        return
+    await message.answer(
+        format_user_search_results(users, lang=lang),
+        reply_markup=admin_user_search_results_kb(users, lang),
+    )
+
+
+@router.callback_query(F.data.startswith("adm:user:"))
+async def admin_user_open(callback: CallbackQuery, user: User, session: AsyncSession, state: FSMContext) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    await state.clear()
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    ok = await _show_user_card(callback.message, session, user_id, lang, edit=True)
+    if not ok:
+        await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
+        return
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("adm:urefresh:"))
+async def admin_user_refresh(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    ok = await _show_user_card(callback.message, session, user_id, lang, edit=True)
+    if not ok:
+        await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
+        return
+    await callback.answer(t(lang, "admin_refreshed"))
+
+
+@router.callback_query(F.data.startswith("adm:uplan:"))
+async def admin_user_set_plan(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    parts = (callback.data or "").split(":")
+    user_id = int(parts[2])
+    plan_id = parts[3]
+    updated = await admin_set_user_plan(session, user_id, plan_id, days=30)
+    if not updated:
+        await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
+        return
+    plan_name = t(lang, PLANS[plan_id].name_key) if plan_id in PLANS else plan_id
+    await _show_user_card(callback.message, session, user_id, lang, edit=True)
+    await callback.answer(t(lang, "admin_user_plan_set", plan=plan_name))
+
+
+@router.callback_query(F.data.startswith("adm:uextplan:"))
+async def admin_user_extend_plan(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    updated = await admin_extend_plan(session, user_id, days=30)
+    if not updated:
+        await callback.answer(t(lang, "admin_user_extend_plan_fail"), show_alert=True)
+        return
+    await _show_user_card(callback.message, session, user_id, lang, edit=True)
+    await callback.answer(t(lang, "admin_user_extend_plan_ok"))
+
+
+@router.callback_query(F.data.startswith("adm:uextrial:"))
+async def admin_user_extend_trial(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    updated = await admin_extend_trial(session, user_id, days=7)
+    if not updated:
+        await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
+        return
+    await _show_user_card(callback.message, session, user_id, lang, edit=True)
+    await callback.answer(t(lang, "admin_user_extend_trial_ok"))
+
+
+@router.callback_query(F.data.startswith("adm:ureset:"))
+async def admin_user_reset_usage(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    updated = await admin_reset_usage(session, user_id)
+    if not updated:
+        await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
+        return
+    await _show_user_card(callback.message, session, user_id, lang, edit=True)
+    await callback.answer(t(lang, "admin_user_reset_ok"))
+
+
+@router.callback_query(F.data.startswith("adm:ubonus100:"))
+async def admin_user_bonus_100(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    updated = await admin_add_ai_bonus(session, user_id, 100)
+    if not updated:
+        await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
+        return
+    await _show_user_card(callback.message, session, user_id, lang, edit=True)
+    await callback.answer(t(lang, "admin_user_bonus_ok", amount=100))
+
+
+@router.callback_query(F.data.startswith("adm:ubonus:"))
+async def admin_user_bonus_start(callback: CallbackQuery, user: User, state: FSMContext) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    await state.set_state(AdminStates.waiting_bonus_amount)
+    await state.update_data(admin_bonus_user_id=user_id)
+    await callback.message.answer(t(lang, "admin_user_bonus_prompt"), reply_markup=admin_back_kb(lang))
+    await callback.answer()
+
+
+@router.message(AdminStates.waiting_bonus_amount)
+async def admin_user_bonus_save(message: Message, user: User, session: AsyncSession, state: FSMContext) -> None:
+    if not is_admin(user):
+        return
+    lang = user.language
+    data = await state.get_data()
+    user_id = int(data.get("admin_bonus_user_id") or 0)
+    raw = (message.text or "").strip()
+    if not raw.isdigit():
+        await message.answer(t(lang, "admin_user_bonus_invalid"))
+        return
+    amount = int(raw)
+    if amount <= 0 or amount > 100_000:
+        await message.answer(t(lang, "admin_user_bonus_invalid"))
+        return
+    updated = await admin_add_ai_bonus(session, user_id, amount)
+    await state.clear()
+    if not updated:
+        await message.answer(t(lang, "admin_user_not_found"), reply_markup=admin_back_kb(lang))
+        return
+    await message.answer(t(lang, "admin_user_bonus_ok", amount=amount))
+    await _show_user_card(message, session, user_id, lang)
 
 
 @router.callback_query(F.data == "adm:costs")

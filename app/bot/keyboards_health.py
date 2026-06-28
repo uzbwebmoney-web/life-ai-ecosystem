@@ -92,3 +92,30 @@ def health_cancel_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="health:cancel")]]
     )
+
+
+def med_reminder_kb(med_id: int, lang: str = "ru") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=t(lang, "health_med_btn_taken"), callback_data=f"health:med:taken:{med_id}"),
+                InlineKeyboardButton(text=t(lang, "health_med_btn_skip"), callback_data=f"health:med:skip:{med_id}"),
+            ],
+        ]
+    )
+
+
+def med_snooze_kb(med_id: int, lang: str = "ru") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=t(lang, "health_med_snooze_15"), callback_data=f"health:med:snooze:{med_id}:15"),
+                InlineKeyboardButton(text=t(lang, "health_med_snooze_30"), callback_data=f"health:med:snooze:{med_id}:30"),
+            ],
+            [
+                InlineKeyboardButton(text=t(lang, "health_med_snooze_60"), callback_data=f"health:med:snooze:{med_id}:60"),
+                InlineKeyboardButton(text=t(lang, "health_med_snooze_120"), callback_data=f"health:med:snooze:{med_id}:120"),
+            ],
+            [InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="health:med:snooze:cancel")],
+        ]
+    )

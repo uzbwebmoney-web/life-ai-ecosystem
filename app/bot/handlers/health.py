@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from aiogram import F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,8 @@ from app.bot.keyboards_health import (
     health_docs_kb,
     health_med_item_kb,
     health_meds_kb,
+    med_reminder_kb,
+    med_snooze_kb,
     health_module_kb,
     health_visits_kb,
 )
@@ -31,6 +34,7 @@ from app.services.health_service import (
     deactivate_health_medication,
     format_metric_line,
     format_medication_line,
+    format_snooze_delay,
     get_health_medication,
     health_submodule_description,
     list_health_documents,
@@ -40,7 +44,11 @@ from app.services.health_service import (
     parse_pressure,
     parse_reminder_times,
     parse_single_value,
+    parse_snooze_minutes,
+    schedule_med_snooze,
+    clear_med_snooze,
     update_health_medication,
+    user_local_now,
 )
 from app.services.life_data import add_record, add_reminder, set_active_module
 
@@ -402,6 +410,104 @@ async def health_med_delete(callback: CallbackQuery, user: User, session: AsyncS
         return
     await _show_meds(callback.message, user, session, lang, edit=True)
     await callback.answer(t(lang, "health_med_removed"))
+
+
+async def _clear_callback_kb(callback: CallbackQuery) -> None:
+    try:
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except TelegramBadRequest:
+        pass
+
+
+@router.callback_query(F.data.startswith("health:med:taken:"))
+async def health_med_taken(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    med_id = int((callback.data or "").split(":")[3])
+    med = await get_health_medication(session, user.id, med_id)
+    if not med:
+        await callback.answer(t(lang, "health_med_not_found"), show_alert=True)
+        return
+    await clear_med_snooze(session, user.id, med_id)
+    await _clear_callback_kb(callback)
+    await callback.message.answer(t(lang, "health_med_taken_confirm", name=med.name))
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("health:med:skip:"))
+async def health_med_skip(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    med_id = int((callback.data or "").split(":")[3])
+    med = await get_health_medication(session, user.id, med_id)
+    if not med:
+        await callback.answer(t(lang, "health_med_not_found"), show_alert=True)
+        return
+    await state.set_state(HealthStates.waiting_med_snooze_delay)
+    await state.update_data(med_snooze_id=med_id)
+    await _clear_callback_kb(callback)
+    await callback.message.answer(
+        t(lang, "health_med_snooze_prompt", name=med.name),
+        reply_markup=med_snooze_kb(med_id, lang),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "health:med:snooze:cancel")
+async def health_med_snooze_cancel(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    await state.clear()
+    await callback.message.edit_reply_markup(reply_markup=None)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("health:med:snooze:"))
+async def health_med_snooze_pick(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
+    parts = (callback.data or "").split(":")
+    if len(parts) < 5 or parts[3] == "cancel":
+        return
+    lang = user.language
+    med_id = int(parts[3])
+    minutes = int(parts[4])
+    med = await schedule_med_snooze(session, user.id, med_id, minutes)
+    if not med:
+        await callback.answer(t(lang, "health_med_not_found"), show_alert=True)
+        return
+    await state.clear()
+    await callback.message.edit_reply_markup(reply_markup=None)
+    remind_at = user_local_now(user, med.snooze_until).strftime("%H:%M")
+    await callback.message.answer(
+        t(
+            lang,
+            "health_med_snooze_scheduled",
+            when=format_snooze_delay(minutes, lang),
+            time=remind_at,
+        )
+    )
+    await callback.answer()
+
+
+@router.message(HealthStates.waiting_med_snooze_delay)
+async def health_med_snooze_text(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    data = await state.get_data()
+    med_id = int(data.get("med_snooze_id") or 0)
+    minutes = parse_snooze_minutes(message.text or "")
+    if not minutes:
+        await message.answer(t(lang, "health_med_snooze_invalid"), reply_markup=med_snooze_kb(med_id, lang))
+        return
+    med = await schedule_med_snooze(session, user.id, med_id, minutes)
+    if not med:
+        await state.clear()
+        await message.answer(t(lang, "health_med_not_found"))
+        return
+    await state.clear()
+    remind_at = user_local_now(user, med.snooze_until).strftime("%H:%M")
+    await message.answer(
+        t(
+            lang,
+            "health_med_snooze_scheduled",
+            when=format_snooze_delay(minutes, lang),
+            time=remind_at,
+        )
+    )
 
 
 @router.callback_query(F.data == "health:visit:add")

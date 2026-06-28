@@ -31,7 +31,13 @@ from app.services.home_service import (
     mark_home_utility_notified,
 )
 from app.core.i18n import t
-from app.services.health_service import build_med_reminder_text, fetch_med_reminders_due, mark_med_notified, user_local_now
+from app.services.health_service import (
+    build_med_reminder_text,
+    fetch_med_reminders_due,
+    mark_med_notified,
+    user_local_now,
+)
+from app.bot.keyboards_health import med_reminder_kb
 from app.services.life_data import fetch_due_reminders, mark_reminder_sent
 from app.services.notifications_service import (
     build_alert_reminder_text,
@@ -95,6 +101,7 @@ class ReminderWorker:
                 await bot.send_message(
                     chat_id=int(user.telegram_id),
                     text=build_med_reminder_text(med, user.language),
+                    reply_markup=med_reminder_kb(med.id, user.language),
                 )
                 async with session_maker() as session:
                     await mark_med_notified(session, med.id, notify_key)

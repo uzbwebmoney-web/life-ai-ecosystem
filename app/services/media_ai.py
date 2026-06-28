@@ -82,6 +82,8 @@ async def generate_image(prompt: str) -> bytes | None:
         return None
     import base64
 
+    import httpx
+
     client = AsyncOpenAI(api_key=settings.openai_api_key)
     response = await client.images.generate(
         model="dall-e-3",
@@ -89,10 +91,19 @@ async def generate_image(prompt: str) -> bytes | None:
         size="1024x1024",
         quality="standard",
         n=1,
-        response_format="b64_json",
     )
-    data = response.data[0].b64_json if response.data else None
-    return base64.b64decode(data) if data else None
+    if not response.data:
+        return None
+    item = response.data[0]
+    if getattr(item, "b64_json", None):
+        return base64.b64decode(item.b64_json)
+    url = getattr(item, "url", None)
+    if not url:
+        return None
+    async with httpx.AsyncClient(timeout=60) as http:
+        resp = await http.get(url)
+        resp.raise_for_status()
+        return resp.content
 
 
 async def synthesize_speech(text: str, *, voice: str = "alloy") -> bytes | None:
