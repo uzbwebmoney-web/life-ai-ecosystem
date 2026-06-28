@@ -31,7 +31,19 @@ def extract_usage(response) -> tuple[int, int]:
     usage = getattr(response, "usage", None)
     if not usage:
         return 0, 0
-    return int(usage.prompt_tokens or 0), int(usage.completion_tokens or 0)
+
+    def _read(*names: str) -> int:
+        for name in names:
+            value = getattr(usage, name, None)
+            if value is None and isinstance(usage, dict):
+                value = usage.get(name)
+            if value is not None:
+                return int(value or 0)
+        return 0
+
+    prompt = _read("prompt_tokens", "input_tokens")
+    completion = _read("completion_tokens", "output_tokens")
+    return prompt, completion
 
 
 def _row_cost(
