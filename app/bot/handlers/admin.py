@@ -24,8 +24,10 @@ from app.services.ai_usage_service import fetch_ai_cost_stats, format_ai_cost_st
 from app.core.plans import PLANS, normalize_plan_id
 from app.services.admin_user_service import (
     admin_add_ai_bonus,
+    admin_apply_credits_input,
     admin_extend_plan,
     admin_extend_trial,
+    admin_reset_credits,
     admin_reset_usage,
     admin_set_user_plan,
     format_admin_user_card,
@@ -262,6 +264,21 @@ async def admin_user_reset_usage(callback: CallbackQuery, user: User, session: A
     await callback.answer(t(lang, "admin_user_reset_ok"))
 
 
+@router.callback_query(F.data.startswith("adm:ucredits0:"))
+async def admin_user_reset_credits(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    updated = await admin_reset_credits(session, user_id)
+    if not updated:
+        await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
+        return
+    await _show_user_card(callback.message, session, user_id, lang, edit=True)
+    await callback.answer(t(lang, "admin_user_credits_reset_ok"))
+
+
 @router.callback_query(F.data.startswith("adm:ubonus100:"))
 async def admin_user_bonus_100(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     if not is_admin(user):
@@ -274,7 +291,20 @@ async def admin_user_bonus_100(callback: CallbackQuery, user: User, session: Asy
         await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
         return
     await _show_user_card(callback.message, session, user_id, lang, edit=True)
-    await callback.answer(t(lang, "admin_user_bonus_ok", amount=100))
+    await callback.answer(t(lang, "admin_user_credits_add_ok", amount=100))
+
+
+@router.callback_query(F.data.startswith("adm:ucredits:"))
+async def admin_user_credits_start(callback: CallbackQuery, user: User, state: FSMContext) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    user_id = int((callback.data or "").split(":")[2])
+    await state.set_state(AdminStates.waiting_credits_adjust)
+    await state.update_data(admin_credits_user_id=user_id)
+    await callback.message.answer(t(lang, "admin_user_credits_prompt"), reply_markup=admin_back_kb(lang))
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("adm:ubonus:"))
@@ -284,33 +314,33 @@ async def admin_user_bonus_start(callback: CallbackQuery, user: User, state: FSM
         return
     lang = user.language
     user_id = int((callback.data or "").split(":")[2])
-    await state.set_state(AdminStates.waiting_bonus_amount)
-    await state.update_data(admin_bonus_user_id=user_id)
-    await callback.message.answer(t(lang, "admin_user_bonus_prompt"), reply_markup=admin_back_kb(lang))
+    await state.set_state(AdminStates.waiting_credits_adjust)
+    await state.update_data(admin_credits_user_id=user_id)
+    await callback.message.answer(t(lang, "admin_user_credits_prompt"), reply_markup=admin_back_kb(lang))
     await callback.answer()
 
 
 @router.message(AdminStates.waiting_bonus_amount)
-async def admin_user_bonus_save(message: Message, user: User, session: AsyncSession, state: FSMContext) -> None:
+@router.message(AdminStates.waiting_credits_adjust)
+async def admin_user_credits_save(message: Message, user: User, session: AsyncSession, state: FSMContext) -> None:
     if not is_admin(user):
         return
     lang = user.language
     data = await state.get_data()
-    user_id = int(data.get("admin_bonus_user_id") or 0)
+    user_id = int(data.get("admin_credits_user_id") or data.get("admin_bonus_user_id") or 0)
     raw = (message.text or "").strip()
-    if not raw.isdigit():
-        await message.answer(t(lang, "admin_user_bonus_invalid"))
-        return
-    amount = int(raw)
-    if amount <= 0 or amount > 100_000:
-        await message.answer(t(lang, "admin_user_bonus_invalid"))
-        return
-    updated = await admin_add_ai_bonus(session, user_id, amount)
+    updated, action, amount = await admin_apply_credits_input(session, user_id, raw)
     await state.clear()
-    if not updated:
-        await message.answer(t(lang, "admin_user_not_found"), reply_markup=admin_back_kb(lang))
+    if action is None or not updated:
+        await message.answer(t(lang, "admin_user_credits_invalid"))
         return
-    await message.answer(t(lang, "admin_user_bonus_ok", amount=amount))
+    if action == "reset":
+        toast = t(lang, "admin_user_credits_reset_ok")
+    elif action == "subtract":
+        toast = t(lang, "admin_user_credits_sub_ok", amount=amount)
+    else:
+        toast = t(lang, "admin_user_credits_add_ok", amount=amount)
+    await message.answer(toast)
     await _show_user_card(message, session, user_id, lang)
 
 

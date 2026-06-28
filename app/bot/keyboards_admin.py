@@ -69,10 +69,13 @@ def admin_user_kb(user_id: int, lang: str = "ru") -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(text=t(lang, "admin_user_btn_reset_usage"), callback_data=f"adm:ureset:{user_id}"),
-                InlineKeyboardButton(text=t(lang, "admin_user_btn_bonus_100"), callback_data=f"adm:ubonus100:{user_id}"),
+                InlineKeyboardButton(text=t(lang, "admin_user_btn_reset_credits"), callback_data=f"adm:ucredits0:{user_id}"),
             ],
             [
-                InlineKeyboardButton(text=t(lang, "admin_user_btn_bonus_custom"), callback_data=f"adm:ubonus:{user_id}"),
+                InlineKeyboardButton(text=t(lang, "admin_user_btn_bonus_100"), callback_data=f"adm:ubonus100:{user_id}"),
+                InlineKeyboardButton(text=t(lang, "admin_user_btn_credits_adjust"), callback_data=f"adm:ucredits:{user_id}"),
+            ],
+            [
                 InlineKeyboardButton(text=t(lang, "admin_user_btn_refresh"), callback_data=f"adm:urefresh:{user_id}"),
             ],
             [InlineKeyboardButton(text=t(lang, "admin_btn_search_again"), callback_data="adm:search")],

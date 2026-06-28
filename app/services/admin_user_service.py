@@ -3,6 +3,7 @@ from __future__ import annotations
 import html
 import re
 from datetime import datetime, timedelta
+from typing import Literal
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -335,14 +336,96 @@ async def admin_reset_usage(session: AsyncSession, user_id: int) -> User | None:
     return user
 
 
-async def admin_add_ai_bonus(session: AsyncSession, user_id: int, amount: int) -> User | None:
+CreditAdjustAction = Literal["add", "subtract", "reset"]
+
+
+def parse_admin_credits_input(raw: str) -> tuple[CreditAdjustAction, int] | None:
+    text = (raw or "").strip().replace(" ", "").lower()
+    if not text:
+        return None
+    if text in {"0", "reset", "обнулить", "obnul", "nol"}:
+        return ("reset", 0)
+    negative = text.startswith("-")
+    if text.startswith("+"):
+        text = text[1:]
+    elif negative:
+        text = text[1:]
+    if not text.isdigit():
+        return None
+    amount = int(text)
+    if amount <= 0 or amount > 1_000_000:
+        return None
+    if negative:
+        return ("subtract", amount)
+    return ("add", amount)
+
+
+def apply_credits_adjustment(user: User, amount: int, *, action: CreditAdjustAction) -> None:
+    if action == "reset":
+        _reset_usage_counters(user)
+        user.ai_used_month = 0
+        user.ai_bonus_balance = 0
+        return
+    amount = max(0, int(amount))
+    if amount <= 0:
+        return
+    if action == "add":
+        user.ai_bonus_balance = (user.ai_bonus_balance or 0) + amount
+        return
+    bonus = user.ai_bonus_balance or 0
+    if bonus >= amount:
+        user.ai_bonus_balance = bonus - amount
+    elif bonus > 0:
+        user.ai_bonus_balance = 0
+        user.ai_used_month = (user.ai_used_month or 0) + (amount - bonus)
+    else:
+        user.ai_used_month = (user.ai_used_month or 0) + amount
+
+
+async def admin_reset_credits(session: AsyncSession, user_id: int) -> User | None:
     user = await get_user_by_id(session, user_id)
     if not user:
         return None
-    user.ai_bonus_balance = max(0, (user.ai_bonus_balance or 0) + max(0, amount))
+    apply_credits_adjustment(user, 0, action="reset")
     await session.commit()
     await session.refresh(user)
     return user
+
+
+async def admin_adjust_credits(
+    session: AsyncSession,
+    user_id: int,
+    amount: int,
+    *,
+    action: Literal["add", "subtract"],
+) -> User | None:
+    user = await get_user_by_id(session, user_id)
+    if not user:
+        return None
+    apply_credits_adjustment(user, amount, action=action)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
+async def admin_apply_credits_input(
+    session: AsyncSession,
+    user_id: int,
+    raw: str,
+) -> tuple[User | None, CreditAdjustAction | None, int]:
+    parsed = parse_admin_credits_input(raw)
+    if not parsed:
+        return None, None, 0
+    action, amount = parsed
+    if action == "reset":
+        user = await admin_reset_credits(session, user_id)
+        return user, "reset", 0
+    user = await admin_adjust_credits(session, user_id, amount, action=action)
+    return user, action, amount
+
+
+async def admin_add_ai_bonus(session: AsyncSession, user_id: int, amount: int) -> User | None:
+    return await admin_adjust_credits(session, user_id, max(0, int(amount)), action="add")
 
 
 ADMIN_PLAN_IDS: tuple[PlanId, ...] = ("free", "student", "basic", "premium", "pro")

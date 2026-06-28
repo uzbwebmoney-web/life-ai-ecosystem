@@ -140,6 +140,7 @@ class PaymentStates(StatesGroup):
 class AdminStates(StatesGroup):
     waiting_user_search = State()
     waiting_bonus_amount = State()
+    waiting_credits_adjust = State()
 
 
 class OnboardingStates(StatesGroup):
