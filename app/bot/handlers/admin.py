@@ -21,7 +21,7 @@ from app.services.admin_service import (
     list_recent_users,
 )
 from app.services.ai_usage_service import fetch_ai_cost_stats, format_ai_cost_stats_message
-from app.core.plans import PLANS
+from app.core.plans import PLANS, normalize_plan_id
 from app.services.admin_user_service import (
     admin_add_ai_bonus,
     admin_extend_plan,
@@ -128,6 +128,7 @@ async def _show_user_card(
     target_user = await get_user_by_id(session, user_id)
     if not target_user:
         return False
+    await session.refresh(target_user)
     text = await format_admin_user_card(session, target_user, lang=lang)
     kb = admin_user_kb(user_id, lang)
     if edit:
@@ -206,11 +207,12 @@ async def admin_user_set_plan(callback: CallbackQuery, user: User, session: Asyn
     parts = (callback.data or "").split(":")
     user_id = int(parts[2])
     plan_id = parts[3]
-    updated = await admin_set_user_plan(session, user_id, plan_id, days=30)
+    plan_key = normalize_plan_id(plan_id)
+    updated = await admin_set_user_plan(session, user_id, plan_key, days=30)
     if not updated:
         await callback.answer(t(lang, "admin_user_not_found"), show_alert=True)
         return
-    plan_name = t(lang, PLANS[plan_id].name_key) if plan_id in PLANS else plan_id
+    plan_name = t(lang, PLANS[plan_key].name_key) if plan_key in PLANS else plan_key
     await _show_user_card(callback.message, session, user_id, lang, edit=True)
     await callback.answer(t(lang, "admin_user_plan_set", plan=plan_name))
 
