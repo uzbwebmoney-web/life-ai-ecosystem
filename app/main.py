@@ -34,7 +34,7 @@ async def main() -> None:
 
     reminder_worker.start(bot, SessionLocal)
 
-    logging.info("Life AI Ecosystem — 15 modules, voice, OCR, family, reminders")
+    logging.info("Life AI Ecosystem — 14 modules, voice, OCR, family, reminders")
 
     try:
 

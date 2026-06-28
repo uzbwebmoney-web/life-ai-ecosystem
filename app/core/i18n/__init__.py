@@ -12,7 +12,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "ru": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Персональный помощник в жизни — <b>15 модулей</b>:\n"
+            "Персональный помощник в жизни — <b>14 модулей</b>:\n"
             "здоровье, авто, финансы, право, дом и другое.\n\n"
             "<b>Как пользоваться:</b>\n"
             "1. Выберите модуль (например ⚖️ Юридическая помощь или 🏥 Здоровье)\n"
@@ -30,7 +30,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_calendar": "📅 Календарь",
         "btn_family": "👨‍👩‍👧 Семья",
         "btn_voice": "🎤 Голосовой режим",
-        "btn_all_modules": "📚 Все 15 модулей",
+        "btn_all_modules": "📚 Все 14 модулей",
         "btn_settings": "⚙️ Настройки",
         "btn_language": "🌐 Язык",
         "btn_back_menu": "⬅️ Главное меню",
@@ -102,7 +102,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ai_assistant_title": "🤖 <b>AI-ассистент</b>",
         "ai_assistant_ask": "Задайте любой вопрос:",
         "record_new": "➕ <b>Новая запись</b> ({module})",
-        "record_send": "Отправьте текст записи.\nДля финансов после текста бот спросит сумму.",
+        "record_send": "Отправьте текст записи.",
+        "record_send_finance": "Отправьте текст записи.\nПосле этого бот спросит сумму.",
         "record_amount": "💰 Введите сумму (число) или 0 чтобы пропустить:",
         "record_amount_error": "Введите число, например 150000",
         "record_saved": "✅ Запись сохранена. Найти: «🔍 Поиск по жизни»",
@@ -123,7 +124,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cat_1": "Деньги и бизнес",
         "cat_2": "Транспорт и путешествия",
         "cat_3": "Дом и покупки",
-        "cat_4": "Обучение и спорт",
+        "cat_4": "Обучение",
         "cat_5": "Право",
         "cat_6": "Планирование",
         "cat_7": "AI и данные",
@@ -688,7 +689,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Виза",
         "onb_welcome": (
             "👋 <b>Добро пожаловать в Life AI!</b>\n\n"
-            "15 модулей для жизни: здоровье, финансы, авто, право и другое.\n"
+            "14 модулей для жизни: здоровье, финансы, авто, право и другое.\n"
             "Выберите модуль → задайте вопрос AI или сохраните запись.\n\n"
             "Нажмите «Начать», чтобы открыть меню."
         ),
@@ -704,7 +705,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "uz": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Hayotingizda shaxsiy yordamchi — <b>15 ta modul</b>:\n"
+            "Hayotingizda shaxsiy yordamchi — <b>14 ta modul</b>:\n"
             "salomatlik, avto, moliya, huquq, oila va boshqalar.\n\n"
             "<b>Qanday foydalanish:</b>\n"
             "1. Modulni tanlang (masalan ⚖️ Yuridik yordam yoki 🏥 Salomatlik)\n"
@@ -722,7 +723,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_calendar": "📅 Taqvim",
         "btn_family": "👨‍👩‍👧 Oila",
         "btn_voice": "🎤 Ovozli rejim",
-        "btn_all_modules": "📚 Barcha 29 modul",
+        "btn_all_modules": "📚 Barcha 14 modul",
         "btn_settings": "⚙️ Sozlamalar",
         "btn_language": "🌐 Til",
         "btn_back_menu": "⬅️ Asosiy menyu",
@@ -794,7 +795,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ai_assistant_title": "🤖 <b>AI yordamchi</b>",
         "ai_assistant_ask": "Har qanday savol bering:",
         "record_new": "➕ <b>Yangi yozuv</b> ({module})",
-        "record_send": "Yozuv matnini yuboring.\nMoliya uchun keyin summa so'raladi.",
+        "record_send": "Yozuv matnini yuboring.",
+        "record_send_finance": "Yozuv matnini yuboring.\nKeyin summa so'raladi.",
         "record_amount": "💰 Summani kiriting (raqam) yoki 0 — o'tkazib yuborish:",
         "record_amount_error": "Raqam kiriting, masalan 150000",
         "record_saved": "✅ Yozuv saqlandi. Topish: «🔍 Hayot bo'yicha qidiruv»",
@@ -815,7 +817,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cat_1": "Pul va biznes",
         "cat_2": "Transport va sayohat",
         "cat_3": "Uy va xaridlar",
-        "cat_4": "Ta'lim va sport",
+        "cat_4": "Ta'lim",
         "cat_5": "Huquq",
         "cat_6": "Rejalashtirish",
         "cat_7": "AI va ma'lumotlar",
@@ -1374,7 +1376,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ntf_add_only_data": "Faqat obuna va viza uchun qo'shish.",
         "eco_src_subscription": "Obuna",
         "eco_src_visa": "Viza",
-        "onb_welcome": "👋 <b>Life AI ga xush kelibsiz!</b>\n\n15 ta modul. «Boshlash» tugmasini bosing.",
+        "onb_welcome": "👋 <b>Life AI ga xush kelibsiz!</b>\n\n14 ta modul. «Boshlash» tugmasini bosing.",
         "onb_start_btn": "🚀 Boshlash",
         "onb_done": "✅ Tayyor!",
         "export_done": "📦 Ma'lumotlaringiz eksporti (JSON).",
@@ -1387,7 +1389,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "en": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Your personal life assistant — <b>15 modules</b>:\n"
+            "Your personal life assistant — <b>14 modules</b>:\n"
             "health, car, finance, legal, family, and more.\n\n"
             "<b>How to use:</b>\n"
             "1. Pick a module (e.g. ⚖️ Legal help or 🏥 Health)\n"
@@ -1405,7 +1407,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_calendar": "📅 Calendar",
         "btn_family": "👨‍👩‍👧 Family",
         "btn_voice": "🎤 Voice mode",
-        "btn_all_modules": "📚 All 15 modules",
+        "btn_all_modules": "📚 All 14 modules",
         "btn_settings": "⚙️ Settings",
         "btn_language": "🌐 Language",
         "btn_back_menu": "⬅️ Main menu",
@@ -1477,7 +1479,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ai_assistant_title": "🤖 <b>AI assistant</b>",
         "ai_assistant_ask": "Ask anything:",
         "record_new": "➕ <b>New record</b> ({module})",
-        "record_send": "Send record text.\nFor finance, amount will be asked next.",
+        "record_send": "Send record text.",
+        "record_send_finance": "Send record text.\nYou will be asked for the amount next.",
         "record_amount": "💰 Enter amount (number) or 0 to skip:",
         "record_amount_error": "Enter a number, e.g. 150000",
         "record_saved": "✅ Record saved. Find via «🔍 Life search»",
@@ -1498,7 +1501,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cat_1": "Money & business",
         "cat_2": "Transport & travel",
         "cat_3": "Home & shopping",
-        "cat_4": "Education & sport",
+        "cat_4": "Education",
         "cat_5": "Legal",
         "cat_6": "Planning",
         "cat_7": "AI & data",
@@ -2057,7 +2060,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ntf_add_only_data": "Adding is available for subscriptions and visas only.",
         "eco_src_subscription": "Subscription",
         "eco_src_visa": "Visa",
-        "onb_welcome": "👋 <b>Welcome to Life AI!</b>\n\n15 modules. Tap «Start» to open the menu.",
+        "onb_welcome": "👋 <b>Welcome to Life AI!</b>\n\n14 modules. Tap «Start» to open the menu.",
         "onb_start_btn": "🚀 Start",
         "onb_done": "✅ Done!",
         "export_done": "📦 Your data export (JSON).",

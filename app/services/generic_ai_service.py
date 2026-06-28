@@ -3,16 +3,9 @@ from __future__ import annotations
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
 
-GENERIC_AI_MODULES: frozenset[str] = frozenset({"sport", "fitness"})
+GENERIC_AI_MODULES: frozenset[str] = frozenset({"fitness"})
 
 GENERIC_SUBMODULE_AI: dict[str, dict[str, str]] = {
-    "sport": {
-        "analytics": "Футбольная аналитика: тактика, форма команд, ключевые игроки.",
-        "stats": "Статистика матчей, игроков, турнирные таблицы — справочно.",
-        "matches": "Разбор матчей, ключевые моменты, прогнозы — без гарантий.",
-        "teams": "Сравнение команд по составу, форме, статистике.",
-        "alerts": "Напоминания о матчах — помогай настроить через органайзер.",
-    },
     "fitness": {
         "workouts": "Планы тренировок по целям и уровню подготовки.",
         "progress": "Отслеживание прогресса, мотивация, периодизация.",

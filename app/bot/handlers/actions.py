@@ -99,7 +99,8 @@ async def record_start(callback: CallbackQuery, state: FSMContext, user: User) -
     await state.set_state(RecordStates.waiting_text)
     mod = MODULE_BY_ID.get(module_id)
     mod_title = mod.title(lang) if mod else module_id
-    await callback.message.answer(f"{t(lang, 'record_new', module=mod_title)}\n\n{t(lang, 'record_send')}")
+    hint_key = "record_send_finance" if module_id == "finance" else "record_send"
+    await callback.message.answer(f"{t(lang, 'record_new', module=mod_title)}\n\n{t(lang, hint_key)}")
     await callback.answer()
 
 
