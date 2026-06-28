@@ -14,9 +14,9 @@ def test_image_model_candidates_deduplicates(monkeypatch):
     )
     monkeypatch.setattr(
         "app.services.media_ai.settings.openai_image_model_fallbacks",
-        "dall-e-2,dall-e-3,gpt-image-1",
+        "dall-e-2,gpt-image-1",
     )
-    assert image_model_candidates() == ["dall-e-3", "dall-e-2", "gpt-image-1"]
+    assert image_model_candidates() == ["gpt-image-1", "dall-e-2"]
 
 
 def test_build_image_generate_kwargs_dalle3():

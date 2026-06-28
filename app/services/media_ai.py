@@ -11,12 +11,21 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+_DEPRECATED_IMAGE_MODELS = frozenset({"dall-e-3"})
+
+
 def image_model_candidates() -> list[str]:
-    primary = (settings.openai_image_model or "dall-e-3").strip()
+    primary = (settings.openai_image_model or "gpt-image-1").strip()
+    if primary.lower() in _DEPRECATED_IMAGE_MODELS:
+        primary = "gpt-image-1"
     raw_fallbacks = (settings.openai_image_model_fallbacks or "").strip()
-    fallbacks = [part.strip() for part in raw_fallbacks.split(",") if part.strip()]
+    fallbacks = [
+        part.strip()
+        for part in raw_fallbacks.split(",")
+        if part.strip() and part.strip().lower() not in _DEPRECATED_IMAGE_MODELS
+    ]
     if not fallbacks:
-        fallbacks = ["dall-e-2", "gpt-image-1"]
+        fallbacks = ["dall-e-2"]
     seen: set[str] = set()
     ordered: list[str] = []
     for model in [primary, *fallbacks]:
