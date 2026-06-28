@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.message_ui import deliver_long_text
 from app.bot.keyboards import back_menu_kb, dashboard_kb, module_kb, submodule_kb
 from app.core.modules.catalog import MODULE_BY_ID
 from app.core.i18n import t
@@ -57,7 +58,7 @@ async def _answer_in_module(
     kb = proactive_kb(actions, lang) or (
         submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
     )
-    await loading.edit_text(f"{header}\n\n{answer}", reply_markup=kb)
+    await deliver_long_text(loading, f"{header}\n\n{answer}", reply_markup=kb)
 
     from app.bot.handlers.study_export import after_study_ai_response
 
@@ -90,7 +91,12 @@ async def _answer_in_module(
 async def free_text_router(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
     lang = user.language
     text = (message.text or "").strip()
-    if not text or len(text) < 3:
+    if not text:
+        return
+    if user.active_module_id == "ai_assistant" and user.active_submodule_id == "images":
+        if len(text) < 2:
+            return
+    elif len(text) < 3:
         return
 
     remember = parse_remember_text(text)
@@ -142,6 +148,6 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
     )
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or back_menu_kb(lang)
-    await loading.edit_text(f"🤖 {answer}", reply_markup=kb)
+    await deliver_long_text(loading, f"🤖 {answer}", reply_markup=kb)
     if user.memory_enabled:
         await add_memory(session, user.id, f"Q: {text[:200]}\nA: {answer[:400]}", module_id="ai_assistant")

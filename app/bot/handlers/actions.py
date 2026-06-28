@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.message_ui import deliver_long_text
 from app.bot.keyboards import back_menu_kb, record_saved_kb
 from app.bot.states import AiChatStates, MemoryStates, RecordStates, ReminderStates
 from app.core.i18n import t
@@ -106,7 +107,7 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
     )
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or back_menu_kb(lang)
-    await loading.edit_text(f"🤖 {answer}", reply_markup=kb)
+    await deliver_long_text(loading, f"🤖 {answer}", reply_markup=kb)
     from app.bot.handlers.study_export import after_study_ai_response
 
     await after_study_ai_response(

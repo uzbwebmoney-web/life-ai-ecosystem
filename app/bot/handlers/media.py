@@ -8,6 +8,7 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards import back_menu_kb, dashboard_kb, record_saved_kb
+from app.bot.message_ui import deliver_long_text
 from app.bot.states import ScanStates
 from app.core.i18n import ai_reply_language, t
 from app.models.entities import User
@@ -205,7 +206,7 @@ async def _process_photo(
         if state is not None and amount:
             await state.update_data(scan_amount=amount)
         kb = scan_followup_kb(lang, amount=amount)
-    await loading.edit_text(text, reply_markup=kb)
+    await deliver_long_text(loading, text, reply_markup=kb)
 
 
 @router.message(F.voice)
