@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards_admin import admin_back_kb, admin_menu_kb, admin_user_kb, admin_user_search_results_kb
 from app.bot.keyboards_payment import admin_order_kb, admin_orders_list_kb
+from app.bot.message_ui import safe_edit_text
 from app.bot.states import AdminStates
 from app.core.config import settings
 from app.core.i18n import t
@@ -65,7 +66,7 @@ async def _show_admin_menu(
             intro += "\n\n" + t(lang, "pay_admin_pending_count", count=pending)
     kb = admin_menu_kb(lang)
     if edit:
-        await target.edit_text(intro, reply_markup=kb)
+        await safe_edit_text(target, intro, reply_markup=kb)
     else:
         await target.answer(intro, reply_markup=kb)
 
@@ -93,7 +94,8 @@ async def admin_stats(callback: CallbackQuery, user: User, session: AsyncSession
         return
     lang = user.language
     stats = await fetch_admin_stats(session)
-    await callback.message.edit_text(
+    await safe_edit_text(
+        callback.message,
         format_admin_stats_message(stats, lang=lang),
         reply_markup=admin_back_kb(lang),
     )
@@ -107,7 +109,8 @@ async def admin_users(callback: CallbackQuery, user: User, session: AsyncSession
         return
     lang = user.language
     users = await list_recent_users(session)
-    await callback.message.edit_text(
+    await safe_edit_text(
+        callback.message,
         format_recent_users_message(users, lang=lang),
         reply_markup=admin_back_kb(lang),
     )
@@ -128,7 +131,7 @@ async def _show_user_card(
     text = await format_admin_user_card(session, target_user, lang=lang)
     kb = admin_user_kb(user_id, lang)
     if edit:
-        await target.edit_text(text, reply_markup=kb)
+        await safe_edit_text(target, text, reply_markup=kb)
     else:
         await target.answer(text, reply_markup=kb)
     return True
@@ -141,7 +144,7 @@ async def admin_search_start(callback: CallbackQuery, user: User, state: FSMCont
         return
     lang = user.language
     await state.set_state(AdminStates.waiting_user_search)
-    await callback.message.edit_text(t(lang, "admin_user_search_prompt"), reply_markup=admin_back_kb(lang))
+    await safe_edit_text(callback.message, t(lang, "admin_user_search_prompt"), reply_markup=admin_back_kb(lang))
     await callback.answer()
 
 
@@ -316,7 +319,8 @@ async def admin_costs(callback: CallbackQuery, user: User, session: AsyncSession
         return
     lang = user.language
     stats = await fetch_ai_cost_stats(session)
-    await callback.message.edit_text(
+    await safe_edit_text(
+        callback.message,
         format_ai_cost_stats_message(stats, lang=lang),
         reply_markup=admin_back_kb(lang),
     )
@@ -341,7 +345,8 @@ async def admin_orders(callback: CallbackQuery, user: User, session: AsyncSessio
     lang = user.language
     orders = await list_pending_orders(session)
     users = await _load_order_users(session, orders)
-    await callback.message.edit_text(
+    await safe_edit_text(
+        callback.message,
         format_orders_list(orders, users, lang=lang),
         reply_markup=admin_orders_list_kb(orders, lang),
     )
@@ -366,7 +371,7 @@ async def admin_order_detail(callback: CallbackQuery, user: User, session: Async
         await callback.answer(t(lang, "pay_order_not_found"), show_alert=True)
         return
     text = format_order_admin_card(order, buyer, lang=lang)
-    await callback.message.edit_text(text, reply_markup=admin_order_kb(order_id, lang))
+    await safe_edit_text(callback.message, text, reply_markup=admin_order_kb(order_id, lang))
     if order.receipt_file_id:
         await callback.message.answer_photo(order.receipt_file_id, caption=t(lang, "pay_admin_receipt"))
     await callback.answer()
@@ -388,7 +393,8 @@ async def admin_pay_approve(
     if not order or not buyer:
         await callback.answer(t(lang, "pay_order_already_processed"), show_alert=True)
         return
-    await callback.message.edit_text(
+    await safe_edit_text(
+        callback.message,
         format_order_admin_card(order, buyer, lang=lang) + "\n\n" + t(lang, "pay_admin_done_approved"),
         reply_markup=admin_back_kb(lang),
     )
@@ -424,7 +430,7 @@ async def admin_pay_reject(
     text = t(lang, "pay_admin_done_rejected", order_id=order.id)
     if buyer:
         text = format_order_admin_card(order, buyer, lang=lang) + "\n\n" + text
-    await callback.message.edit_text(text, reply_markup=admin_back_kb(lang))
+    await safe_edit_text(callback.message, text, reply_markup=admin_back_kb(lang))
     if buyer:
         try:
             await bot.send_message(buyer.telegram_id, format_buyer_rejected_message(lang=buyer.language))

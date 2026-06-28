@@ -7,6 +7,32 @@ TELEGRAM_TEXT_LIMIT = 4096
 TELEGRAM_SAFE_LIMIT = 4000
 
 
+def _is_not_modified_error(exc: TelegramBadRequest) -> bool:
+    return "message is not modified" in (exc.message or "").lower()
+
+
+async def safe_edit_text(
+    message: Message,
+    text: str,
+    *,
+    reply_markup: InlineKeyboardMarkup | None = None,
+    parse_mode: str | None = "HTML",
+) -> bool:
+    """Edit message text; return True if edited. No-op when content is unchanged."""
+    if not message.text and not message.caption:
+        return False
+    kwargs: dict = {"reply_markup": reply_markup}
+    if parse_mode:
+        kwargs["parse_mode"] = parse_mode
+    try:
+        await message.edit_text(text, **kwargs)
+        return True
+    except TelegramBadRequest as exc:
+        if _is_not_modified_error(exc):
+            return False
+        raise
+
+
 def split_telegram_text(text: str, *, limit: int = TELEGRAM_SAFE_LIMIT) -> list[str]:
     if len(text) <= limit:
         return [text]
@@ -42,8 +68,9 @@ async def edit_or_answer_text(
         try:
             await message.edit_text(text, **kwargs)
             return
-        except TelegramBadRequest:
-            pass
+        except TelegramBadRequest as exc:
+            if _is_not_modified_error(exc):
+                return
     await message.answer(text, **kwargs)
 
 
@@ -63,14 +90,17 @@ async def deliver_long_text(
         try:
             await anchor.edit_text(chunks[0], reply_markup=reply_markup, **kwargs)
             return
-        except TelegramBadRequest:
+        except TelegramBadRequest as exc:
+            if _is_not_modified_error(exc):
+                return
             await anchor.answer(chunks[0], reply_markup=reply_markup, **kwargs)
             return
 
     try:
         await anchor.edit_text(chunks[0], **kwargs)
-    except TelegramBadRequest:
-        await anchor.answer(chunks[0], **kwargs)
+    except TelegramBadRequest as exc:
+        if not _is_not_modified_error(exc):
+            await anchor.answer(chunks[0], **kwargs)
 
     for chunk in chunks[1:-1]:
         await anchor.answer(chunk, **kwargs)
