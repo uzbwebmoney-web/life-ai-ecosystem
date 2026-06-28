@@ -17,12 +17,13 @@ from app.services.vault_service import (
     add_vault_item,
     delete_vault_item,
     format_vault_line,
+    format_vault_text_view,
     get_vault_item,
     is_image_file,
     list_vault_items,
     parse_stored_file,
+    record_has_file,
     vault_submodule_title_key,
-    vault_text_body,
 )
 
 router = Router()
@@ -171,32 +172,34 @@ async def vault_open(
     stored = parse_stored_file(record)
     kb = vault_items_kb(await list_vault_items(session, user.id, sub_id), sub_id, lang)
     if stored:
-        file_id, mime = stored
+        file_id, mime, kind = stored
         caption = f"<b>{record.title}</b>"
+        from app.services.vault_service import vault_text_body
+
         analysis = vault_text_body(record)
         if analysis and not analysis.startswith("file_id="):
             caption += f"\n\n{analysis[:900]}"
+        if record.amount is not None:
+            cur = record.currency or "UZS"
+            caption += f"\n💰 {record.amount:,.0f} {cur}".replace(",", " ")
+        as_photo = is_image_file(mime, kind=kind)
         try:
-            if mime and not is_image_file(mime):
-                await bot.send_document(chat_id=callback.message.chat.id, document=file_id, caption=caption)
-            else:
+            if as_photo:
                 await bot.send_photo(chat_id=callback.message.chat.id, photo=file_id, caption=caption)
-        except Exception:
-            if mime and is_image_file(mime):
-                await callback.message.answer(t(lang, "vlt_file_expired"), reply_markup=kb)
-                await callback.answer()
-                return
-            try:
+            else:
                 await bot.send_document(chat_id=callback.message.chat.id, document=file_id, caption=caption)
+        except Exception:
+            try:
+                if as_photo:
+                    await bot.send_document(chat_id=callback.message.chat.id, document=file_id, caption=caption)
+                else:
+                    await bot.send_photo(chat_id=callback.message.chat.id, photo=file_id, caption=caption)
             except Exception:
                 await callback.message.answer(t(lang, "vlt_file_expired"), reply_markup=kb)
                 await callback.answer()
                 return
     else:
-        text_body = vault_text_body(record)
-        if not text_body:
-            text_body = "—"
-        await callback.message.answer(f"<b>{record.title}</b>\n\n{text_body}", reply_markup=kb)
+        await callback.message.answer(format_vault_text_view(record, lang), reply_markup=kb)
     await callback.answer()
 
 

@@ -779,6 +779,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_oil_hint": "🚗 Раздел «Авто → ТО» открыт. Напишите, когда меняли масло, или добавьте через меню.",
         "vlt_delete_confirm": "🗑 Удалить эту запись? Это действие нельзя отменить.",
         "vlt_file_expired": "⚠️ Файл недоступен (Telegram хранит файлы ограниченное время). Загрузите снова.",
+        "vlt_no_file_attached": "К файлу не прикреплено фото.\n\nОткройте раздел «Чеки» и отправьте 📷 фото чека — оно сохранится с файлом.",
         "vlt_confirm_yes": "✅ Да, удалить",
     },
     "uz": {
@@ -1552,6 +1553,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_oil_hint": "🚗 «Avto → TO» bo'limi ochildi. Yog' almashtirish sanasini yozing yoki menyudan qo'shing.",
         "vlt_delete_confirm": "🗑 Bu yozuvni o'chirish?",
         "vlt_file_expired": "⚠️ Fayl mavjud emas (Telegram vaqtinchalik saqlaydi). Qayta yuklang.",
+        "vlt_no_file_attached": "Fayl biriktirilmagan.\n\n«Cheklar» bo'limini ochib, 📷 chek rasmini yuboring.",
         "vlt_confirm_yes": "✅ Ha, o'chirish",
     },
     "en": {
@@ -2325,6 +2327,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_oil_hint": "🚗 Car → Service is open. Tell me when you changed the oil, or add it via the menu.",
         "vlt_delete_confirm": "🗑 Delete this entry?",
         "vlt_file_expired": "⚠️ File unavailable (Telegram stores files for a limited time). Upload again.",
+        "vlt_no_file_attached": "No file attached.\n\nOpen «Receipts» and send a 📷 photo of the receipt.",
         "vlt_confirm_yes": "✅ Yes, delete",
     },
 }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 
 from sqlalchemy import select
@@ -54,6 +55,26 @@ def vault_file_title(submodule_id: str, lang: str, *, filename: str = "") -> str
     idx = {"ru": 0, "uz": 1, "en": 2}.get(lang, 0)
     label = labels.get(submodule_id, ("Файл", "Fayl", "File"))[idx]
     return f"{label} — {t(lang, 'photo_title_default')}"
+
+
+def vault_file_meta(
+    submodule_id: str,
+    file_id: str,
+    *,
+    mime: str | None = None,
+    folder: str | None = None,
+    kind: str | None = None,
+) -> str:
+    if kind is None:
+        kind = "document" if mime and not mime.startswith("image/") else "photo"
+    payload: dict[str, str] = {
+        "telegram_file_id": file_id,
+        "file_kind": kind,
+        "archive_folder": folder or vault_folder_for_submodule(submodule_id),
+    }
+    if mime:
+        payload["mime"] = mime
+    return json.dumps(payload, ensure_ascii=False)
 
 
 SUBMODULE_ICONS: dict[str, str] = {
@@ -129,12 +150,31 @@ async def get_vault_item(session: AsyncSession, user_id: int, record_id: int) ->
     ).scalar_one_or_none()
 
 
-def parse_stored_file(record: LifeRecord) -> tuple[str, str | None] | None:
+def parse_stored_file(record: LifeRecord) -> tuple[str, str | None, str] | None:
+    raw_meta = record.meta_json or ""
+    if raw_meta:
+        try:
+            data = json.loads(raw_meta)
+            file_id = data.get("telegram_file_id")
+            if file_id:
+                return (
+                    str(file_id),
+                    data.get("mime") or None,
+                    str(data.get("file_kind") or "photo"),
+                )
+        except (json.JSONDecodeError, TypeError):
+            pass
     match = re.search(r"file_id=([^\s\n]+)", record.body or "")
     if not match:
         return None
     mime_match = re.search(r"mime=([^\s\n]+)", record.body or "")
-    return match.group(1), mime_match.group(1) if mime_match else None
+    mime = mime_match.group(1) if mime_match else None
+    kind = "document" if mime and not mime.startswith("image/") else "photo"
+    return match.group(1), mime, kind
+
+
+def record_has_file(record: LifeRecord) -> bool:
+    return parse_stored_file(record) is not None
 
 
 def vault_text_body(record: LifeRecord) -> str:
@@ -151,10 +191,29 @@ def vault_text_body(record: LifeRecord) -> str:
     return parts[1].strip() if len(parts) > 1 else ""
 
 
-def is_image_file(mime: str | None) -> bool:
+def format_vault_text_view(record: LifeRecord, lang: str) -> str:
+    from app.core.i18n import t
+
+    lines = [f"<b>{record.title}</b>"]
+    if record.amount is not None:
+        cur = record.currency or "UZS"
+        lines.append(f"💰 {record.amount:,.0f} {cur}".replace(",", " "))
+    body = vault_text_body(record)
+    if body:
+        lines.append(body)
+    elif record.amount is None:
+        lines.append(t(lang, "vlt_no_file_attached"))
+    return "\n\n".join(lines)
+
+
+def is_image_file(mime: str | None, *, kind: str | None = None) -> bool:
+    if kind == "photo":
+        return True
+    if kind == "document":
+        return False
     if mime:
         return mime.startswith("image/")
-    return False
+    return True
 
 
 async def delete_vault_item(session: AsyncSession, user_id: int, record_id: int) -> bool:
@@ -182,7 +241,7 @@ def format_vault_line(record: LifeRecord, submodule_id: str) -> str:
     elif record.amount:
         line += f" — {record.amount:,.0f} UZS".replace(",", " ")
     elif record.body:
-        if "file_id=" in record.body:
+        if record_has_file(record):
             line += " — <i>📎 файл</i>"
         else:
             preview = record.body.replace("\n", " ")[:80]

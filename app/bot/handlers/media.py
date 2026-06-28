@@ -22,6 +22,7 @@ from app.services.proactive_service import proactive_kb, suggest_actions
 from app.services.scanner_service import archive_label, archive_meta, classify_scan, parse_amount_from_text, universal_scan_prompt
 from app.services.vault_service import (
     VAULT_FILE_SUBMODULES,
+    vault_file_meta,
     vault_file_title,
     vault_folder_for_submodule,
     vault_search_tags,
@@ -129,6 +130,11 @@ async def _process_photo(
     title = caption[:200] or (
         vault_file_title(sub_id, lang) if module_id == "vault" else t(lang, "photo_title_default")
     )
+    meta_json = (
+        vault_file_meta(sub_id, file_id, folder=folder)
+        if module_id == "vault"
+        else archive_meta(folder, scan=universal_scan)
+    )
     await add_record(
         session,
         user_id=user.id,
@@ -139,7 +145,7 @@ async def _process_photo(
         amount=amount,
         currency="UZS" if amount else None,
         profile_id=user.active_profile_id,
-        meta_json=archive_meta(folder, scan=universal_scan),
+        meta_json=meta_json,
     )
     folder_label = archive_label(folder, lang)
     text = f"{t(lang, 'scan_saved', folder=folder_label) if universal_scan else t(lang, 'photo_done')}\n{folder_label}\n\n{analysis}{extra}"
@@ -226,6 +232,11 @@ async def handle_document(message: Message, user: User, session: AsyncSession) -
     title = name[:200]
     if module_id == "vault" and name in ("document", "file"):
         title = vault_file_title(sub_id, lang)
+    meta_json = (
+        vault_file_meta(sub_id, doc.file_id, mime=doc.mime_type, folder=folder, kind="document")
+        if module_id == "vault"
+        else archive_meta(folder)
+    )
     await add_record(
         session,
         user_id=user.id,
@@ -234,7 +245,7 @@ async def handle_document(message: Message, user: User, session: AsyncSession) -
         title=title,
         body=f"{search_prefix}file_id={doc.file_id}\nmime={doc.mime_type}",
         profile_id=user.active_profile_id,
-        meta_json=archive_meta(folder),
+        meta_json=meta_json,
     )
     if assistant_docs:
         await message.answer(t(lang, "ast_doc_saved", name=name), reply_markup=back_menu_kb(lang))

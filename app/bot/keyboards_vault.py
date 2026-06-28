@@ -11,6 +11,7 @@ from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
 
 from app.models.entities import LifeRecord
+from app.services.vault_service import record_has_file
 
 
 
@@ -72,10 +73,11 @@ def vault_items_kb(
 
     for record in chunk:
         label = record.title[:24]
+        icon = "📎" if record_has_file(record) else "📝"
         rows.append(
             [
                 InlineKeyboardButton(
-                    text=f"📎 {label}",
+                    text=f"{icon} {label}",
                     callback_data=f"vlt:open:{submodule_id}:{record.id}",
                 ),
                 InlineKeyboardButton(
