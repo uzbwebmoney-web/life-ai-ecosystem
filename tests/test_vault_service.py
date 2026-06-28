@@ -14,7 +14,7 @@ def test_vault_constants():
     assert len(VAULT_SUBMODULES) == 6
     assert "passport" in VAULT_SUBMODULES
     assert "receipts" in VAULT_FILE_SUBMODULES
-    assert "notes" not in VAULT_FILE_SUBMODULES
+    assert "notes" in VAULT_FILE_SUBMODULES
 
 
 def test_format_vault_line_masks_passport():

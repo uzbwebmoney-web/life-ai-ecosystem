@@ -15,7 +15,7 @@ from app.services.health_service import list_health_medications, user_local_now
 from app.services.home_service import list_home_utilities
 from app.services.household_service import effective_data_user_ids
 from app.services.life_data import list_calendar_events, list_upcoming_reminders, search_memory, search_records
-from app.services.notifications_service import list_alert_items
+from app.services.notifications_service import alert_source_key, alert_type_def, list_alert_items
 
 
 @dataclass(order=True)
@@ -135,8 +135,9 @@ async def list_unified_notifications(
         for alert in await list_alert_items(session, uid, limit=20):
             if alert.due_at < now or alert.due_at > horizon:
                 continue
-            source = t(lang, "eco_src_subscription") if alert.alert_type == "subscription" else t(lang, "eco_src_visa")
-            add(EcosystemNotification(alert.due_at, "📋", alert.title, source))
+            kind = alert_type_def(alert.alert_type)
+            source = t(lang, alert_source_key(alert.alert_type))
+            add(EcosystemNotification(alert.due_at, kind.icon, alert.title, source))
 
     for loan in await list_credit_loans_for_users(session, user_ids):
         due = next_credit_payment_at(loan, now)
@@ -224,16 +225,31 @@ async def unified_search(
     )
 
 
+def format_record_search_line(record: LifeRecord, lang: str) -> str:
+    mod = record.module_id
+    sub = record.submodule_id
+    label = f"[{mod}/{sub}]" if sub else f"[{mod}]"
+    extra = ""
+    body = record.body or ""
+    if "file_id=" in body:
+        extra = " 📎"
+        if "\n\n" in body:
+            preview = body.split("\n\n", 1)[1].replace("\n", " ").strip()[:60]
+            if preview and not preview.startswith("file_id="):
+                extra = f" — {preview}"
+    elif body:
+        preview = body.replace("\n", " ").strip()[:80]
+        if preview and not preview.startswith("file_id="):
+            extra = f" — {preview}"
+    return f"• {label} {record.title}{extra}"
+
+
 def format_unified_search(results: UnifiedSearchResult, lang: str, query: str) -> list[str]:
     lines = [t(lang, "search_results", query=query)]
     if results.records:
         lines.append(f"<b>{t(lang, 'search_records')}</b>")
         for record in results.records[:5]:
-            body = f" — {record.body[:80]}" if record.body else ""
-            archive = ""
-            if record.meta_json and "archive_folder" in record.meta_json:
-                archive = " 📁"
-            lines.append(f"• [{record.module_id}] {record.title}{archive}{body}")
+            lines.append(format_record_search_line(record, lang))
     if results.events:
         lines.append(f"\n<b>{t(lang, 'eco_search_events')}</b>")
         for event in results.events[:5]:

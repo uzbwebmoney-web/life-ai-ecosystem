@@ -4,9 +4,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.core.i18n import t
 from app.models.entities import AlertItem
-
-
-def ecosystem_features_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+from app.services.notifications_service import alert_type_def(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications")],
@@ -19,12 +17,34 @@ def ecosystem_features_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     )
 
 
+def _ntf_add_btn(lang: str, alert_type: str) -> InlineKeyboardButton:
+    kind = alert_type_def(alert_type)
+    return InlineKeyboardButton(
+        text=t(lang, f"ntf_add_{alert_type}"),
+        callback_data=f"ntf:add:{alert_type}",
+    )
+
+
 def notifications_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            [
+                _ntf_add_btn(lang, "movie"),
+                _ntf_add_btn(lang, "event"),
+            ],
+            [
+                _ntf_add_btn(lang, "ticket"),
+                _ntf_add_btn(lang, "delivery"),
+            ],
+            [
+                _ntf_add_btn(lang, "appointment"),
+                _ntf_add_btn(lang, "custom"),
+            ],
+            [
+                _ntf_add_btn(lang, "subscription"),
+                _ntf_add_btn(lang, "visa"),
+            ],
             [InlineKeyboardButton(text=t(lang, "btn_add_reminder"), callback_data="sub:organizer:reminders")],
-            [InlineKeyboardButton(text=t(lang, "ntf_add_subscription"), callback_data="ntf:add:subscription")],
-            [InlineKeyboardButton(text=t(lang, "ntf_add_visa"), callback_data="ntf:add:visa")],
             [InlineKeyboardButton(text=t(lang, "ntf_manage_alerts"), callback_data="ntf:menu")],
             [InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")],
         ]
@@ -33,14 +53,16 @@ def notifications_kb(lang: str = "ru") -> InlineKeyboardMarkup:
 
 def alerts_list_kb(items: list[AlertItem], lang: str = "ru") -> InlineKeyboardMarkup:
     rows: list[list[InlineKeyboardButton]] = [
-        [InlineKeyboardButton(text=t(lang, "ntf_add_subscription"), callback_data="ntf:add:subscription")],
-        [InlineKeyboardButton(text=t(lang, "ntf_add_visa"), callback_data="ntf:add:visa")],
+        [
+            _ntf_add_btn(lang, "movie"),
+            _ntf_add_btn(lang, "event"),
+        ],
     ]
-    for item in items[:8]:
-        rows.append(
-            [InlineKeyboardButton(text=f"🗑 {item.title[:26]}", callback_data=f"ntf:del:{item.id}")]
-        )
-    rows.append([InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")])
+    for item in items[:10]:
+        kind = alert_type_def(item.alert_type)
+        label = f"🗑 {kind.icon} {item.title[:22]}"
+        rows.append([InlineKeyboardButton(text=label, callback_data=f"ntf:del:{item.id}")])
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:notifications")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 

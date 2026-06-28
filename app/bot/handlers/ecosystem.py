@@ -7,11 +7,18 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards import all_modules_kb, back_menu_kb, dashboard_kb, household_kb, sos_kb
+from app.bot.keyboards import (
+    all_modules_kb,
+    back_menu_kb,
+    dashboard_kb,
+    household_join_cancel_kb,
+    household_kb,
+    sos_kb,
+)
 from app.bot.keyboards_car import car_cancel_kb, car_maint_type_kb
 from app.bot.keyboards_finance import finance_category_kb
 from app.bot.keyboards_health import health_cancel_kb
-from app.bot.states import HealthStates, MemoryStates, ScanStates
+from app.bot.states import HealthStates, HouseholdStates, MemoryStates, ScanStates
 from app.core.i18n import t
 from app.models.entities import User
 from app.services.household_service import get_household_members, get_or_create_household, join_household
@@ -19,6 +26,28 @@ from app.services.life_data import set_active_module
 from app.services.sos_service import sos_menu_text, sos_topic_text
 
 router = Router()
+
+
+async def _household_screen_text(session: AsyncSession, user: User, lang: str) -> str:
+    household = await get_or_create_household(session, user)
+    members = await get_household_members(session, household.id)
+    member_lines = []
+    for member in members:
+        u = (await session.execute(select(User).where(User.id == member.user_id))).scalar_one_or_none()
+        if u:
+            name = u.username or str(u.telegram_id)
+            member_lines.append(f"• {name} ({member.role})")
+    members_text = "\n".join(member_lines) if member_lines else "—"
+    return t(lang, "household_info", code=household.invite_code) + f"\n\n<b>{t(lang, 'household_members_title')}</b>\n{members_text}"
+
+
+async def _apply_household_join(message: Message, user: User, session: AsyncSession, code: str) -> None:
+    lang = user.language
+    ok, reason = await join_household(session, user, code)
+    if not ok:
+        await message.answer(t(lang, f"household_join_{reason}"))
+        return
+    await message.answer(t(lang, "household_join_ok"), reply_markup=dashboard_kb(lang))
 
 
 @router.callback_query(F.data == "hub:all_modules")
@@ -51,19 +80,11 @@ async def hub_sos_topic(callback: CallbackQuery, user: User) -> None:
 
 
 @router.callback_query(F.data == "hub:household")
-async def hub_household(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+async def hub_household(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
+    await state.clear()
     lang = user.language
     household = await get_or_create_household(session, user)
-    members = await get_household_members(session, household.id)
-    member_lines = []
-    for member in members:
-        u = (await session.execute(select(User).where(User.id == member.user_id))).scalar_one_or_none()
-        if u:
-            name = u.username or str(u.telegram_id)
-            role = member.role
-            member_lines.append(f"• {name} ({role})")
-    members_text = "\n".join(member_lines) if member_lines else "—"
-    text = t(lang, "household_info", code=household.invite_code) + f"\n\n<b>{t(lang, 'household_members_title')}</b>\n{members_text}"
+    text = await _household_screen_text(session, user, lang)
     await callback.message.edit_text(text, reply_markup=household_kb(lang, household.invite_code))
     await callback.answer()
 
@@ -75,18 +96,33 @@ async def hub_household_code(callback: CallbackQuery, user: User, session: Async
     await callback.answer(t(lang, "household_copy_code", code=household.invite_code), show_alert=True)
 
 
+@router.callback_query(F.data == "hh:join")
+async def hub_household_join_start(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    lang = user.language
+    await state.set_state(HouseholdStates.waiting_join_code)
+    await callback.message.answer(t(lang, "household_join_prompt"), reply_markup=household_join_cancel_kb(lang))
+    await callback.answer()
+
+
+@router.message(HouseholdStates.waiting_join_code)
+async def hub_household_join_code(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
+    code = (message.text or "").strip()
+    if not code:
+        await message.answer(t(user.language, "household_join_usage"))
+        return
+    await state.clear()
+    await _apply_household_join(message, user, session, code)
+
+
 @router.message(Command("join"))
-async def cmd_join_household(message: Message, user: User, session: AsyncSession) -> None:
+async def cmd_join_household(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
     lang = user.language
     code = (message.text or "").replace("/join", "", 1).strip()
     if not code:
         await message.answer(t(lang, "household_join_usage"))
         return
-    ok, reason = await join_household(session, user, code)
-    if not ok:
-        await message.answer(t(lang, f"household_join_{reason}"))
-        return
-    await message.answer(t(lang, "household_join_ok"), reply_markup=dashboard_kb(lang))
+    await state.clear()
+    await _apply_household_join(message, user, session, code)
 
 
 @router.callback_query(F.data.startswith("act:"))

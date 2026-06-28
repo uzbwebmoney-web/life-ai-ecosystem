@@ -15,15 +15,7 @@ COMPLIANCE_TYPES = ("insurance", "inspection")
 COMPLIANCE_ALERT_DAYS = (30, 7, 1, 0)
 
 
-def parse_date(raw: str) -> datetime | None:
-    text = raw.strip()
-    for fmt in ("%Y-%m-%d", "%d.%m.%Y"):
-        try:
-            dt = datetime.strptime(text, fmt)
-            return dt.replace(hour=9, minute=0, second=0, microsecond=0)
-        except ValueError:
-            continue
-    return None
+from app.services.date_parse import parse_date_flexible as parse_date
 
 
 def _date_key(dt: datetime) -> str:

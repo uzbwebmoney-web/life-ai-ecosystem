@@ -216,6 +216,8 @@ async def search_records(session: AsyncSession, user_id: int, query: str, *, lim
                     LifeRecord.title.ilike(pattern),
                     LifeRecord.body.ilike(pattern),
                     LifeRecord.module_id.ilike(pattern),
+                    LifeRecord.submodule_id.ilike(pattern),
+                    LifeRecord.meta_json.ilike(pattern),
                 ),
             )
             .order_by(LifeRecord.created_at.desc())

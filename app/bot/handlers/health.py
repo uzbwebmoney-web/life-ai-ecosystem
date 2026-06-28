@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.services.date_parse import parse_datetime_flexible
 
 from app.bot.keyboards_health import (
     health_ai_kb,
@@ -423,9 +423,8 @@ async def health_visit_datetime(message: Message, state: FSMContext, user: User,
     lang = user.language
     data = await state.get_data()
     title = str(data.get("health_visit_title") or t(lang, "health_visit_title"))
-    try:
-        due = datetime.strptime((message.text or "").strip(), "%Y-%m-%d %H:%M")
-    except ValueError:
+    due = parse_datetime_flexible((message.text or "").strip())
+    if due is None:
         await message.answer(t(lang, "remind_date_error"))
         return
     await add_reminder(

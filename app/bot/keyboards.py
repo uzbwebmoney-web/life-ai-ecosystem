@@ -45,19 +45,19 @@ def dashboard_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     rows.append(
         [
             InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications"),
-            InlineKeyboardButton(text=t(lang, "btn_calendar"), callback_data="hub:calendar"),
-        ]
-    )
-    rows.append(
-        [
             InlineKeyboardButton(text=t(lang, "btn_search"), callback_data="hub:search"),
-            InlineKeyboardButton(text=t(lang, "btn_scan"), callback_data="hub:scan"),
         ]
     )
     rows.append(
         [
+            InlineKeyboardButton(text=t(lang, "btn_scan"), callback_data="hub:scan"),
             InlineKeyboardButton(text=t(lang, "btn_dashboard"), callback_data="hub:dashboard"),
+        ]
+    )
+    rows.append(
+        [
             InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings"),
+            InlineKeyboardButton(text=t(lang, "btn_household"), callback_data="hub:household"),
         ]
     )
     return InlineKeyboardMarkup(inline_keyboard=rows)
@@ -96,7 +96,16 @@ def household_kb(lang: str, invite_code: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=t(lang, "household_copy_code", code=invite_code), callback_data="hh:code")],
+            [InlineKeyboardButton(text=t(lang, "btn_household_join"), callback_data="hh:join")],
             [InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")],
+        ]
+    )
+
+
+def household_join_cancel_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="hub:household")],
         ]
     )
 
@@ -161,6 +170,7 @@ def family_kb(profiles: list[FamilyProfile], active_id: int | None, lang: str = 
             ]
         )
     rows.append([InlineKeyboardButton(text=t(lang, "btn_add_profile"), callback_data="fam:add")])
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_household"), callback_data="hub:household")])
     rows.append([InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 

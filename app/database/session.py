@@ -50,6 +50,16 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
     },
 
+    "alert_items": {
+
+        "notes": "TEXT DEFAULT ''",
+
+        "remind_before_minutes": "INTEGER DEFAULT 0",
+
+        "sent": "BOOLEAN DEFAULT 0",
+
+    },
+
 }
 
 

@@ -77,9 +77,12 @@ class AlertItem(Base):
     alert_type: Mapped[str] = mapped_column(String(32), index=True)
     title: Mapped[str] = mapped_column(String(255))
     due_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    remind_before_minutes: Mapped[int] = mapped_column(Integer, default=0)
     amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    sent: Mapped[bool] = mapped_column(Boolean, default=False)
     last_notified_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

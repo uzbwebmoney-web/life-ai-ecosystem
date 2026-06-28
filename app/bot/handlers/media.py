@@ -20,7 +20,12 @@ from app.services.media_ai import analyze_image_url, get_telegram_image_url, syn
 from app.services.module_context import active_module_label
 from app.services.proactive_service import proactive_kb, suggest_actions
 from app.services.scanner_service import archive_label, archive_meta, classify_scan, parse_amount_from_text, universal_scan_prompt
-from app.services.vault_service import VAULT_FILE_SUBMODULES
+from app.services.vault_service import (
+    VAULT_FILE_SUBMODULES,
+    vault_file_title,
+    vault_folder_for_submodule,
+    vault_search_tags,
+)
 
 router = Router()
 
@@ -91,11 +96,10 @@ async def _process_photo(
         module_id, sub_id, folder = classify_scan(analysis, caption)
     else:
         module_id, sub_id, folder = "vault", "receipts", "receipts"
-        vault_mode = user.active_module_id == "vault"
-        if vault_mode and user.active_submodule_id in VAULT_FILE_SUBMODULES:
+        if user.active_module_id == "vault" and user.active_submodule_id in VAULT_FILE_SUBMODULES:
             module_id, sub_id = "vault", user.active_submodule_id
-            folder = user.active_submodule_id if user.active_submodule_id != "documents" else "contracts"
-        if legal_mode:
+            folder = vault_folder_for_submodule(user.active_submodule_id)
+        elif user.active_module_id == "legal" and user.active_submodule_id == "doc_check":
             module_id, sub_id, folder = "legal", "doc_check", "contracts"
         elif assistant_photo:
             module_id, sub_id, folder = "ai_assistant", "photo", "photos"
@@ -121,13 +125,17 @@ async def _process_photo(
         )
         extra = f"\n\n🍽 {recipes}"
 
+    search_prefix = f"{vault_search_tags(sub_id)}\n" if module_id == "vault" else ""
+    title = caption[:200] or (
+        vault_file_title(sub_id, lang) if module_id == "vault" else t(lang, "photo_title_default")
+    )
     await add_record(
         session,
         user_id=user.id,
         module_id=module_id,
         submodule_id=sub_id,
-        title=caption[:200] or t(lang, "photo_title_default"),
-        body=f"file_id={file_id}\n\n{analysis}",
+        title=title,
+        body=f"{search_prefix}file_id={file_id}\n\n{analysis}",
         amount=amount,
         currency="UZS" if amount else None,
         profile_id=user.active_profile_id,
@@ -213,15 +221,20 @@ async def handle_document(message: Message, user: User, session: AsyncSession) -
         module_id, sub_id = "ai_assistant", "documents"
     else:
         module_id, sub_id = "vault", "documents"
+    folder = vault_folder_for_submodule(sub_id) if module_id == "vault" else "contracts"
+    search_prefix = f"{vault_search_tags(sub_id)}\n" if module_id == "vault" else ""
+    title = name[:200]
+    if module_id == "vault" and name in ("document", "file"):
+        title = vault_file_title(sub_id, lang)
     await add_record(
         session,
         user_id=user.id,
         module_id=module_id,
         submodule_id=sub_id,
-        title=name[:200],
-        body=f"file_id={doc.file_id}\nmime={doc.mime_type}",
+        title=title,
+        body=f"{search_prefix}file_id={doc.file_id}\nmime={doc.mime_type}",
         profile_id=user.active_profile_id,
-        meta_json=archive_meta("contracts"),
+        meta_json=archive_meta(folder),
     )
     if assistant_docs:
         await message.answer(t(lang, "ast_doc_saved", name=name), reply_markup=back_menu_kb(lang))

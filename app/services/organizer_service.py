@@ -13,17 +13,7 @@ ORGANIZER_MODULE = "organizer"
 EVENT_TYPES = ("meeting", "birthday", "task")
 
 
-def parse_datetime(raw: str) -> datetime | None:
-    raw = raw.strip()
-    for fmt in ("%Y-%m-%d %H:%M", "%d.%m.%Y %H:%M", "%Y-%m-%d", "%d.%m.%Y"):
-        try:
-            dt = datetime.strptime(raw, fmt)
-            if fmt in ("%Y-%m-%d", "%d.%m.%Y"):
-                return dt.replace(hour=9, minute=0)
-            return dt
-        except ValueError:
-            continue
-    return None
+from app.services.date_parse import format_date, format_datetime, parse_datetime_flexible as parse_datetime
 
 
 async def add_task(

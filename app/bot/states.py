@@ -115,6 +115,7 @@ class OrganizerStates(StatesGroup):
 class NotificationsStates(StatesGroup):
     waiting_title = State()
     waiting_due = State()
+    waiting_notes = State()
     waiting_amount = State()
 
 
@@ -124,3 +125,7 @@ class ScanStates(StatesGroup):
 
 class OnboardingStates(StatesGroup):
     waiting_confirm = State()
+
+
+class HouseholdStates(StatesGroup):
+    waiting_join_code = State()
