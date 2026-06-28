@@ -289,6 +289,7 @@ async def admin_reset_usage(session: AsyncSession, user_id: int) -> User | None:
     user.image_gen_used_month = 0
     user.pdf_used_month = 0
     user.advanced_model_used_month = 0
+    user.pro_model_used_month = 0
     user.ai_usage_day = None
     user.ai_usage_month = None
     await session.commit()

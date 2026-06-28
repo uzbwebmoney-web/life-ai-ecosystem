@@ -14,6 +14,7 @@ from app.core.plans import (
     TRIAL_DAYS,
     WELCOME_AI_BONUS,
     PlanId,
+    ai_request_weight,
     format_uzs,
     normalize_plan_id,
     usd_to_uzs,
@@ -51,6 +52,12 @@ def plan_info(user: User):
     return PLANS[effective_plan_id(user)]
 
 
+def image_quality_for_user(user: User) -> str:
+    from app.core.ai_pricing import image_quality_for_plan
+
+    return image_quality_for_plan(effective_plan_id(user))
+
+
 def _reset_usage_counters(user: User) -> None:
     day = _day_key()
     month = _month_key()
@@ -64,6 +71,25 @@ def _reset_usage_counters(user: User) -> None:
         user.image_gen_used_month = 0
         user.pdf_used_month = 0
         user.advanced_model_used_month = 0
+        user.pro_model_used_month = 0
+
+
+def advanced_model_remaining(user: User) -> int:
+    _reset_usage_counters(user)
+    limits = plan_info(user).limits
+    cap = limits.advanced_model_monthly or 0
+    bonus = user.bonus_advanced_model or 0
+    used = user.advanced_model_used_month or 0
+    return max(0, cap + bonus - used)
+
+
+def pro_model_remaining(user: User) -> int:
+    _reset_usage_counters(user)
+    limits = plan_info(user).limits
+    cap = limits.pro_model_monthly or 0
+    bonus = user.bonus_pro_model or 0
+    used = user.pro_model_used_month or 0
+    return max(0, cap + bonus - used)
 
 
 async def ensure_user_subscription_fields(session: AsyncSession, user: User) -> User:
@@ -156,13 +182,31 @@ async def consume_ai_request(session: AsyncSession, user: User, *, model: str | 
     from app.core.config import settings
 
     _reset_usage_counters(user)
-    if (user.ai_bonus_balance or 0) > 0:
-        user.ai_bonus_balance -= 1
+    use_model = model or settings.openai_model
+    advanced = settings.effective_advanced_model
+    pro = settings.effective_pro_model
+
+    if use_model == pro:
+        bonus = user.bonus_pro_model or 0
+        if bonus > 0:
+            user.bonus_pro_model = bonus - 1
+        else:
+            user.pro_model_used_month = (user.pro_model_used_month or 0) + 1
+    elif use_model == advanced:
+        bonus = user.bonus_advanced_model or 0
+        if bonus > 0:
+            user.bonus_advanced_model = bonus - 1
+        else:
+            user.advanced_model_used_month = (user.advanced_model_used_month or 0) + 1
     else:
-        user.ai_used_today = (user.ai_used_today or 0) + 1
-        user.ai_used_month = (user.ai_used_month or 0) + 1
-    if model == settings.effective_advanced_model:
-        user.advanced_model_used_month = (user.advanced_model_used_month or 0) + 1
+        weight = ai_request_weight(use_model)
+        bonus = user.ai_bonus_balance or 0
+        if bonus >= weight:
+            user.ai_bonus_balance = bonus - weight
+        else:
+            user.ai_used_today = (user.ai_used_today or 0) + weight
+            if plan_info(user).limits.ai_monthly is not None:
+                user.ai_used_month = (user.ai_used_month or 0) + weight
     await session.commit()
 
 
@@ -201,21 +245,58 @@ async def consume_image_generation(session: AsyncSession, user: User) -> None:
     await session.commit()
 
 
-async def check_ai_quota(session: AsyncSession, user: User, *, lang: str) -> str | None:
+async def check_ai_quota(session: AsyncSession, user: User, *, lang: str, model: str | None = None) -> str | None:
     await ensure_user_subscription_fields(session, user)
-    key = can_use_ai(user)
-    if not key:
+    if model is None:
+        from app.services.model_router import select_ai_model
+
+        model = select_ai_model(user, "стандартный запрос")
+    return check_model_quota(user, model, lang=lang)
+
+
+def check_model_quota(user: User, model: str, *, lang: str) -> str | None:
+    from app.core.config import settings
+
+    _reset_usage_counters(user)
+    limits = plan_info(user).limits
+    advanced = settings.effective_advanced_model
+    pro = settings.effective_pro_model
+
+    if model == pro:
+        if (limits.pro_model_monthly or 0) <= 0 and (user.bonus_pro_model or 0) <= 0:
+            return t(lang, "quota_pro_model")
+        if pro_model_remaining(user) <= 0:
+            return t(
+                lang,
+                "quota_pro_model_monthly",
+                used=user.pro_model_used_month or 0,
+                limit=(limits.pro_model_monthly or 0) + (user.bonus_pro_model or 0),
+            )
         return None
-    info = plan_info(user)
-    daily_left, monthly_left, bonus = ai_remaining(user)
-    return t(
-        lang,
-        key,
-        plan=t(lang, info.name_key),
-        daily=daily_left or 0,
-        monthly=monthly_left or 0,
-        bonus=bonus,
-    )
+
+    if model == advanced:
+        if limits.advanced_model == "none":
+            return t(lang, "quota_advanced_model")
+        if (limits.advanced_model_monthly or 0) <= 0 and (user.bonus_advanced_model or 0) <= 0:
+            return t(lang, "quota_advanced_model")
+        if advanced_model_remaining(user) <= 0:
+            return t(
+                lang,
+                "quota_advanced_model_monthly",
+                used=user.advanced_model_used_month or 0,
+                limit=(limits.advanced_model_monthly or 0) + (user.bonus_advanced_model or 0),
+            )
+        return None
+
+    weight = ai_request_weight(model)
+    bonus = user.ai_bonus_balance or 0
+    if bonus >= weight:
+        return None
+    if limits.ai_daily is not None and (user.ai_used_today or 0) + weight > limits.ai_daily:
+        return t(lang, "quota_ai_daily")
+    if limits.ai_monthly is not None and (user.ai_used_month or 0) + weight > limits.ai_monthly:
+        return t(lang, "quota_ai_monthly")
+    return None
 
 
 def feature_allowed(user: User, feature: str) -> str | None:
@@ -265,6 +346,27 @@ async def check_image_gen_quota(session: AsyncSession, user: User, *, lang: str)
     if used >= limit:
         return t(lang, "quota_image_gen_monthly", used=used, limit=limit)
     return None
+
+
+async def check_pdf_export_quota(session: AsyncSession, user: User, *, lang: str) -> str | None:
+    await ensure_user_subscription_fields(session, user)
+    blocked = feature_allowed(user, "pdf_docx")
+    if blocked:
+        return t(lang, blocked)
+    _reset_usage_counters(user)
+    limit = plan_info(user).limits.pdf_docx_monthly
+    if limit is None:
+        return None
+    used = user.pdf_used_month or 0
+    if used >= limit:
+        return t(lang, "quota_pdf_monthly", used=used, limit=limit)
+    return None
+
+
+async def consume_pdf_export(session: AsyncSession, user: User) -> None:
+    _reset_usage_counters(user)
+    user.pdf_used_month = (user.pdf_used_month or 0) + 1
+    await session.commit()
 
 
 def module_allowed(user: User, module_id: str) -> str | None:
@@ -355,10 +457,32 @@ def format_usage_summary(user: User, *, lang: str) -> str:
     lines.append("")
     if limits.ai_daily is not None:
         lines.append(t(lang, "sub_ai_daily", used=user.ai_used_today or 0, limit=limits.ai_daily))
-    if limits.ai_monthly is not None:
+    elif limits.ai_monthly is not None:
         lines.append(t(lang, "sub_ai_monthly", used=user.ai_used_month or 0, limit=limits.ai_monthly))
+    else:
+        lines.append(t(lang, "sub_gpt4o_unlimited"))
     if bonus:
         lines.append(t(lang, "sub_ai_bonus", bonus=bonus))
+    adv_cap = limits.advanced_model_monthly or 0
+    if adv_cap > 0 or limits.advanced_model != "none":
+        lines.append(
+            t(
+                lang,
+                "sub_gpt54_monthly",
+                used=user.advanced_model_used_month or 0,
+                limit=adv_cap + (user.bonus_advanced_model or 0),
+            )
+        )
+    pro_cap = limits.pro_model_monthly or 0
+    if pro_cap > 0:
+        lines.append(
+            t(
+                lang,
+                "sub_gpt55_monthly",
+                used=user.pro_model_used_month or 0,
+                limit=pro_cap + (user.bonus_pro_model or 0),
+            )
+        )
     photo_limit = _photo_limit(user)
     if photo_limit is not None and photo_limit > 0:
         lines.append(
@@ -393,32 +517,37 @@ def format_plan_card(plan_id: PlanId, *, lang: str) -> str:
         uzs = usd_to_uzs(plan.usd_monthly)
         price_line = t(lang, "plan_price_monthly", price=format_uzs(uzs), usd=f"{plan.usd_monthly:g}")
     limits = plan.limits
-    ai_line = (
-        t(lang, "plan_limit_ai_daily", n=limits.ai_daily)
+    gpt4o_line = (
+        t(lang, "plan_limit_gpt4o_daily", n=limits.ai_daily)
         if limits.ai_daily
-        else t(lang, "plan_limit_ai_monthly", n=limits.ai_monthly or 0)
+        else t(lang, "plan_limit_gpt4o_unlimited")
     )
-    if limits.ai_monthly and limits.ai_monthly >= 999_999:
-        ai_line = t(lang, "plan_limit_ai_unlimited")
+    gpt54_line = (
+        t(lang, "plan_limit_gpt54", n=limits.advanced_model_monthly or 0)
+        if (limits.advanced_model_monthly or 0) > 0
+        else t(lang, "plan_limit_gpt54_none")
+    )
+    gpt55_line = (
+        t(lang, "plan_limit_gpt55", n=limits.pro_model_monthly or 0)
+        if (limits.pro_model_monthly or 0) > 0
+        else t(lang, "plan_limit_gpt55_none")
+    )
+    image_line = (
+        t(lang, "plan_limit_image_gen", n=limits.image_gen_monthly or 0)
+        if (limits.image_gen_monthly or 0) > 0
+        else t(lang, "plan_limit_image_none")
+    )
     photo_line = _limit_label(
         limits.photo_analysis_monthly,
         lang=lang,
         unlimited_key="plan_limit_photo_unlimited",
         template_key="plan_limit_photo_monthly",
     )
-    if limits.advanced_model == "limited":
-        model_line = t(
-            lang,
-            "plan_model_limited",
-            cap=limits.advanced_model_monthly or 0,
-            model="GPT-5.4 mini",
-        )
-    elif limits.advanced_model == "full":
-        model_line = t(lang, "plan_model_full", model="GPT-5.4 mini")
-    elif limits.advanced_model == "router":
-        model_line = t(lang, "plan_model_router_short")
-    else:
-        model_line = t(lang, "plan_model_none")
+    pdf_line = (
+        t(lang, "plan_limit_pdf", n=limits.pdf_docx_monthly or 0)
+        if (limits.pdf_docx_monthly or 0) > 0
+        else t(lang, "plan_limit_pdf_none")
+    )
     storage_gb = limits.storage_mb / 1024 if limits.storage_mb >= 1024 else None
     storage_line = (
         t(lang, "plan_limit_storage_gb", n=f"{storage_gb:g}")
@@ -437,22 +566,20 @@ def format_plan_card(plan_id: PlanId, *, lang: str) -> str:
         t(lang, plan.desc_key),
         "",
         t(lang, "plan_features_title"),
-        f"• {ai_line}",
-        f"• {t(lang, 'plan_feature_model')}: {model_line}",
+        f"• {gpt4o_line}",
+        f"• {gpt54_line}",
+        f"• {gpt55_line}",
+        f"• {image_line}",
+        f"• {t(lang, 'plan_feature_voice')}: {'✅' if limits.voice else '❌'}",
         f"• {t(lang, 'plan_feature_photo')}: {photo_line}",
+        f"• {pdf_line}",
         f"• {t(lang, 'plan_feature_memory')}: {memory_line}",
         f"• {storage_line}",
     ]
-    if limits.voice:
-        parts.append(f"• {t(lang, 'plan_feature_voice')}")
-    if limits.image_gen_monthly:
-        parts.append(
-            f"• {t(lang, 'plan_limit_image_gen', n=limits.image_gen_monthly)}"
-        )
     if limits.household_members > 1:
-        parts.append(
-            t(lang, "plan_feature_household", n=limits.household_members)
-        )
+        parts.append(t(lang, "plan_feature_household", n=limits.household_members))
+    else:
+        parts.append(f"• {t(lang, 'plan_feature_family')}: ❌")
     if limits.priority:
         parts.append(
             f"• {t(lang, 'plan_feature_priority_max' if limits.max_priority else 'plan_feature_priority')}"
@@ -463,23 +590,8 @@ def format_plan_card(plan_id: PlanId, *, lang: str) -> str:
 
 
 def format_packages_list(*, lang: str) -> str:
-    lines = [t(lang, "sub_packages_title"), "", t(lang, "sub_packages_ai_title")]
+    lines = [t(lang, "sub_packages_title"), "", t(lang, "sub_packages_addon_title")]
     for pkg in ADDON_PACKAGES:
-        if pkg.kind != "ai_requests":
-            continue
-        lines.append(
-            t(
-                lang,
-                "sub_package_line",
-                name=t(lang, pkg.name_key),
-                requests=pkg.amount,
-                price=format_uzs(usd_to_uzs(pkg.usd_price)),
-            )
-        )
-    lines.extend(["", t(lang, "sub_packages_addon_title")])
-    for pkg in ADDON_PACKAGES:
-        if pkg.kind == "ai_requests":
-            continue
         lines.append(
             t(
                 lang,

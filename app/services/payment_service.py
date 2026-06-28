@@ -89,6 +89,10 @@ async def activate_product_purchase(
                 user.bonus_memory_facts = (user.bonus_memory_facts or 0) + pkg.amount
             elif pkg.kind == "storage_mb":
                 user.bonus_storage_mb = (user.bonus_storage_mb or 0) + pkg.amount
+            elif pkg.kind == "advanced_ai":
+                user.bonus_advanced_model = (user.bonus_advanced_model or 0) + pkg.amount
+            elif pkg.kind == "pro_ai":
+                user.bonus_pro_model = (user.bonus_pro_model or 0) + pkg.amount
     await session.commit()
     await session.refresh(user)
     return user

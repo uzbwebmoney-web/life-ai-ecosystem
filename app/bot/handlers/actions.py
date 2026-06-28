@@ -86,6 +86,12 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
         return
     hint = str(data.get("ai_module_hint") or "")
     module_id = str(data.get("ai_module_id") or "ai_assistant")
+    if module_id == "education":
+        from app.bot.handlers.study_export import try_format_only_export
+
+        if await try_format_only_export(message, user, session, text):
+            await state.clear()
+            return
     profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
     loading = await message.answer(t(lang, "ai_thinking"))
     answer = await ask_ai(
@@ -101,6 +107,17 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or back_menu_kb(lang)
     await loading.edit_text(f"🤖 {answer}", reply_markup=kb)
+    from app.bot.handlers.study_export import after_study_ai_response
+
+    await after_study_ai_response(
+        message,
+        user,
+        session,
+        user_text=text,
+        answer=answer,
+        module_id=module_id,
+        submodule_id=sub_id or None,
+    )
     await _maybe_send_voice(message, user, answer)
     if user.memory_enabled:
         await add_memory(

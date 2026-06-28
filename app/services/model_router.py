@@ -4,7 +4,7 @@ import re
 from enum import Enum
 
 from app.models.entities import User
-from app.services.subscription_service import plan_info
+from app.services.subscription_service import advanced_model_remaining, plan_info, pro_model_remaining
 
 
 class QueryComplexity(str, Enum):
@@ -43,7 +43,7 @@ _EXPERT_KEYWORDS = (
     "регулятор",
     "litigation",
     "иск",
-    "арbitr",
+    "arbitr",
 )
 
 _COMPLEX_KEYWORDS = (
@@ -161,28 +161,29 @@ def select_ai_model(
     if mode == "none":
         return base
 
-    if mode == "full":
-        return advanced
-
     if mode == "limited":
         if complexity in (QueryComplexity.COMPLEX, QueryComplexity.EXPERT):
-            from app.services.subscription_service import _month_key
-
-            cap = limits.advanced_model_monthly or 0
-            if user.ai_usage_month == _month_key():
-                used = user.advanced_model_used_month or 0
-            else:
-                used = 0
-            if used < cap:
+            if advanced_model_remaining(user) > 0:
                 return advanced
+        return base
+
+    if mode == "full":
+        if advanced_model_remaining(user) > 0:
+            return advanced
         return base
 
     if mode == "router":
         if complexity == QueryComplexity.SIMPLE:
             return base
         if complexity == QueryComplexity.EXPERT:
-            return top
-        return advanced
+            if pro_model_remaining(user) > 0:
+                return top
+            if advanced_model_remaining(user) > 0:
+                return advanced
+            return base
+        if advanced_model_remaining(user) > 0:
+            return advanced
+        return base
 
     return base
 
@@ -209,14 +210,16 @@ def select_vision_model(
 def model_routing_label(user: User, *, lang: str) -> str:
     from app.core.i18n import t
 
-    mode = plan_info(user).limits.advanced_model
+    limits = plan_info(user).limits
+    mode = limits.advanced_model
     if mode == "none":
         return t(lang, "plan_model_none")
     if mode == "limited":
-        cap = plan_info(user).limits.advanced_model_monthly or 0
-        return t(lang, "plan_model_limited", cap=cap, model=_advanced_model())
+        cap = limits.advanced_model_monthly or 0
+        used = user.advanced_model_used_month or 0
+        return t(lang, "plan_model_limited", cap=cap, model="GPT-5.4 Mini")
     if mode == "full":
-        return t(lang, "plan_model_full", model=_advanced_model())
+        return t(lang, "plan_model_full", model="GPT-5.4 Mini")
     if mode == "router":
         return t(
             lang,

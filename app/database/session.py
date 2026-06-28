@@ -65,10 +65,15 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
         "pdf_used_month": "INTEGER DEFAULT 0",
 
         "advanced_model_used_month": "INTEGER DEFAULT 0",
+        "pro_model_used_month": "INTEGER DEFAULT 0",
 
         "bonus_photo_analysis": "INTEGER DEFAULT 0",
 
         "bonus_image_gen": "INTEGER DEFAULT 0",
+
+        "bonus_advanced_model": "INTEGER DEFAULT 0",
+
+        "bonus_pro_model": "INTEGER DEFAULT 0",
 
         "bonus_memory_facts": "INTEGER DEFAULT 0",
 
@@ -102,6 +107,11 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
         "snooze_until": "DATETIME",
 
+    },
+
+    "ai_usage_logs": {
+        "image_count": "INTEGER DEFAULT 0",
+        "image_quality": "VARCHAR(16)",
     },
 
 }

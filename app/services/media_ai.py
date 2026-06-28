@@ -1,11 +1,56 @@
 from __future__ import annotations
 
 import io
+import logging
 
 from aiogram import Bot
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, BadRequestError
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+def image_model_candidates() -> list[str]:
+    primary = (settings.openai_image_model or "dall-e-3").strip()
+    raw_fallbacks = (settings.openai_image_model_fallbacks or "").strip()
+    fallbacks = [part.strip() for part in raw_fallbacks.split(",") if part.strip()]
+    if not fallbacks:
+        fallbacks = ["dall-e-2", "gpt-image-1"]
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for model in [primary, *fallbacks]:
+        key = model.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(model)
+    return ordered
+
+
+def build_image_generate_kwargs(model: str | None, prompt: str, *, quality: str = "medium") -> dict:
+    kwargs: dict = {"prompt": prompt[:4000], "n": 1}
+    if model:
+        kwargs["model"] = model
+    name = (model or "gpt-image-1").lower()
+    kwargs["size"] = "1024x1024"
+    if name.startswith("gpt-image"):
+        q = quality if quality in {"low", "medium", "high"} else "medium"
+        kwargs["quality"] = q
+    elif name == "dall-e-3":
+        kwargs["quality"] = "standard"
+    return kwargs
+
+
+def is_unsupported_image_model_error(exc: BadRequestError) -> bool:
+    body = getattr(exc, "body", None) or {}
+    err = body.get("error", {}) if isinstance(body, dict) else {}
+    code = str(err.get("code") or "").lower()
+    param = str(err.get("param") or "").lower()
+    message = str(err.get("message") or exc).lower()
+    if param == "model" and code in {"invalid_value", "model_not_found"}:
+        return True
+    return "does not exist" in message and "model" in message
 
 
 async def transcribe_voice(bot: Bot, file_id: str) -> str:
@@ -77,21 +122,11 @@ async def get_telegram_image_url(bot: Bot, file_id: str) -> str:
     return f"https://api.telegram.org/file/bot{settings.bot_token}/{file.file_path}"
 
 
-async def generate_image(prompt: str) -> bytes | None:
-    if not settings.openai_api_key.strip():
-        return None
+async def _image_bytes_from_response(response) -> bytes | None:
     import base64
 
     import httpx
 
-    client = AsyncOpenAI(api_key=settings.openai_api_key)
-    response = await client.images.generate(
-        model="dall-e-3",
-        prompt=prompt[:4000],
-        size="1024x1024",
-        quality="standard",
-        n=1,
-    )
     if not response.data:
         return None
     item = response.data[0]
@@ -104,6 +139,40 @@ async def generate_image(prompt: str) -> bytes | None:
         resp = await http.get(url)
         resp.raise_for_status()
         return resp.content
+
+
+async def generate_image(prompt: str, *, quality: str = "medium") -> tuple[bytes, str, object] | None:
+    if not settings.openai_api_key.strip():
+        return None
+
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    models = image_model_candidates()
+    last_error: Exception | None = None
+
+    for model in models:
+        try:
+            response = await client.images.generate(
+                **build_image_generate_kwargs(model, prompt, quality=quality)
+            )
+            data = await _image_bytes_from_response(response)
+            if data:
+                if model != models[0]:
+                    logger.info("Image generated with fallback model %s (primary: %s)", model, models[0])
+                return data, model, response
+        except BadRequestError as exc:
+            last_error = exc
+            if is_unsupported_image_model_error(exc):
+                logger.warning("Image model %s unavailable: %s", model, exc)
+                continue
+            logger.exception("Image generation failed for model %s", model)
+            return None
+        except Exception:
+            logger.exception("Image generation failed for model %s", model)
+            return None
+
+    if last_error:
+        logger.error("All image models failed: %s", ", ".join(models))
+    return None
 
 
 async def synthesize_speech(text: str, *, voice: str = "alloy") -> bytes | None:

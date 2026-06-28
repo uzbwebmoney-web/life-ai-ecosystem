@@ -59,6 +59,18 @@ async def _answer_in_module(
     )
     await loading.edit_text(f"{header}\n\n{answer}", reply_markup=kb)
 
+    from app.bot.handlers.study_export import after_study_ai_response
+
+    await after_study_ai_response(
+        message,
+        user,
+        session,
+        user_text=text,
+        answer=answer,
+        module_id=module_id,
+        submodule_id=submodule_id,
+    )
+
     if user.voice_mode:
         audio = await synthesize_speech(answer)
         if audio:
@@ -95,6 +107,11 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
         return
 
     if user.active_module_id and user.active_module_id in MODULE_BY_ID:
+        if user.active_module_id == "education":
+            from app.bot.handlers.study_export import try_format_only_export
+
+            if await try_format_only_export(message, user, session, text):
+                return
         if user.active_module_id == "car" and len(text) > 5:
             await upsert_fact(session, user.id, category="car", fact_key="car_model", fact_value=text[:200])
         await _answer_in_module(

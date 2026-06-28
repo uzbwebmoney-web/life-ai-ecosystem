@@ -8,6 +8,11 @@ class Settings(BaseSettings):
     bot_token: str = Field(alias="BOT_TOKEN")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    openai_image_model: str = Field(default="gpt-image-1", alias="OPENAI_IMAGE_MODEL")
+    openai_image_model_fallbacks: str = Field(
+        default="dall-e-2",
+        alias="OPENAI_IMAGE_MODEL_FALLBACKS",
+    )
     advanced_openai_model: str = Field(default="gpt-5.4-mini", alias="ADVANCED_OPENAI_MODEL")
     pro_openai_model: str = Field(default="gpt-5.5", alias="PRO_OPENAI_MODEL")
     premium_openai_model: str = Field(default="", alias="PREMIUM_OPENAI_MODEL")

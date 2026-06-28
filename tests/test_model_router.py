@@ -49,15 +49,14 @@ def test_basic_simple_uses_base():
 
 
 def test_basic_exhausted_cap_falls_back():
-    user = _user("basic", advanced_model_used_month=50)
+    user = _user("basic", advanced_model_used_month=300)
     model = select_ai_model(user, "Проанализируй договор и все юридические риски")
     assert model == "gpt-4o-mini"
 
 
-def test_premium_uses_advanced():
+def test_premium_router_simple():
     user = _user("premium")
-    model = select_ai_model(user, "привет")
-    assert model == "gpt-5.4-mini"
+    assert select_ai_model(user, "привет") == "gpt-4o-mini"
 
 
 def test_pro_router_simple():

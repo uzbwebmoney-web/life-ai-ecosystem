@@ -19,11 +19,20 @@ async def ask_ai(
     bot=None,
 ) -> str:
     if user is not None and session is not None:
+        from app.services.model_router import select_ai_model
         from app.services.subscription_service import check_ai_quota, consume_ai_request
 
-        quota_msg = await check_ai_quota(session, user, lang=language)
+        model = select_ai_model(
+            user,
+            user_message,
+            module_hint=module_hint,
+            module_id=getattr(user, "active_module_id", None),
+        )
+        quota_msg = await check_ai_quota(session, user, lang=language, model=model)
         if quota_msg:
             return quota_msg
+    else:
+        model = settings.openai_model
 
     if not settings.openai_api_key.strip():
         return (
@@ -36,16 +45,8 @@ async def ask_ai(
 
     client = AsyncOpenAI(api_key=settings.openai_api_key)
     reply_lang = ai_reply_language(language)
-    model = settings.openai_model
-    if user is not None:
-        from app.services.model_router import select_ai_model
-
-        model = select_ai_model(
-            user,
-            user_message,
-            module_hint=module_hint,
-            module_id=getattr(user, "active_module_id", None),
-        )
+    if user is None:
+        model = settings.openai_model
     system = (
         "Ты — персональный AI-помощник экосистемы Life AI. "
         "Помогаешь человеку в повседневной жизни. "
