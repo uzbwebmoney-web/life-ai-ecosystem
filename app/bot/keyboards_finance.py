@@ -4,7 +4,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
-from app.models.entities import FinanceGoal
+from app.models.entities import FinanceGoal, CreditLoan
 from app.services.finance_service import EXPENSE_CATEGORIES
 
 
@@ -82,6 +82,36 @@ def finance_bill_item_kb(bill_id: int, lang: str = "ru") -> InlineKeyboardMarkup
         inline_keyboard=[
             [InlineKeyboardButton(text=t(lang, "fin_bill_delete"), callback_data=f"fin:bill:del:{bill_id}")],
             [InlineKeyboardButton(text=t(lang, "fin_back_bills"), callback_data="fin:bill:list")],
+        ]
+    )
+
+
+def finance_loans_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "btn_add_credit"), callback_data="fin:loan:add")],
+            [InlineKeyboardButton(text=t(lang, "btn_back_module"), callback_data="mod:finance")],
+        ]
+    )
+
+
+def finance_loans_list_kb(loans: list[CreditLoan], lang: str = "ru") -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = [
+        [InlineKeyboardButton(text=t(lang, "btn_add_credit"), callback_data="fin:loan:add")],
+    ]
+    for loan in loans[:8]:
+        rows.append(
+            [InlineKeyboardButton(text=f"💳 {loan.title[:26]}", callback_data=f"fin:loan:open:{loan.id}")]
+        )
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_back_module"), callback_data="mod:finance")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def finance_loan_item_kb(loan_id: int, lang: str = "ru") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "fin_loan_delete"), callback_data=f"fin:loan:del:{loan_id}")],
+            [InlineKeyboardButton(text=t(lang, "fin_back_loans"), callback_data="fin:loan:list")],
         ]
     )
 

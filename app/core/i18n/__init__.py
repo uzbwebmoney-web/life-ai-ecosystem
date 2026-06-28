@@ -150,7 +150,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "lang_reply_uz": "узбекском",
         "lang_reply_en": "английском",
         "credits_my": "💳 <b>Мои кредиты</b>",
-        "credits_title": "💳 <b>Кредиты</b>",
+        "credits_title": "💳 <b>Кредит и ипотека</b>",
         "credits_empty": "Пока нет сохранённых кредитов.",
         "credits_empty_short": "Добавьте кредит вручную — бот будет напоминать о платеже каждый месяц.",
         "credits_hint": "Добавьте вручную:\n• название (банк/кредит)\n• сумма кредита\n• платёж в месяц\n• число месяца (1–31)",
@@ -170,6 +170,19 @@ _STRINGS: dict[str, dict[str, str]] = {
         "credits_deleted_all": "💳 Кредиты удалены. Добавьте новый при необходимости.",
         "credits_not_found": "Кредит не найден",
         "credits_removed": "Кредит удалён",
+        "credits_line": (
+            "• <b>{title}</b>\n"
+            "  Сумма: {total}\n"
+            "  Платёж/мес: {monthly}\n"
+            "  День оплаты: <b>{day}</b>-е число"
+        ),
+        "credits_reminder": (
+            "💳 <b>Напоминание о платеже</b>\n\n"
+            "🏦 {title}\n"
+            "💰 Платёж: <b>{monthly}</b>\n"
+            "📋 Сумма: {total}\n"
+            "📅 Сегодня <b>{day}-е число</b> — не забудьте оплатить."
+        ),
         "default_loan_title": "Кредит",
         "doc_saved": "📄 Документ «{name}» сохранён.\nДля PDF отправьте скрин или фото страницы.",
         "link_check": "🛡 <b>Проверка ссылки</b>",
@@ -311,7 +324,7 @@ _STRINGS: dict[str, dict[str, str]] = {
             "• Планирование бюджета по категориям\n"
             "• Напоминания об оплате счетов\n"
             "• Анализ расходов\n"
-            "• Кредиты"
+            "• Кредит и ипотека"
         ),
         "fin_ai_hint": "💬 Задайте вопрос AI по финансам",
         "fin_sub_income": "Записывайте зарплату, подработки и другие поступления.",
@@ -320,7 +333,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "fin_sub_budget": "Лимиты по категориям на месяц.",
         "fin_sub_bills": "Коммуналка, интернет, подписки — напоминания в срок.",
         "fin_sub_analysis": "Разбивка расходов и баланс за месяц.",
-        "fin_sub_loans": "Кредиты с ежемесячными напоминаниями.",
+        "fin_sub_loans": "Кредиты и ипотека — сумма, ежемесячный платёж и день оплаты с напоминаниями.",
         "fin_income_title": "📈 <b>Доходы</b>",
         "fin_expense_title": "📉 <b>Расходы</b>",
         "fin_total": "Итого: <b>{total}</b> UZS",
@@ -367,6 +380,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "fin_bill_delete": "🗑 Удалить",
         "fin_bill_default": "Счёт",
         "fin_back_bills": "⬅️ К счетам",
+        "fin_back_loans": "⬅️ К кредитам",
+        "fin_loan_delete": "🗑 Удалить",
         "fin_bill_reminder_title": "Напоминание об оплате",
         "fin_due_today": "сегодня нужно оплатить",
         "fin_bill_pay": "оплатить",
@@ -900,7 +915,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "lang_reply_uz": "o'zbek",
         "lang_reply_en": "ingliz",
         "credits_my": "💳 <b>Mening kreditlarim</b>",
-        "credits_title": "💳 <b>Kreditlar</b>",
+        "credits_title": "💳 <b>Kredit va ipoteka</b>",
         "credits_empty": "Saqlangan kreditlar yo'q.",
         "credits_empty_short": "Kreditni qo'lda qo'shing — bot har oy to'lov haqida eslatadi.",
         "credits_hint": "Qo'lda qo'shing:\n• nomi (bank/kredit)\n• kredit summasi\n• oylik to'lov\n• oy kuni (1–31)",
@@ -920,6 +935,19 @@ _STRINGS: dict[str, dict[str, str]] = {
         "credits_deleted_all": "💳 Kreditlar o'chirildi. Kerak bo'lsa yangisini qo'shing.",
         "credits_not_found": "Kredit topilmadi",
         "credits_removed": "Kredit o'chirildi",
+        "credits_line": (
+            "• <b>{title}</b>\n"
+            "  Summa: {total}\n"
+            "  Oylik to'lov: {monthly}\n"
+            "  To'lov kuni: oyning <b>{day}</b>-kuni"
+        ),
+        "credits_reminder": (
+            "💳 <b>To'lov eslatmasi</b>\n\n"
+            "🏦 {title}\n"
+            "💰 To'lov: <b>{monthly}</b>\n"
+            "📋 Summa: {total}\n"
+            "📅 Bugun oyning <b>{day}</b>-kuni — to'lovni unutmang."
+        ),
         "default_loan_title": "Kredit",
         "doc_saved": "📄 «{name}» hujjati saqlandi.\nPDF uchun sahifa rasmini yuboring.",
         "link_check": "🛡 <b>Havola tekshiruvi</b>",
@@ -1070,7 +1098,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "fin_sub_budget": "Oy bo'yicha kategoriya limitlari.",
         "fin_sub_bills": "Kommunal, internet, obunalar — vaqtida eslatma.",
         "fin_sub_analysis": "Xarajatlar taqsimoti va oylik balans.",
-        "fin_sub_loans": "Oylik eslatmalar bilan kreditlar.",
+        "fin_sub_loans": "Kredit va ipoteka — summa, oylik to'lov va eslatmalar.",
         "fin_income_title": "📈 <b>Daromadlar</b>",
         "fin_expense_title": "📉 <b>Xarajatlar</b>",
         "fin_total": "Jami: <b>{total}</b> UZS",
@@ -1117,6 +1145,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "fin_bill_delete": "🗑 O'chirish",
         "fin_bill_default": "Hisob",
         "fin_back_bills": "⬅️ Hisoblarga",
+        "fin_back_loans": "⬅️ Kreditlarga",
+        "fin_loan_delete": "🗑 O'chirish",
         "fin_bill_reminder_title": "To'lov eslatmasi",
         "fin_due_today": "bugun to'lash kerak",
         "fin_bill_pay": "to'lash",
@@ -1647,7 +1677,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "lang_reply_uz": "Uzbek",
         "lang_reply_en": "English",
         "credits_my": "💳 <b>My loans</b>",
-        "credits_title": "💳 <b>Loans</b>",
+        "credits_title": "💳 <b>Loans & mortgage</b>",
         "credits_empty": "No saved loans yet.",
         "credits_empty_short": "Add a loan manually — the bot will remind you each month.",
         "credits_hint": "Add manually:\n• name (bank/loan)\n• total amount\n• monthly payment\n• day of month (1–31)",
@@ -1667,6 +1697,19 @@ _STRINGS: dict[str, dict[str, str]] = {
         "credits_deleted_all": "💳 Loans removed. Add a new one if needed.",
         "credits_not_found": "Loan not found",
         "credits_removed": "Loan removed",
+        "credits_line": (
+            "• <b>{title}</b>\n"
+            "  Total: {total}\n"
+            "  Monthly: {monthly}\n"
+            "  Payment day: <b>{day}</b> of each month"
+        ),
+        "credits_reminder": (
+            "💳 <b>Payment reminder</b>\n\n"
+            "🏦 {title}\n"
+            "💰 Payment: <b>{monthly}</b>\n"
+            "📋 Total: {total}\n"
+            "📅 Today is the <b>{day}th</b> — don't forget to pay."
+        ),
         "default_loan_title": "Loan",
         "doc_saved": "📄 Document «{name}» saved.\nFor PDF, send a screenshot or photo of the page.",
         "link_check": "🛡 <b>Link check</b>",
@@ -1817,7 +1860,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "fin_sub_budget": "Monthly limits per category.",
         "fin_sub_bills": "Utilities, internet, subscriptions — timely reminders.",
         "fin_sub_analysis": "Expense breakdown and monthly balance.",
-        "fin_sub_loans": "Loans with monthly payment reminders.",
+        "fin_sub_loans": "Loans and mortgage — amount, monthly payment, and reminders.",
         "fin_income_title": "📈 <b>Income</b>",
         "fin_expense_title": "📉 <b>Expenses</b>",
         "fin_total": "Total: <b>{total}</b> UZS",
@@ -1864,6 +1907,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "fin_bill_delete": "🗑 Delete",
         "fin_bill_default": "Bill",
         "fin_back_bills": "⬅️ Back to bills",
+        "fin_back_loans": "⬅️ Back to loans",
+        "fin_loan_delete": "🗑 Delete",
         "fin_bill_reminder_title": "Bill payment reminder",
         "fin_due_today": "due today",
         "fin_bill_pay": "pay",

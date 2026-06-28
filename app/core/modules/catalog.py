@@ -160,6 +160,8 @@ MODULES: tuple[ModuleDef, ...] = (
 
             _sub("bills", "Оплата счетов", "Hisob to'lovi", "Bill payments"),
 
+            _sub("loans", "Кредит и ипотека", "Kredit va ipoteka", "Loans & mortgage"),
+
             _sub("analysis", "Анализ расходов", "Xarajat tahlili", "Expense analysis"),
 
         ),

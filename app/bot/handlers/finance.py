@@ -14,13 +14,22 @@ from app.bot.keyboards_finance import (
     finance_category_kb,
     finance_goal_item_kb,
     finance_goals_kb,
+    finance_loan_item_kb,
+    finance_loans_list_kb,
+    finance_loans_kb,
     finance_module_kb,
     finance_tx_kb,
 )
-from app.bot.states import FinanceStates
+from app.bot.states import CreditStates, FinanceStates
 from app.core.i18n import t
 from app.models.entities import User
-from app.services.credit_loans import format_amount
+from app.services.credit_loans import (
+    add_credit_loan,
+    deactivate_credit_loan,
+    format_amount,
+    format_credit_loan_line,
+    list_credit_loans,
+)
 from app.services.finance_service import (
     add_finance_bill,
     add_finance_goal,
@@ -71,6 +80,8 @@ async def finance_submodule(callback: CallbackQuery, user: User, session: AsyncS
         await _show_budget(callback.message, user, session, lang, edit=True)
     elif sub_id == "bills":
         await _show_bills(callback.message, user, session, lang, edit=True)
+    elif sub_id == "loans":
+        await _show_loans(callback.message, user, session, lang, edit=True)
     elif sub_id == "analysis":
         await _show_analysis(callback.message, user, session, lang, edit=True)
     await callback.answer()
@@ -145,6 +156,20 @@ async def _show_bills(target, user: User, session: AsyncSession, lang: str, *, e
             rows.append([InlineKeyboardButton(text=f"💳 {b.title[:26]}", callback_data=f"fin:bill:open:{b.id}")])
         rows.append([InlineKeyboardButton(text=t(lang, "btn_back_module"), callback_data="mod:finance")])
         kb = InlineKeyboardMarkup(inline_keyboard=rows)
+    await _send(target, "\n".join(lines), kb, edit)
+
+
+async def _show_loans(target, user: User, session: AsyncSession, lang: str, *, edit: bool = False) -> None:
+    loans = await list_credit_loans(session, user.id)
+    lines = [t(lang, "credits_title"), ""]
+    if loans:
+        lines.extend(format_credit_loan_line(loan, lang) for loan in loans)
+    else:
+        lines.append(t(lang, "credits_empty"))
+        lines.append("")
+        lines.append(t(lang, "credits_hint"))
+    lines.append(f"\n{t(lang, 'credits_notify')}")
+    kb = finance_loans_list_kb(loans, lang) if loans else finance_loans_kb(lang)
     await _send(target, "\n".join(lines), kb, edit)
 
 
@@ -428,6 +453,113 @@ async def fin_bill_delete(callback: CallbackQuery, user: User, session: AsyncSes
         return
     await _show_bills(callback.message, user, session, lang, edit=True)
     await callback.answer(t(lang, "fin_deleted"))
+
+
+@router.callback_query(F.data == "fin:loan:add")
+async def fin_loan_add(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    await state.set_state(CreditStates.waiting_title)
+    await callback.message.answer(t(user.language, "credits_new"), reply_markup=finance_cancel_kb(user.language))
+    await callback.answer()
+
+
+@router.message(CreditStates.waiting_title)
+async def fin_loan_title_msg(message: Message, state: FSMContext, user: User) -> None:
+    lang = user.language
+    title = (message.text or "").strip()
+    if len(title) < 2:
+        await message.answer(t(lang, "credits_title_short"))
+        return
+    await state.update_data(credit_title=title)
+    await state.set_state(CreditStates.waiting_total)
+    await message.answer(t(lang, "credits_total"), reply_markup=finance_cancel_kb(lang))
+
+
+@router.message(CreditStates.waiting_total)
+async def fin_loan_total_msg(message: Message, state: FSMContext, user: User) -> None:
+    lang = user.language
+    amount = parse_amount(message.text or "")
+    if amount is None:
+        await message.answer(t(lang, "credits_total_error"))
+        return
+    if amount <= 0:
+        await message.answer(t(lang, "credits_total_positive"))
+        return
+    await state.update_data(credit_total=amount)
+    await state.set_state(CreditStates.waiting_monthly)
+    await message.answer(t(lang, "credits_monthly"), reply_markup=finance_cancel_kb(lang))
+
+
+@router.message(CreditStates.waiting_monthly)
+async def fin_loan_monthly_msg(message: Message, state: FSMContext, user: User) -> None:
+    lang = user.language
+    amount = parse_amount(message.text or "")
+    if amount is None:
+        await message.answer(t(lang, "credits_monthly_error"))
+        return
+    if amount <= 0:
+        await message.answer(t(lang, "credits_total_positive"))
+        return
+    await state.update_data(credit_monthly=amount)
+    await state.set_state(CreditStates.waiting_day)
+    await message.answer(t(lang, "credits_day"), reply_markup=finance_cancel_kb(lang))
+
+
+@router.message(CreditStates.waiting_day)
+async def fin_loan_save(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    raw = (message.text or "").strip()
+    if not raw.isdigit():
+        await message.answer(t(lang, "credits_day_error"))
+        return
+    day = int(raw)
+    if day < 1 or day > 31:
+        await message.answer(t(lang, "credits_day_range"))
+        return
+    data = await state.get_data()
+    loan = await add_credit_loan(
+        session,
+        user_id=user.id,
+        title=str(data.get("credit_title") or t(lang, "default_loan_title")),
+        total_amount=float(data.get("credit_total") or 0),
+        monthly_payment=float(data.get("credit_monthly") or 0),
+        payment_day=day,
+        profile_id=user.active_profile_id,
+    )
+    info = format_credit_loan_line(loan, lang)
+    await message.answer(t(lang, "credits_saved", info=info, day=loan.payment_day))
+    await _show_loans(message, user, session, lang)
+    await state.clear()
+
+
+@router.callback_query(F.data == "fin:loan:list")
+async def fin_loan_list(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    await _show_loans(callback.message, user, session, user.language, edit=True)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("fin:loan:open:"))
+async def fin_loan_open(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    loan_id = int((callback.data or "").split(":")[3])
+    loans = await list_credit_loans(session, user.id)
+    loan = next((item for item in loans if item.id == loan_id), None)
+    if not loan:
+        await callback.answer(t(lang, "credits_not_found"), show_alert=True)
+        return
+    await callback.message.edit_text(format_credit_loan_line(loan, lang), reply_markup=finance_loan_item_kb(loan_id, lang))
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("fin:loan:del:"))
+async def fin_loan_delete(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    loan_id = int((callback.data or "").split(":")[3])
+    ok = await deactivate_credit_loan(session, user.id, loan_id)
+    if not ok:
+        await callback.answer(t(lang, "credits_not_found"), show_alert=True)
+        return
+    await _show_loans(callback.message, user, session, lang, edit=True)
+    await callback.answer(t(lang, "credits_removed"))
 
 
 @router.callback_query(F.data == "fin:cancel")

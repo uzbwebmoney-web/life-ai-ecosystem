@@ -6,7 +6,9 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.i18n import t
 from app.models.entities import CreditLoan, User
+from app.services.health_service import user_local_now
 
 
 def _month_key(dt: datetime | None = None) -> str:
@@ -76,20 +78,20 @@ async def deactivate_credit_loan(session: AsyncSession, user_id: int, loan_id: i
 
 async def fetch_credit_reminders_due(session: AsyncSession, *, now: datetime | None = None) -> list[tuple[CreditLoan, User]]:
     now = now or datetime.utcnow()
-    month = _month_key(now)
     rows = (
         await session.execute(
             select(CreditLoan, User)
             .join(User, User.id == CreditLoan.user_id)
-            .where(
-                CreditLoan.active.is_(True),
-                CreditLoan.last_notified_month != month,
-            )
+            .where(CreditLoan.active.is_(True))
         )
     ).all()
     due: list[tuple[CreditLoan, User]] = []
     for loan, user in rows:
-        if payment_day_matches_today(loan.payment_day, now):
+        local = user_local_now(user, now)
+        month = _month_key(local)
+        if loan.last_notified_month == month:
+            continue
+        if payment_day_matches_today(loan.payment_day, local):
             due.append((loan, user))
     return due
 
@@ -103,20 +105,19 @@ async def mark_credit_notified(session: AsyncSession, loan_id: int, *, month: st
     await session.commit()
 
 
-def format_credit_loan_line(loan: CreditLoan) -> str:
-    return (
-        f"• <b>{loan.title}</b>\n"
-        f"  Кредит: {format_amount(loan.total_amount, loan.currency)}\n"
-        f"  Платёж/мес: {format_amount(loan.monthly_payment, loan.currency)}\n"
-        f"  День оплаты: <b>{loan.payment_day}</b>-е число"
+def format_credit_loan_line(loan: CreditLoan, lang: str = "ru") -> str:
+    return t(lang, "credits_line").format(
+        title=loan.title,
+        total=format_amount(loan.total_amount, loan.currency),
+        monthly=format_amount(loan.monthly_payment, loan.currency),
+        day=loan.payment_day,
     )
 
 
-def build_credit_reminder_text(loan: CreditLoan) -> str:
-    return (
-        f"💳 <b>Напоминание о платеже по кредиту</b>\n\n"
-        f"🏦 {loan.title}\n"
-        f"💰 Платёж: <b>{format_amount(loan.monthly_payment, loan.currency)}</b>\n"
-        f"📋 Сумма кредита: {format_amount(loan.total_amount, loan.currency)}\n"
-        f"📅 Сегодня <b>{loan.payment_day}-е число</b> — не забудьте оплатить."
+def build_credit_reminder_text(loan: CreditLoan, lang: str = "ru") -> str:
+    return t(lang, "credits_reminder").format(
+        title=loan.title,
+        total=format_amount(loan.total_amount, loan.currency),
+        monthly=format_amount(loan.monthly_payment, loan.currency),
+        day=loan.payment_day,
     )

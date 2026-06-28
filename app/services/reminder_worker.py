@@ -14,6 +14,11 @@ from app.services.car_service import (
     mark_car_compliance_notified,
     mark_car_maintenance_notified,
 )
+from app.services.credit_loans import (
+    build_credit_reminder_text,
+    fetch_credit_reminders_due,
+    mark_credit_notified,
+)
 from app.services.finance_service import (
     build_bill_reminder_text,
     fetch_finance_bills_due,
@@ -24,7 +29,7 @@ from app.services.home_service import (
     fetch_home_utilities_due,
     mark_home_utility_notified,
 )
-from app.services.health_service import build_med_reminder_text, fetch_med_reminders_due, mark_med_notified
+from app.services.health_service import build_med_reminder_text, fetch_med_reminders_due, mark_med_notified, user_local_now
 from app.services.life_data import fetch_due_reminders, mark_reminder_sent
 
 logger = logging.getLogger(__name__)
@@ -64,6 +69,7 @@ class ReminderWorker:
             car_comp_due = await fetch_car_compliance_due(session)
             bill_due = await fetch_finance_bills_due(session)
             utility_due = await fetch_home_utilities_due(session)
+            credit_due = await fetch_credit_reminders_due(session)
         for reminder, user in due:
             try:
                 prefix = "🩺" if reminder.module_id == "health" else "🔔"
@@ -129,6 +135,17 @@ class ReminderWorker:
                     await mark_home_utility_notified(session, bill.id)
             except Exception:
                 logger.exception("Failed to send home utility reminder id=%s", bill.id)
+        for loan, user in credit_due:
+            try:
+                local = user_local_now(user)
+                await bot.send_message(
+                    chat_id=int(user.telegram_id),
+                    text=build_credit_reminder_text(loan, user.language),
+                )
+                async with session_maker() as session:
+                    await mark_credit_notified(session, loan.id, month=local.strftime("%Y-%m"))
+            except Exception:
+                logger.exception("Failed to send credit reminder id=%s", loan.id)
 
 
 reminder_worker = ReminderWorker()
