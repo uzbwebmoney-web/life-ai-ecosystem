@@ -58,6 +58,22 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
         "referred_by_user_id": "INTEGER",
 
+        "photo_used_month": "INTEGER DEFAULT 0",
+
+        "image_gen_used_month": "INTEGER DEFAULT 0",
+
+        "pdf_used_month": "INTEGER DEFAULT 0",
+
+        "advanced_model_used_month": "INTEGER DEFAULT 0",
+
+        "bonus_photo_analysis": "INTEGER DEFAULT 0",
+
+        "bonus_image_gen": "INTEGER DEFAULT 0",
+
+        "bonus_memory_facts": "INTEGER DEFAULT 0",
+
+        "bonus_storage_mb": "INTEGER DEFAULT 0",
+
     },
 
     "calendar_events": {

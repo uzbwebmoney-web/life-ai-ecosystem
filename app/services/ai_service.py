@@ -37,9 +37,14 @@ async def ask_ai(
     reply_lang = ai_reply_language(language)
     model = settings.openai_model
     if user is not None:
-        from app.services.subscription_service import ai_model_for_user
+        from app.services.model_router import select_ai_model
 
-        model = ai_model_for_user(user)
+        model = select_ai_model(
+            user,
+            user_message,
+            module_hint=module_hint,
+            module_id=getattr(user, "active_module_id", None),
+        )
     system = (
         "Ты — персональный AI-помощник экосистемы Life AI. "
         "Помогаешь человеку в повседневной жизни. "
@@ -68,5 +73,5 @@ async def ask_ai(
     if user is not None and session is not None:
         from app.services.subscription_service import consume_ai_request
 
-        await consume_ai_request(session, user)
+        await consume_ai_request(session, user, model=model)
     return format_ai_reply(raw)

@@ -8,7 +8,9 @@ class Settings(BaseSettings):
     bot_token: str = Field(alias="BOT_TOKEN")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
-    premium_openai_model: str = Field(default="gpt-4o", alias="PREMIUM_OPENAI_MODEL")
+    advanced_openai_model: str = Field(default="gpt-5.4-mini", alias="ADVANCED_OPENAI_MODEL")
+    pro_openai_model: str = Field(default="gpt-5.5", alias="PRO_OPENAI_MODEL")
+    premium_openai_model: str = Field(default="", alias="PREMIUM_OPENAI_MODEL")
     payment_contact: str = Field(default="", alias="PAYMENT_CONTACT")
     payment_card_number: str = Field(default="", alias="PAYMENT_CARD_NUMBER")
     payment_card_holder: str = Field(default="", alias="PAYMENT_CARD_HOLDER")
@@ -28,6 +30,26 @@ class Settings(BaseSettings):
         from app.services.admin_service import parse_admin_telegram_ids
 
         return parse_admin_telegram_ids(self.admin_telegram_ids)
+
+
+    @property
+    def effective_advanced_model(self) -> str:
+        advanced = self.advanced_openai_model.strip()
+        if advanced:
+            return advanced
+        legacy = self.premium_openai_model.strip()
+        return legacy or "gpt-5.4-mini"
+
+
+    @property
+    def effective_pro_model(self) -> str:
+        pro = self.pro_openai_model.strip()
+        if pro:
+            return pro
+        legacy = self.premium_openai_model.strip()
+        if legacy and legacy not in (self.openai_model, self.advanced_openai_model):
+            return legacy
+        return "gpt-5.5"
 
 
 settings = Settings()

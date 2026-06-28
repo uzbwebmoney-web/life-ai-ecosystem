@@ -73,7 +73,12 @@ async def _process_photo(
     universal_scan: bool = False,
 ) -> None:
     lang = user.language
-    from app.services.subscription_service import check_ai_quota, consume_ai_request, feature_allowed
+    from app.services.model_router import select_vision_model
+    from app.services.subscription_service import (
+        check_photo_analysis_quota,
+        consume_photo_analysis,
+        feature_allowed,
+    )
 
     if (
         not universal_scan
@@ -93,18 +98,24 @@ async def _process_photo(
         if blocked:
             await message.answer(t(lang, blocked))
             return
+        photo_quota = await check_photo_analysis_quota(session, user, lang=lang)
+        if photo_quota:
+            await message.answer(photo_quota)
+            return
     file_id = message.photo[-1].file_id
     caption = (message.caption or "").strip()
     loading = await message.answer(t(lang, "photo_analyzing"))
-    if not universal_scan:
-        quota_msg = await check_ai_quota(session, user, lang=lang)
-        if quota_msg:
-            await loading.edit_text(quota_msg)
-            return
     image_url = await get_telegram_image_url(bot, file_id)
     car_mode = user.active_module_id == "car" and user.active_submodule_id in (None, "panel_photo")
     legal_mode = user.active_module_id == "legal" and user.active_submodule_id == "doc_check"
     assistant_photo = user.active_module_id == "ai_assistant" and user.active_submodule_id == "photo"
+    vision_model = select_vision_model(
+        user,
+        module_id=user.active_module_id,
+        caption=caption,
+        legal_document=legal_mode and not universal_scan,
+        car_dashboard=car_mode and not universal_scan,
+    )
     analysis = await analyze_image_url(
         image_url,
         _vision_prompt(
@@ -115,9 +126,10 @@ async def _process_photo(
             assistant_photo=assistant_photo and not universal_scan,
             universal=universal_scan,
         ),
+        model=vision_model,
     )
     if not universal_scan:
-        await consume_ai_request(session, user)
+        await consume_photo_analysis(session, user)
     lowered = analysis.lower()
     combined = f"{caption} {analysis}".lower()
 

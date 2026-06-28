@@ -17,23 +17,33 @@ from app.models.entities import User
 from app.services.assistant_service import assistant_submodule_description
 from app.services.life_data import set_active_module
 from app.services.media_ai import generate_image
+from app.services.subscription_service import check_image_gen_quota, consume_image_generation, feature_allowed
 
 router = Router()
 text_router = Router()
 
 
-async def reply_with_generated_image(message: Message, user: User, prompt: str) -> None:
+async def reply_with_generated_image(message: Message, user: User, session: AsyncSession, prompt: str) -> None:
     lang = user.language
     kb = assistant_ai_kb("ai_assistant", "images", lang)
     text = prompt.strip()
     if len(text) < 5:
         await message.answer(t(lang, "ast_send_image_prompt"), reply_markup=kb)
         return
+    blocked = feature_allowed(user, "image_gen")
+    if blocked:
+        await message.answer(t(lang, blocked))
+        return
+    quota_msg = await check_image_gen_quota(session, user, lang=lang)
+    if quota_msg:
+        await message.answer(quota_msg)
+        return
     loading = await message.answer(t(lang, "ast_image_generating"))
     image_bytes = await generate_image(text)
     if not image_bytes:
         await loading.edit_text(t(lang, "ast_image_failed"), reply_markup=kb)
         return
+    await consume_image_generation(session, user)
     try:
         await loading.delete()
     except Exception:

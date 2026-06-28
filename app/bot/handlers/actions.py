@@ -81,7 +81,7 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
     if sub_id == "images":
         from app.bot.handlers.assistant import reply_with_generated_image
 
-        await reply_with_generated_image(message, user, text)
+        await reply_with_generated_image(message, user, session, text)
         await state.clear()
         return
     hint = str(data.get("ai_module_hint") or "")

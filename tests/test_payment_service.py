@@ -1,4 +1,11 @@
-from app.services.payment_service import product_label, resolve_product
+from app.core.plans import usd_to_stars
+from app.services.payment_service import (
+    build_stars_payload,
+    parse_stars_payload,
+    product_label,
+    resolve_product,
+    resolve_product_stars,
+)
 
 
 def test_resolve_product_plan():
@@ -31,3 +38,15 @@ def test_product_label_plan():
 def test_product_label_package():
     label = product_label("package", "p500", lang="ru")
     assert "500" in label
+
+
+def test_usd_to_stars():
+    assert usd_to_stars(4) == 300
+    assert usd_to_stars(9) == 700
+
+
+def test_stars_payload_roundtrip():
+    payload = build_stars_payload("plan", "premium")
+    assert parse_stars_payload(payload) == ("plan", "premium")
+    _, _, stars = resolve_product_stars("premium")
+    assert stars == 700

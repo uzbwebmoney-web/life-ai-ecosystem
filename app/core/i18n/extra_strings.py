@@ -130,7 +130,7 @@ EXTRA_RU: dict[str, str] = {
         "💎 <b>Подписка и лимиты</b>\n\n"
         "Все разделы бота доступны всем — платите только за объём.\n"
         "Цены в сумах (курс ЦБ ~12 017 so'm / $1).\n\n"
-        "🎁 Первые 7 дней — Premium бесплатно."
+        "🎁 Первые {days} дней — Premium бесплатно."
     ),
     "sub_plans_title": "💳 <b>Тарифы</b>",
     "sub_plans_hint": "Нажмите тариф для подробностей или «Оформить».",
@@ -194,21 +194,73 @@ EXTRA_RU: dict[str, str] = {
     "pay_admin_rejected_toast": "Отклонено",
     "pay_admin_pending_count": "⏳ Заявок на оплату: <b>{count}</b>",
     "pay_order_already_processed": "Заявка уже обработана.",
+    "pay_method_choose": (
+        "💳 <b>Способ оплаты</b>\n\n"
+        "{product}\n"
+        "Карта: <b>{uzs}</b>\n"
+        "Telegram Stars: <b>{stars}</b>\n\n"
+        "Выберите способ:"
+    ),
+    "pay_method_card": "💳 Перевод на карту",
+    "pay_method_stars": "⭐ Telegram Stars",
+    "pay_stars_invoice_desc": "{product} — Life AI Ecosystem",
+    "pay_admin_stars_notify": (
+        "⭐ <b>Оплата Stars</b>\n"
+        "Пользователь: {user} (<code>{telegram_id}</code>)\n"
+        "Товар: {product}\n"
+        "Сумма: <b>{stars}</b>"
+    ),
     "plan_price_free": "Бесплатно",
     "plan_price_monthly": "<b>{price}</b> / мес (~${usd})",
     "plan_free_name": "Free",
-    "plan_free_desc": "Все модули, лимиты по объёму.",
+    "plan_free_desc": "20 AI/день, 5 анализов фото, 100 записей памяти, 100 МБ.",
     "plan_basic_name": "Basic",
-    "plan_basic_desc": "Для большинства пользователей.",
+    "plan_basic_desc": "Голос, OCR, PDF, переводы, 500 AI/мес, GPT-5.4 mini (50/мес).",
     "plan_premium_name": "Premium",
-    "plan_premium_desc": "Для активных пользователей.",
+    "plan_premium_desc": "Почти всё безлимитно, семья до 5, GPT-5.4 mini, приоритет.",
     "plan_pro_name": "Pro",
-    "plan_pro_desc": "Почти без лимитов + лучшая модель.",
+    "plan_pro_desc": "Максимум для бизнеса: безлимит AI, 10 человек, 100 ГБ.",
+    "plan_student_name": "Student",
+    "plan_student_desc": "Учёба, переводы, AI, PDF, конспекты — от $2.49.",
     "plan_family_name": "Семейная",
     "plan_family_desc": "До 5 человек в одном аккаунте.",
     "plan_pkg_100": "100 AI-запросов",
     "plan_pkg_500": "500 AI-запросов",
     "plan_pkg_1000": "1000 AI-запросов",
+    "plan_pkg_img100": "🎨 100 генераций изображений",
+    "plan_pkg_photo500": "📷 500 анализов фото",
+    "plan_pkg_mem10k": "🧠 +10 000 записей памяти",
+    "plan_pkg_cloud50": "☁️ +50 ГБ облака",
+    "plan_features_title": "<b>Что включено:</b>",
+    "plan_feature_model": "AI-модель",
+    "plan_model_none": "GPT-4o mini",
+    "plan_model_limited": "GPT-4o mini + {cap} сложных/мес на {model}",
+    "plan_model_full": "{model} для AI-задач",
+    "plan_model_router": "Роутер: {top} / {advanced} / {base}",
+    "plan_model_router_short": "GPT-5.5 / GPT-5.4 mini / GPT-4o mini",
+    "plan_limit_photo_unlimited": "Анализ фото: безлимит",
+    "plan_limit_photo_monthly": "Анализ фото: {n}/мес",
+    "plan_limit_ai_unlimited": "AI: безлимит*",
+    "plan_limit_memory": "Память: {n} записей",
+    "plan_limit_memory_unlimited": "Память: безлимит",
+    "plan_limit_image_gen": "Генерация изображений: {n}/мес",
+    "plan_feature_household": "Семейный доступ: до {n} человек",
+    "plan_feature_priority_max": "Максимальный приоритет",
+    "plan_feature_student_modules": "Только: учёба, AI, PDF, конспекты",
+    "plan_feature_memory": "AI-память",
+    "sub_ai_model": "Модель: {model}",
+    "sub_photo_monthly": "Анализ фото: {used} / {limit}",
+    "sub_image_gen_monthly": "Генерация изображений: {used} / {limit}",
+    "sub_packages_ai_title": "🤖 AI-запросы:",
+    "sub_packages_addon_title": "📦 Разовые пакеты:",
+    "sub_addon_line": "• {name} — <b>{price}</b>",
+    "quota_photo_monthly": "⚠️ Лимит анализа фото {used}/{limit}. /subscription",
+    "quota_image_gen_monthly": "⚠️ Лимит генерации изображений {used}/{limit}. /subscription",
+    "quota_image_gen": "🎨 Генерация изображений — от Basic. /subscription",
+    "quota_ocr": "📄 OCR — от Basic. /subscription",
+    "quota_doc_translate": "🌐 Перевод документов — от Basic. /subscription",
+    "quota_pdf": "📎 PDF/DOCX — от Basic. /subscription",
+    "quota_student_module": "🎓 Раздел доступен от тарифа {plan}. /subscription",
     "plan_limit_ai_daily": "{n} AI-запросов в день",
     "plan_limit_ai_monthly": "{n} AI-запросов в месяц",
     "plan_limit_reminders": "До {n} напоминаний",
@@ -375,7 +427,7 @@ EXTRA_UZ: dict[str, str] = {
     "eco_src_appointment": "Uchrashuv",
     "eco_src_custom": "Eslatma",
     "sub_btn_menu": "💎 Obuna va limitlar",
-    "sub_menu_intro": "💎 <b>Obuna</b>\n\nBarcha bo'limlar ochiq — faqat hajm uchun to'lov.\n🎁 7 kun Premium bepul.",
+    "sub_menu_intro": "💎 <b>Obuna</b>\n\nBarcha bo'limlar ochiq — faqat hajm uchun to'lov.\n🎁 {days} kun Premium bepul.",
     "sub_btn_usage": "📊 Limitlarim",
     "sub_btn_plans": "💳 Tariflar",
     "sub_btn_packages": "📦 AI to'plamlari",
@@ -427,6 +479,22 @@ EXTRA_UZ: dict[str, str] = {
     "pay_admin_rejected_toast": "Rad etildi",
     "pay_admin_pending_count": "⏳ To'lov arizalari: <b>{count}</b>",
     "pay_order_already_processed": "Ariza allaqachon qayta ishlangan.",
+    "pay_method_choose": (
+        "💳 <b>To'lov usuli</b>\n\n"
+        "{product}\n"
+        "Karta: <b>{uzs}</b>\n"
+        "Telegram Stars: <b>{stars}</b>\n\n"
+        "Usulni tanlang:"
+    ),
+    "pay_method_card": "💳 Kartaga o'tkazma",
+    "pay_method_stars": "⭐ Telegram Stars",
+    "pay_stars_invoice_desc": "{product} — Life AI Ecosystem",
+    "pay_admin_stars_notify": (
+        "⭐ <b>Stars to'lovi</b>\n"
+        "Foydalanuvchi: {user} (<code>{telegram_id}</code>)\n"
+        "Mahsulot: {product}\n"
+        "Summa: <b>{stars}</b>"
+    ),
 }
 
 EXTRA_EN: dict[str, str] = {
@@ -592,7 +660,7 @@ EXTRA_EN: dict[str, str] = {
         "💎 <b>Subscription & limits</b>\n\n"
         "All modules are open — you pay for volume.\n"
         "Prices in UZS (CBU rate ~12,017 UZS / $1).\n\n"
-        "🎁 First 7 days — Premium free."
+        "🎁 First {days} days — Premium free."
     ),
     "sub_plans_title": "💳 <b>Plans</b>",
     "sub_plans_hint": "Tap a plan for details or Subscribe.",
@@ -656,6 +724,22 @@ EXTRA_EN: dict[str, str] = {
     "pay_admin_rejected_toast": "Rejected",
     "pay_admin_pending_count": "⏳ Pending payments: <b>{count}</b>",
     "pay_order_already_processed": "Order already processed.",
+    "pay_method_choose": (
+        "💳 <b>Payment method</b>\n\n"
+        "{product}\n"
+        "Card: <b>{uzs}</b>\n"
+        "Telegram Stars: <b>{stars}</b>\n\n"
+        "Choose:"
+    ),
+    "pay_method_card": "💳 Bank card transfer",
+    "pay_method_stars": "⭐ Telegram Stars",
+    "pay_stars_invoice_desc": "{product} — Life AI Ecosystem",
+    "pay_admin_stars_notify": (
+        "⭐ <b>Stars payment</b>\n"
+        "User: {user} (<code>{telegram_id}</code>)\n"
+        "Product: {product}\n"
+        "Amount: <b>{stars}</b>"
+    ),
     "plan_price_free": "Free",
     "plan_price_monthly": "<b>{price}</b> / mo (~${usd})",
     "plan_free_name": "Free",

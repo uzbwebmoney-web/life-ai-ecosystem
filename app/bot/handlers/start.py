@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot.handlers.dashboard_view import edit_dashboard, send_dashboard
 from app.bot.keyboards import dashboard_kb, help_kb, onboarding_kb, start_language_kb
 from app.core.i18n import LANG_LABELS, t
+from app.core.plans import TRIAL_DAYS, WELCOME_AI_BONUS
 from app.models.entities import User
 from app.services.life_data import complete_onboarding, mark_welcome_pending, set_user_language
 from app.services.vault_lock_service import lock_vault_on_menu_exit
@@ -74,6 +75,6 @@ async def start_begin(callback: CallbackQuery, user: User, session: AsyncSession
     lang = user.language
     await complete_onboarding(session, user)
     await callback.message.edit_text(t(lang, "onb_done"))
-    await callback.message.answer(t(lang, "sub_trial_welcome", days=7, bonus=50))
+    await callback.message.answer(t(lang, "sub_trial_welcome", days=TRIAL_DAYS, bonus=WELCOME_AI_BONUS))
     await edit_dashboard(callback, user, session)
     await callback.answer()

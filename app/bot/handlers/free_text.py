@@ -90,7 +90,7 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
     if user.active_module_id == "ai_assistant" and user.active_submodule_id == "images":
         from app.bot.handlers.assistant import reply_with_generated_image
 
-        await reply_with_generated_image(message, user, text)
+        await reply_with_generated_image(message, user, session, text)
         return
 
     if user.active_module_id and user.active_module_id in MODULE_BY_ID:

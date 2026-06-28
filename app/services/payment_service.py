@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.i18n import t
-from app.core.plans import AI_PACKAGES, PLANS, format_uzs, usd_to_uzs
+from app.core.plans import ADDON_PACKAGES, PLANS, format_stars, format_uzs, usd_to_stars, usd_to_uzs
 from app.models.entities import PaymentOrder, User
 
 
@@ -19,22 +19,79 @@ def product_label(product_type: str, product_id: str, *, lang: str) -> str:
     if product_type == "plan" and product_id in PLANS:
         plan = PLANS[product_id]  # type: ignore[index]
         return f"{plan.emoji} {t(lang, plan.name_key)}"
-    pkg = next((p for p in AI_PACKAGES if p.id == product_id), None)
+    pkg = next((p for p in ADDON_PACKAGES if p.id == product_id), None)
     if pkg:
         return t(lang, pkg.name_key)
     return product_id
 
 
-def resolve_product(product_id: str) -> tuple[str, str, int]:
+def _resolve_product_raw(product_id: str) -> tuple[str, str, float]:
     if product_id in PLANS:
         plan = PLANS[product_id]  # type: ignore[index]
         if not plan.usd_monthly:
             raise ValueError("free plan")
-        return "plan", product_id, usd_to_uzs(plan.usd_monthly)
-    pkg = next((p for p in AI_PACKAGES if p.id == product_id), None)
+        return "plan", product_id, plan.usd_monthly
+    pkg = next((p for p in ADDON_PACKAGES if p.id == product_id), None)
     if pkg:
-        return "package", product_id, usd_to_uzs(pkg.usd_price)
+        return "package", product_id, pkg.usd_price
     raise ValueError(f"unknown product {product_id}")
+
+
+def resolve_product(product_id: str) -> tuple[str, str, int]:
+    product_type, pid, usd = _resolve_product_raw(product_id)
+    return product_type, pid, usd_to_uzs(usd)
+
+
+def resolve_product_stars(product_id: str) -> tuple[str, str, int]:
+    product_type, pid, usd = _resolve_product_raw(product_id)
+    return product_type, pid, usd_to_stars(usd)
+
+
+def build_stars_payload(product_type: str, product_id: str) -> str:
+    kind = "plan" if product_type == "plan" else "pkg"
+    return f"st:{kind}:{product_id}"
+
+
+def parse_stars_payload(payload: str) -> tuple[str, str] | None:
+    parts = (payload or "").split(":")
+    if len(parts) != 3 or parts[0] != "st":
+        return None
+    product_type = "plan" if parts[1] == "plan" else "package" if parts[1] == "pkg" else None
+    if not product_type:
+        return None
+    product_id = parts[2]
+    try:
+        _resolve_product_raw(product_id)
+    except ValueError:
+        return None
+    return product_type, product_id
+
+
+async def activate_product_purchase(
+    session: AsyncSession,
+    user: User,
+    product_type: str,
+    product_id: str,
+) -> User:
+    if product_type == "plan":
+        user.plan_id = product_id
+        user.plan_expires_at = _utcnow() + timedelta(days=30)
+    elif product_type == "package":
+        pkg = next((p for p in ADDON_PACKAGES if p.id == product_id), None)
+        if pkg:
+            if pkg.kind == "ai_requests":
+                user.ai_bonus_balance = (user.ai_bonus_balance or 0) + pkg.amount
+            elif pkg.kind == "photo_analysis":
+                user.bonus_photo_analysis = (user.bonus_photo_analysis or 0) + pkg.amount
+            elif pkg.kind == "image_gen":
+                user.bonus_image_gen = (user.bonus_image_gen or 0) + pkg.amount
+            elif pkg.kind == "memory_facts":
+                user.bonus_memory_facts = (user.bonus_memory_facts or 0) + pkg.amount
+            elif pkg.kind == "storage_mb":
+                user.bonus_storage_mb = (user.bonus_storage_mb or 0) + pkg.amount
+    await session.commit()
+    await session.refresh(user)
+    return user
 
 
 async def get_open_order(session: AsyncSession, user_id: int) -> PaymentOrder | None:
@@ -137,13 +194,7 @@ async def approve_payment_order(
     if not buyer:
         return None, None
 
-    if order.product_type == "plan":
-        buyer.plan_id = order.product_id
-        buyer.plan_expires_at = _utcnow() + timedelta(days=30)
-    elif order.product_type == "package":
-        pkg = next((p for p in AI_PACKAGES if p.id == order.product_id), None)
-        if pkg:
-            buyer.ai_bonus_balance = (buyer.ai_bonus_balance or 0) + pkg.requests
+    await activate_product_purchase(session, buyer, order.product_type, order.product_id)
 
     order.status = "approved"
     order.reviewed_at = _utcnow()
@@ -239,6 +290,34 @@ async def notify_admins_payment_pending(
                     text,
                     reply_markup=admin_order_kb(order.id, lang),
                 )
+        except Exception:
+            continue
+
+
+async def notify_admins_stars_purchase(
+    bot: Bot,
+    buyer: User,
+    product_type: str,
+    product_id: str,
+    stars: int,
+    *,
+    lang: str = "ru",
+) -> None:
+    from app.core.config import settings
+
+    product = product_label(product_type, product_id, lang=lang)
+    username = f"@{buyer.username}" if buyer.username else f"id{buyer.telegram_id}"
+    text = t(
+        lang,
+        "pay_admin_stars_notify",
+        user=username,
+        telegram_id=buyer.telegram_id,
+        product=product,
+        stars=format_stars(stars),
+    )
+    for admin_tid in settings.admin_telegram_id_list:
+        try:
+            await bot.send_message(admin_tid, text)
         except Exception:
             continue
 

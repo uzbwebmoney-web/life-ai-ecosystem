@@ -22,6 +22,7 @@ from app.bot.keyboards import (
 from app.bot.keyboards_vault import vault_lock_cancel_kb, vault_lock_settings_kb
 from app.bot.keyboards_ecosystem import ecosystem_features_kb, notifications_kb
 from app.bot.states import MemoryStates, VaultLockStates
+from app.core.config import settings
 from app.core.i18n import LANG_LABELS, category_title, t
 from app.core.modules.catalog import CATEGORIES, MODULE_BY_ID
 from app.core.modules.ui_texts import module_example_text, module_hint_text
@@ -52,12 +53,18 @@ from app.services.vault_lock_service import (
     validate_password_strength,
     verify_vault_password,
 )
+from app.services.subscription_service import check_module_access
 
 router = Router()
 
 
 def _lang(user: User) -> str:
     return user.language
+
+
+def _is_admin(user: User) -> bool:
+    ids = settings.admin_telegram_id_list
+    return bool(ids) and user.telegram_id in ids
 
 
 @router.callback_query(F.data == "hub:menu")
@@ -122,6 +129,10 @@ async def open_module(callback: CallbackQuery, user: User, session: AsyncSession
     if not mod:
         await callback.answer(t(lang, "module_not_found"), show_alert=True)
         return
+    blocked = await check_module_access(session, user, module_id, lang=lang)
+    if blocked:
+        await callback.answer(blocked, show_alert=True)
+        return
     await set_active_module(session, user, module_id)
     subs = "\n".join(f"• {s.title(lang)}" for s in mod.submodules[:8])
     extra = f"\n{t(lang, 'module_more', count=len(mod.submodules) - 8)}" if len(mod.submodules) > 8 else ""
@@ -157,6 +168,10 @@ async def open_submodule(callback: CallbackQuery, user: User, session: AsyncSess
     sub = next((s for s in mod.submodules if s.id == sub_id), None)
     if not sub:
         await callback.answer(t(lang, "not_found"), show_alert=True)
+        return
+    blocked = await check_module_access(session, user, module_id, lang=lang)
+    if blocked:
+        await callback.answer(blocked, show_alert=True)
         return
     await set_active_module(session, user, module_id, submodule_id=sub_id)
     text = (
@@ -245,6 +260,7 @@ async def hub_settings(callback: CallbackQuery, user: User) -> None:
             user.voice_mode,
             lang,
             vault_locked=is_vault_protected(user),
+            is_admin=_is_admin(user),
         ),
     )
     await callback.answer()
@@ -285,6 +301,7 @@ async def settings_toggle_memory(callback: CallbackQuery, user: User, session: A
             user.voice_mode,
             lang,
             vault_locked=is_vault_protected(user),
+            is_admin=_is_admin(user),
         )
     )
     await callback.answer(t(lang, "memory_on_toast") if enabled else t(lang, "memory_off_toast"))
@@ -309,6 +326,7 @@ async def settings_toggle_voice(callback: CallbackQuery, user: User, session: As
                 enabled,
                 lang,
                 vault_locked=is_vault_protected(user),
+                is_admin=_is_admin(user),
             )
         )
 

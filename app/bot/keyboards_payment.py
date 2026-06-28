@@ -14,6 +14,29 @@ def payment_cancel_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     )
 
 
+def payment_method_kb(product_id: str, lang: str = "ru", *, card_available: bool = True) -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = [
+        [
+            InlineKeyboardButton(
+                text=t(lang, "pay_method_stars"),
+                callback_data=f"sub:pay:stars:{product_id}",
+            )
+        ],
+    ]
+    if card_available:
+        rows.insert(
+            0,
+            [
+                InlineKeyboardButton(
+                    text=t(lang, "pay_method_card"),
+                    callback_data=f"sub:pay:card:{product_id}",
+                )
+            ],
+        )
+    rows.append([InlineKeyboardButton(text=t(lang, "sub_btn_back"), callback_data="sub:menu")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 def admin_order_kb(order_id: int, lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
