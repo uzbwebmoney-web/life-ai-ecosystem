@@ -21,8 +21,9 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 Память AI · 🔍 Поиск · 📊 Панель · 🔔 Напоминания"
         ),
         "choose_language": "🌐 Выберите язык интерфейса:",
+        "start_pick_language": "👋 <b>Добро пожаловать в Life AI!</b>\n\n🌐 Выберите язык:",
         "language_changed": "✅ Язык изменён на {label}",
-        "main_menu": "🏠 <b>Главное меню</b>\n\n15 модулей — выберите раздел жизни:",
+        "main_menu": "🧠 <b>Life AI</b>\n\nВыберите модуль:",
         "btn_dashboard": "📊 Панель управления",
         "btn_ai_assistant": "🤖 AI-ассистент",
         "btn_search": "🔍 Поиск по жизни",
@@ -712,8 +713,9 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 AI xotira · 🔍 Qidiruv · 📊 Panel · 🔔 Eslatmalar"
         ),
         "choose_language": "🌐 Interfeys tilini tanlang:",
+        "start_pick_language": "👋 <b>Life AI ga xush kelibsiz!</b>\n\n🌐 Tilni tanlang:",
         "language_changed": "✅ Til o'zgartirildi: {label}",
-        "main_menu": "🏠 <b>Asosiy menyu</b>\n\n15 ta modul — hayot bo'limini tanlang:",
+        "main_menu": "🧠 <b>Life AI</b>\n\nModulni tanlang:",
         "btn_dashboard": "📊 Boshqaruv paneli",
         "btn_ai_assistant": "🤖 AI yordamchi",
         "btn_search": "🔍 Hayot bo'yicha qidiruv",
@@ -1394,8 +1396,9 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 AI memory · 🔍 Search · 📊 Dashboard · 🔔 Reminders"
         ),
         "choose_language": "🌐 Choose interface language:",
+        "start_pick_language": "👋 <b>Welcome to Life AI!</b>\n\n🌐 Choose your language:",
         "language_changed": "✅ Language changed to {label}",
-        "main_menu": "🏠 <b>Main menu</b>\n\n15 modules — pick a life area:",
+        "main_menu": "🧠 <b>Life AI</b>\n\nPick a module:",
         "btn_dashboard": "📊 Dashboard",
         "btn_ai_assistant": "🤖 AI assistant",
         "btn_search": "🔍 Life search",

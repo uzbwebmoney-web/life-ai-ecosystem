@@ -3,8 +3,39 @@ from __future__ import annotations
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.core.i18n import LANG_LABELS, SUPPORTED_LANGUAGES, t
-from app.core.modules.catalog import CATEGORIES, MODULE_BY_ID, ModuleDef
+from app.core.modules.catalog import CATEGORIES, MODULES, MODULE_BY_ID, ModuleDef
 from app.models.entities import FamilyProfile
+
+
+def start_language_kb() -> InlineKeyboardMarkup:
+    rows = [
+        [InlineKeyboardButton(text=LANG_LABELS[code], callback_data=f"start:lang:{code}")]
+        for code in SUPPORTED_LANGUAGES
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def modules_menu_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = []
+    pair: list[InlineKeyboardButton] = []
+    for mod in MODULES:
+        pair.append(
+            InlineKeyboardButton(
+                text=f"{mod.emoji} {mod.title(lang)}",
+                callback_data=f"mod:{mod.id}",
+            )
+        )
+        if len(pair) == 2:
+            rows.append(pair)
+            pair = []
+    if pair:
+        rows.append(pair)
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def main_menu_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    return modules_menu_kb(lang)
 
 
 def language_kb(lang: str = "ru") -> InlineKeyboardMarkup:
@@ -16,29 +47,6 @@ def language_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def main_menu_kb(lang: str = "ru") -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=t(lang, "btn_dashboard"), callback_data="hub:dashboard")],
-            [
-                InlineKeyboardButton(text=t(lang, "btn_ai_assistant"), callback_data="mod:ai_assistant"),
-                InlineKeyboardButton(text=t(lang, "btn_search"), callback_data="hub:search"),
-            ],
-            [
-                InlineKeyboardButton(text=t(lang, "btn_calendar"), callback_data="mod:organizer"),
-                InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications"),
-            ],
-            [
-                InlineKeyboardButton(text=t(lang, "btn_ecosystem"), callback_data="hub:ecosystem"),
-                InlineKeyboardButton(text=t(lang, "btn_family"), callback_data="hub:family"),
-            ],
-            [InlineKeyboardButton(text=t(lang, "btn_voice"), callback_data="set:voice")],
-            [InlineKeyboardButton(text=t(lang, "btn_all_modules"), callback_data="hub:categories")],
-            [InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings")],
-        ]
-    )
-
-
 def settings_kb(memory_on: bool, voice_on: bool, lang: str = "ru") -> InlineKeyboardMarkup:
     mem_label = t(lang, "btn_memory_on") if memory_on else t(lang, "btn_memory_off")
     voice_label = t(lang, "btn_voice_on") if voice_on else t(lang, "btn_voice_off")
@@ -46,6 +54,10 @@ def settings_kb(memory_on: bool, voice_on: bool, lang: str = "ru") -> InlineKeyb
         inline_keyboard=[
             [InlineKeyboardButton(text=mem_label, callback_data="set:memory")],
             [InlineKeyboardButton(text=voice_label, callback_data="set:voice")],
+            [
+                InlineKeyboardButton(text=t(lang, "btn_search"), callback_data="hub:search"),
+                InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications"),
+            ],
             [InlineKeyboardButton(text=t(lang, "btn_language"), callback_data="hub:language")],
             [InlineKeyboardButton(text=t(lang, "btn_family_profiles"), callback_data="hub:family")],
             [InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")],
