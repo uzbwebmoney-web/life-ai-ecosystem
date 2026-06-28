@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards import back_menu_kb
+from app.bot.keyboards import back_menu_kb, record_saved_kb
 from app.bot.states import AiChatStates, MemoryStates, RecordStates, ReminderStates
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
 from app.models.entities import User
 from app.services.ai_service import ask_ai
+from app.services.date_parse import parse_datetime_flexible
 from app.services.export_service import build_user_export
 from app.services.intent_router import module_hint
 from app.services.life_data import add_memory, add_record, add_reminder, search_memory, set_active_module
@@ -159,7 +158,7 @@ async def _save_record(
         profile_id=user.active_profile_id,
     )
 
-    await message.answer(t(lang, "record_saved"), reply_markup=back_menu_kb(lang))
+    await message.answer(t(lang, "record_saved"), reply_markup=record_saved_kb(lang))
     await state.clear()
 
 
@@ -193,7 +192,9 @@ async def remind_parse(message: Message, state: FSMContext, user: User, session:
     if "|" in raw:
         title, dt_raw = [p.strip() for p in raw.split("|", 1)]
         try:
-            due = datetime.strptime(dt_raw, "%Y-%m-%d %H:%M")
+            due = parse_datetime_flexible(dt_raw)
+            if due is None:
+                raise ValueError
         except ValueError:
             await message.answer(t(lang, "remind_date_error"))
             return
@@ -214,9 +215,8 @@ async def remind_datetime(message: Message, state: FSMContext, user: User, sessi
     lang = user.language
     data = await state.get_data()
     title = str(data.get("remind_title") or t(lang, "remind_default_title"))
-    try:
-        due = datetime.strptime((message.text or "").strip(), "%Y-%m-%d %H:%M")
-    except ValueError:
+    due = parse_datetime_flexible((message.text or "").strip())
+    if due is None:
         await message.answer(t(lang, "remind_date_error"))
         return
     await add_reminder(session, user_id=user.id, title=title, due_at=due, profile_id=user.active_profile_id)

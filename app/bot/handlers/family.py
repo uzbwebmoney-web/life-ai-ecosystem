@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards import family_kb
+from app.bot.keyboards import family_kb, family_relation_kb
 from app.bot.states import FamilyStates
 from app.core.i18n import t
 from app.models.entities import User
@@ -58,7 +58,20 @@ async def family_add_name(message: Message, state: FSMContext, user: User) -> No
         return
     await state.update_data(fam_name=name)
     await state.set_state(FamilyStates.waiting_relation)
-    await message.answer(t(lang, "family_add_relation"))
+    await message.answer(t(lang, "family_add_relation"), reply_markup=family_relation_kb(lang))
+
+
+@router.callback_query(F.data.startswith("fam:rel:"))
+async def family_add_relation_pick(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    relation = (callback.data or "").split(":")[2]
+    data = await state.get_data()
+    name = str(data.get("fam_name") or "Profile")
+    await add_family_profile(session, user.id, name, relation)
+    profiles = await list_family_profiles(session, user.id)
+    await callback.message.edit_text(t(lang, "family_added", name=name), reply_markup=family_kb(profiles, user.active_profile_id, lang))
+    await state.clear()
+    await callback.answer()
 
 
 @router.message(FamilyStates.waiting_relation)

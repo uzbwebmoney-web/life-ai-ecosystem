@@ -119,6 +119,12 @@ async def toggle_voice_mode(session: AsyncSession, user: User) -> bool:
 
 async def complete_onboarding(session: AsyncSession, user: User) -> None:
     user.onboarding_done = True
+    user.welcome_pending = False
+    await session.commit()
+
+
+async def mark_welcome_pending(session: AsyncSession, user: User) -> None:
+    user.welcome_pending = True
     await session.commit()
 
 

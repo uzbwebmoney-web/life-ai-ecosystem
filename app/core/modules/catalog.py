@@ -96,7 +96,7 @@ MODULES: tuple[ModuleDef, ...] = (
 
         (
 
-            _sub("consultant", "AI-консультант", "AI maslahatchi", "AI consultant"),
+            _sub("consultant", "Задать вопрос", "Savol berish", "Ask a question"),
 
             _sub("symptoms", "Симптомы", "Alomatlar", "Symptoms"),
 
@@ -174,7 +174,7 @@ MODULES: tuple[ModuleDef, ...] = (
 
         (
 
-            _sub("consultant", "AI-консультант", "AI maslahatchi", "AI consultant"),
+            _sub("consultant", "Задать вопрос", "Savol berish", "Ask a question"),
 
             _sub("plans", "Бизнес-планы", "Biznes-rejalar", "Business plans"),
 

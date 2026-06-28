@@ -23,7 +23,16 @@ _STRINGS: dict[str, dict[str, str]] = {
         "choose_language": "🌐 Выберите язык интерфейса:",
         "start_pick_language": "👋 <b>Добро пожаловать в Life AI!</b>\n\n🌐 Выберите язык:",
         "language_changed": "✅ Язык изменён на {label}",
-        "main_menu": "🧠 <b>Life AI</b>\n\nВыберите модуль:",
+        "main_menu": (
+            "🧠 <b>Life AI</b>\n\n"
+            "⭐ <b>Частые модули</b> — ниже.\n"
+            "📂 Остальные — «Все модули по категориям».\n\n"
+            "💡 Откройте модуль и <b>просто напишите вопрос</b> — кнопка не обязательна."
+        ),
+        "btn_all_by_category": "📂 Все модули по категориям",
+        "btn_open_menu": "🚀 Открыть меню",
+        "btn_help": "❓ Помощь",
+        "btn_search_record": "🔍 Найти запись",
         "btn_dashboard": "📊 Панель управления",
         "btn_ai_assistant": "🤖 AI-ассистент",
         "btn_search": "🔍 Поиск по жизни",
@@ -33,12 +42,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_all_modules": "📚 Все 14 модулей",
         "btn_settings": "⚙️ Настройки",
         "btn_language": "🌐 Язык",
-        "btn_back_menu": "⬅️ Главное меню",
+        "btn_back_menu": "🏠 К списку модулей",
         "btn_back_categories": "⬅️ Категории",
         "btn_back_module": "⬅️ К модулю",
-        "btn_ask_ai": "🤖 Спросить AI",
-        "btn_add_record": "➕ Запись",
-        "btn_add_record_full": "➕ Добавить запись",
+        "btn_ask_ai": "💬 Задать вопрос",
+        "btn_add_record": "➕ Сохранить заметку",
+        "btn_add_record_full": "➕ Сохранить заметку",
         "btn_memory_on": "🧠 Память: ✅",
         "btn_memory_off": "🧠 Память: ❌",
         "btn_voice_on": "🎤 Голос: ✅",
@@ -51,7 +60,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "settings_memory": "🧠 Память AI: {status}",
         "settings_voice": "🎤 Голосовой режим: {status}",
         "settings_lang": "🌐 Язык: {label}",
-        "settings_commands": "Команды:\n/menu · /ask · /memory · /remind · /credit · /lang",
+        "settings_commands": "Команда /help — краткая инструкция.",
+        "settings_tip": "💡 <b>Память AI</b> — бот запоминает важное из диалогов.\n🎤 <b>Голос</b> — ответы дублируются голосом.",
         "settings_extra": "Отправьте 🎤 голос или 📷 фото — распознавание автоматически.",
         "memory_on_toast": "Память включена",
         "memory_off_toast": "Память выключена",
@@ -76,8 +86,9 @@ _STRINGS: dict[str, dict[str, str]] = {
         "not_found": "Не найдено",
         "module_sections": "Разделы:",
         "module_more": "… и ещё {count}",
-        "module_ask_here": "💬 <b>Напишите вопрос прямо сюда</b> — AI ответит в контексте этого модуля.",
-        "module_or_pick": "Или выберите раздел ниже.",
+        "module_ask_here": "💬 <b>Напишите вопрос прямо сюда</b> — ответ будет по теме модуля.",
+        "module_example_label": "Пример:",
+        "module_or_pick": "Или выберите раздел или кнопку ниже.",
         "submodule_ask": "💬 <b>Задайте вопрос по теме «{sub}»</b> — ответ будет только по этому разделу.",
         "submodule_also": "Также можно:\n• ➕ сохранить запись\n• 🔍 найти через «Поиск по жизни»",
         "search_title": "🔍 <b>Поиск по жизни</b>",
@@ -94,7 +105,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_not_found": "Профиль не найден",
         "family_add_name": "👤 Введите имя профиля (например: Мама, Сын, Жена):",
         "family_name_short": "Имя слишком короткое.",
-        "family_add_relation": "Укажите связь: self / spouse / child / parent / other",
+        "family_add_relation": "Кто этот человек?",
+        "family_rel_self": "Я",
+        "family_rel_spouse": "Супруг(а)",
+        "family_rel_child": "Ребёнок",
+        "family_rel_parent": "Родитель",
+        "family_rel_other": "Другое",
         "family_added": "✅ Профиль «{name}» добавлен.",
         "ai_thinking": "⏳ Думаю…",
         "ai_module_thinking": "{emoji} Думаю в модуле «{module}»…",
@@ -104,15 +120,19 @@ _STRINGS: dict[str, dict[str, str]] = {
         "record_new": "➕ <b>Новая запись</b> ({module})",
         "record_send": "Отправьте текст записи.",
         "record_send_finance": "Отправьте текст записи.\nПосле этого бот спросит сумму.",
-        "record_amount": "💰 Введите сумму (число) или 0 чтобы пропустить:",
+        "record_amount": "💰 Сколько потратили? (число, или 0 — без суммы):",
         "record_amount_error": "Введите число, например 150000",
-        "record_saved": "✅ Запись сохранена. Найти: «🔍 Поиск по жизни»",
+        "record_saved": "✅ Запись сохранена.",
         "memory_cmd": "🧠 Отправьте факт для сохранения в память AI:",
         "memory_saved": "✅ Сохранено в память AI.",
-        "remind_format": "🔔 Формат:\n<code>Заголовок | 2026-06-25 09:00</code>\n\nИли отправьте только заголовок — спросим дату отдельно.",
-        "remind_date_error": "Формат даты: YYYY-MM-DD HH:MM",
+        "remind_format": (
+            "🔔 Формат:\n"
+            "<code>Заголовок | 25.06.2026 09:00</code>\n\n"
+            "Или отправьте только заголовок — спросим дату отдельно."
+        ),
+        "remind_date_error": "Формат даты: ДД.ММ.ГГГГ ЧЧ:ММ (например 25.06.2026 09:00)",
         "remind_created": "✅ Напоминание: {title} — {when}",
-        "remind_datetime": "📅 Введите дату и время: <code>2026-06-25 09:00</code>",
+        "remind_datetime": "📅 Введите дату и время: <code>25.06.2026 09:00</code>",
         "remind_default_title": "Напоминание",
         "free_text_pick_module": "<i>Для точного ответа выберите модуль: Здоровье, Авто, Юридическая помощь и т.д.</i>",
         "weather_title": "🌿 <b>Экология / погода</b>",
@@ -687,11 +707,52 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ntf_add_only_data": "Добавление доступно для подписок и виз.",
         "eco_src_subscription": "Подписка",
         "eco_src_visa": "Виза",
+        "help_text": (
+            "❓ <b>Как пользоваться Life AI</b>\n\n"
+            "1️⃣ <b>Главное меню</b> — /menu или 🏠 «К списку модулей»\n"
+            "2️⃣ <b>Выберите модуль</b> — Здоровье, Финансы, Авто и др.\n"
+            "3️⃣ <b>Задайте вопрос</b> — просто напишите текст (кнопка не обязательна)\n"
+            "4️⃣ <b>Сохранить заметку</b> — кнопка ➕ в модуле\n"
+            "5️⃣ <b>Найти запись</b> — ⚙️ Настройки → 🔍 Поиск\n\n"
+            "⭐ Частые модули на главном экране, остальные — по категориям.\n"
+            "🔔 Напоминания: /remind или модуль «Органайзер»"
+        ),
+        "mod_hint_health": "Симптомы, анализы, лекарства, визиты к врачу и мед. документы.",
+        "mod_example_health": "«что значит повышенный гемоглобин»",
+        "mod_hint_car": "ТО, масло, ошибки на панели, страховка и расходы на авто.",
+        "mod_example_car": "«когда менять масло на 100 000 км»",
+        "mod_hint_finance": "Доходы, расходы, бюджет, цели и оплата счетов.",
+        "mod_example_finance": "«как составить семейный бюджет»",
+        "mod_hint_business": "Бизнес-планы, реклама, договоры, клиенты и продажи.",
+        "mod_example_business": "«план открытия кофейни»",
+        "mod_hint_legal": "Юридические вопросы, документы, заявления и законы.",
+        "mod_example_legal": "«какие документы нужны для аренды квартиры»",
+        "mod_hint_travel": "Маршруты, визы, бюджет поездки и чек-лист вещей.",
+        "mod_example_travel": "«маршрут на 5 дней в Стамбул»",
+        "mod_hint_home": "Коммуналка, ремонт, покупки для дома и инвентарь.",
+        "mod_example_home": "«чек-лист перед ремонтом ванной»",
+        "mod_hint_shopping": "Сравнение товаров, характеристики и советы по выбору.",
+        "mod_example_shopping": "«что лучше — iPhone или Samsung для фото»",
+        "mod_hint_education": "Объяснение тем, экзамены, языки и домашние задания.",
+        "mod_example_education": "«объясни теорему Пифагора простыми словами»",
+        "mod_hint_nutrition": "Рацион, калории, рецепты и список продуктов.",
+        "mod_example_nutrition": "«меню на 1800 ккал без глютена»",
+        "mod_hint_fitness": "Планы тренировок и отслеживание прогресса.",
+        "mod_example_fitness": "«программа на 3 дня для дома без тренажёров»",
+        "mod_hint_organizer": "Задачи, календарь, напоминания, встречи и заметки.",
+        "mod_example_organizer": "«напомни оплатить интернет 1 числа»",
+        "mod_hint_ai_assistant": "Любые вопросы, переводы, тексты, фото и документы.",
+        "mod_example_ai_assistant": "«переведи на английский: доброе утро»",
+        "mod_hint_vault": "Документы, паспорт, полисы, гарантии и чеки.",
+        "mod_example_vault": "«куда сохранить скан паспорта»",
         "onb_welcome": (
             "👋 <b>Добро пожаловать в Life AI!</b>\n\n"
-            "14 модулей для жизни: здоровье, финансы, авто, право и другое.\n"
-            "Выберите модуль → задайте вопрос AI или сохраните запись.\n\n"
-            "Нажмите «Начать», чтобы открыть меню."
+            "<b>Как пользоваться:</b>\n"
+            "1️⃣ Выберите модуль (Здоровье, Финансы, Авто…)\n"
+            "2️⃣ Напишите вопрос текстом — AI ответит по теме\n"
+            "3️⃣ «Сохранить заметку» — записать анализ, расход, напоминание\n\n"
+            "🔍 Поиск и ⚙️ Настройки — внизу главного экрана.\n"
+            "❓ Справка: /help"
         ),
         "onb_start_btn": "🚀 Начать",
         "onb_done": "✅ Готово! Можно пользоваться ботом.",
@@ -716,7 +777,16 @@ _STRINGS: dict[str, dict[str, str]] = {
         "choose_language": "🌐 Interfeys tilini tanlang:",
         "start_pick_language": "👋 <b>Life AI ga xush kelibsiz!</b>\n\n🌐 Tilni tanlang:",
         "language_changed": "✅ Til o'zgartirildi: {label}",
-        "main_menu": "🧠 <b>Life AI</b>\n\nModulni tanlang:",
+        "main_menu": (
+            "🧠 <b>Life AI</b>\n\n"
+            "⭐ <b>Tez-tez modullar</b> — quyida.\n"
+            "📂 Qolganlari — «Barcha modullar».\n\n"
+            "💡 Modulni oching va <b>savol yozing</b> — tugma shart emas."
+        ),
+        "btn_all_by_category": "📂 Barcha modullar",
+        "btn_open_menu": "🚀 Menyuni ochish",
+        "btn_help": "❓ Yordam",
+        "btn_search_record": "🔍 Yozuvni topish",
         "btn_dashboard": "📊 Boshqaruv paneli",
         "btn_ai_assistant": "🤖 AI yordamchi",
         "btn_search": "🔍 Hayot bo'yicha qidiruv",
@@ -726,12 +796,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_all_modules": "📚 Barcha 14 modul",
         "btn_settings": "⚙️ Sozlamalar",
         "btn_language": "🌐 Til",
-        "btn_back_menu": "⬅️ Asosiy menyu",
+        "btn_back_menu": "🏠 Modullar ro'yxati",
         "btn_back_categories": "⬅️ Kategoriyalar",
         "btn_back_module": "⬅️ Modulga",
-        "btn_ask_ai": "🤖 AI dan so'rash",
-        "btn_add_record": "➕ Yozuv",
-        "btn_add_record_full": "➕ Yozuv qo'shish",
+        "btn_ask_ai": "💬 Savol berish",
+        "btn_add_record": "➕ Eslatma saqlash",
+        "btn_add_record_full": "➕ Eslatma saqlash",
         "btn_memory_on": "🧠 Xotira: ✅",
         "btn_memory_off": "🧠 Xotira: ❌",
         "btn_voice_on": "🎤 Ovoz: ✅",
@@ -744,7 +814,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "settings_memory": "🧠 AI xotira: {status}",
         "settings_voice": "🎤 Ovozli rejim: {status}",
         "settings_lang": "🌐 Til: {label}",
-        "settings_commands": "Buyruqlar:\n/menu · /ask · /memory · /remind · /credit · /lang",
+        "settings_commands": "/help — qisqa yo'riqnoma.",
+        "settings_tip": "💡 <b>AI xotira</b> — muhim narsalarni eslab qoladi.\n🎤 <b>Ovoz</b> — javoblar ovozda ham keladi.",
         "settings_extra": "🎤 ovoz yoki 📷 rasm yuboring — avtomatik taniladi.",
         "memory_on_toast": "Xotira yoqildi",
         "memory_off_toast": "Xotira o'chirildi",
@@ -769,8 +840,9 @@ _STRINGS: dict[str, dict[str, str]] = {
         "not_found": "Topilmadi",
         "module_sections": "Bo'limlar:",
         "module_more": "… yana {count} ta",
-        "module_ask_here": "💬 <b>Savolni shu yerga yozing</b> — AI shu modul kontekstida javob beradi.",
-        "module_or_pick": "Yoki quyidan bo'limni tanlang.",
+        "module_ask_here": "💬 <b>Savolni shu yerga yozing</b> — javob shu modul bo'yicha bo'ladi.",
+        "module_example_label": "Misol:",
+        "module_or_pick": "Yoki bo'lim yoki tugmani tanlang.",
         "submodule_ask": "💬 <b>«{sub}» mavzusida savol bering</b> — javob faqat shu bo'lim bo'yicha.",
         "submodule_also": "Shuningdek:\n• ➕ yozuv saqlash\n• 🔍 «Hayot bo'yicha qidiruv» orqali topish",
         "search_title": "🔍 <b>Hayot bo'yicha qidiruv</b>",
@@ -787,7 +859,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_not_found": "Profil topilmadi",
         "family_add_name": "👤 Profil ismini kiriting (masalan: Ona, O'g'il, Xotin):",
         "family_name_short": "Ism juda qisqa.",
-        "family_add_relation": "Qarindoshlik: self / spouse / child / parent / other",
+        "family_add_relation": "Bu kimsa?",
+        "family_rel_self": "Men",
+        "family_rel_spouse": "Turmush o'rtoq",
+        "family_rel_child": "Farzand",
+        "family_rel_parent": "Ota-ona",
+        "family_rel_other": "Boshqa",
         "family_added": "✅ «{name}» profili qo'shildi.",
         "ai_thinking": "⏳ O'ylayapman…",
         "ai_module_thinking": "{emoji} «{module}» modulida o'ylayapman…",
@@ -797,15 +874,19 @@ _STRINGS: dict[str, dict[str, str]] = {
         "record_new": "➕ <b>Yangi yozuv</b> ({module})",
         "record_send": "Yozuv matnini yuboring.",
         "record_send_finance": "Yozuv matnini yuboring.\nKeyin summa so'raladi.",
-        "record_amount": "💰 Summani kiriting (raqam) yoki 0 — o'tkazib yuborish:",
+        "record_amount": "💰 Qancha sarfladingiz? (raqam, yoki 0 — sumsiz):",
         "record_amount_error": "Raqam kiriting, masalan 150000",
-        "record_saved": "✅ Yozuv saqlandi. Topish: «🔍 Hayot bo'yicha qidiruv»",
+        "record_saved": "✅ Yozuv saqlandi.",
         "memory_cmd": "🧠 AI xotirasiga saqlash uchun fakt yuboring:",
         "memory_saved": "✅ AI xotirasiga saqlandi.",
-        "remind_format": "🔔 Format:\n<code>Sarlavha | 2026-06-25 09:00</code>\n\nYoki faqat sarlavha — sanani alohida so'raymiz.",
-        "remind_date_error": "Sana formati: YYYY-MM-DD HH:MM",
+        "remind_format": (
+            "🔔 Format:\n"
+            "<code>Sarlavha | 25.06.2026 09:00</code>\n\n"
+            "Yoki faqat sarlavha — sanani alohida so'raymiz."
+        ),
+        "remind_date_error": "Sana: KK.OO.YYYY SS:MM (masalan 25.06.2026 09:00)",
         "remind_created": "✅ Eslatma: {title} — {when}",
-        "remind_datetime": "📅 Sana va vaqt: <code>2026-06-25 09:00</code>",
+        "remind_datetime": "📅 Sana va vaqt: <code>25.06.2026 09:00</code>",
         "remind_default_title": "Eslatma",
         "free_text_pick_module": "<i>Aniq javob uchun modul tanlang: Salomatlik, Avto, Yuridik yordam va hokazo.</i>",
         "weather_title": "🌿 <b>Ekologiya / ob-havo</b>",
@@ -1376,9 +1457,55 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ntf_add_only_data": "Faqat obuna va viza uchun qo'shish.",
         "eco_src_subscription": "Obuna",
         "eco_src_visa": "Viza",
-        "onb_welcome": "👋 <b>Life AI ga xush kelibsiz!</b>\n\n14 ta modul. «Boshlash» tugmasini bosing.",
+        "eco_src_visa": "Viza",
+        "help_text": (
+            "❓ <b>Life AI dan qanday foydalanish</b>\n\n"
+            "1️⃣ <b>Asosiy menyu</b> — /menu yoki 🏠 «Modullar ro'yxati»\n"
+            "2️⃣ <b>Modul tanlang</b> — Salomatlik, Moliya, Avto…\n"
+            "3️⃣ <b>Savol bering</b> — matn yozing (tugma shart emas)\n"
+            "4️⃣ <b>Eslatma saqlash</b> — ➕ tugmasi\n"
+            "5️⃣ <b>Topish</b> — ⚙️ Sozlamalar → 🔍 Qidiruv\n\n"
+            "⭐ Tez modullar bosh ekranda, qolganlari kategoriyalar bo'yicha."
+        ),
+        "mod_hint_health": "Alomatlar, tahlillar, dorilar, shifokor tashriflari.",
+        "mod_example_health": "«gemoglobin yuqori bo'lsa nima degani»",
+        "mod_hint_car": "TO, yog', panel xatolari, sug'urta va xarajatlar.",
+        "mod_example_car": "«100 ming km da yog'ni qachon almashtirish»",
+        "mod_hint_finance": "Daromad, xarajat, byudjet va maqsadlar.",
+        "mod_example_finance": "«oilaviy byudjet qanday tuzish»",
+        "mod_hint_business": "Biznes-rejalar, reklama, shartnomalar va savdo.",
+        "mod_example_business": "«qahvaxona ochish rejasi»",
+        "mod_hint_legal": "Huquqiy savollar, hujjatlar va arizalar.",
+        "mod_example_legal": "«ijara uchun qanday hujjatlar kerak»",
+        "mod_hint_travel": "Marshrutlar, vizalar va sayohat byudjeti.",
+        "mod_example_travel": "«Istanbulga 5 kunlik marshrut»",
+        "mod_hint_home": "Kommunal, ta'mirlash va uy xaridlari.",
+        "mod_example_home": "«hammom ta'miridan oldin ro'yxat»",
+        "mod_hint_shopping": "Mahsulotlarni solishtirish va tanlov maslahati.",
+        "mod_example_shopping": "«foto uchun iPhone yoki Samsung»",
+        "mod_hint_education": "Mavzular, imtihonlar va uy vazifasi.",
+        "mod_example_education": "«Pifagor teoremasini oddiy qilib tushuntir»",
+        "mod_hint_nutrition": "Ratsion, kaloriya va retseptlar.",
+        "mod_example_nutrition": "«1800 kkal glutensiz menyu»",
+        "mod_hint_fitness": "Mashq rejasi va progress.",
+        "mod_example_fitness": "«uyda 3 kunlik dastur»",
+        "mod_hint_organizer": "Vazifalar, taqvim va eslatmalar.",
+        "mod_example_organizer": "«internet to'lovini 1-sanada eslat»",
+        "mod_hint_ai_assistant": "Har qanday savol, tarjima va matnlar.",
+        "mod_example_ai_assistant": "«inglizchaga tarjima: xayrli tong»",
+        "mod_hint_vault": "Hujjatlar, pasport, polislar va cheklar.",
+        "mod_example_vault": "«pasport skanini qayerga saqlash»",
+        "onb_welcome": (
+            "👋 <b>Life AI ga xush kelibsiz!</b>\n\n"
+            "<b>Qanday foydalanish:</b>\n"
+            "1️⃣ Modul tanlang (Salomatlik, Moliya, Avto…)\n"
+            "2️⃣ Savol yozing — AI javob beradi\n"
+            "3️⃣ «Eslatma saqlash» — tahlil, xarajat, eslatma\n\n"
+            "🔍 Qidiruv va ⚙️ Sozlamalar — bosh ekranda.\n"
+            "❓ /help"
+        ),
         "onb_start_btn": "🚀 Boshlash",
-        "onb_done": "✅ Tayyor!",
+        "onb_done": "✅ Tayyor! Foydalanish mumkin.",
         "export_done": "📦 Ma'lumotlaringiz eksporti (JSON).",
         "cmd_expense_format": "Format: /expense Nomi | 50000",
         "cmd_expense_saved": "✅ Xarajat «{title}» — {amount} UZS",
@@ -1400,7 +1527,16 @@ _STRINGS: dict[str, dict[str, str]] = {
         "choose_language": "🌐 Choose interface language:",
         "start_pick_language": "👋 <b>Welcome to Life AI!</b>\n\n🌐 Choose your language:",
         "language_changed": "✅ Language changed to {label}",
-        "main_menu": "🧠 <b>Life AI</b>\n\nPick a module:",
+        "main_menu": (
+            "🧠 <b>Life AI</b>\n\n"
+            "⭐ <b>Popular modules</b> — below.\n"
+            "📂 More — «All modules by category».\n\n"
+            "💡 Open a module and <b>type your question</b> — no button required."
+        ),
+        "btn_all_by_category": "📂 All modules by category",
+        "btn_open_menu": "🚀 Open menu",
+        "btn_help": "❓ Help",
+        "btn_search_record": "🔍 Find record",
         "btn_dashboard": "📊 Dashboard",
         "btn_ai_assistant": "🤖 AI assistant",
         "btn_search": "🔍 Life search",
@@ -1410,12 +1546,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_all_modules": "📚 All 14 modules",
         "btn_settings": "⚙️ Settings",
         "btn_language": "🌐 Language",
-        "btn_back_menu": "⬅️ Main menu",
+        "btn_back_menu": "🏠 Back to modules",
         "btn_back_categories": "⬅️ Categories",
         "btn_back_module": "⬅️ Back to module",
-        "btn_ask_ai": "🤖 Ask AI",
-        "btn_add_record": "➕ Record",
-        "btn_add_record_full": "➕ Add record",
+        "btn_ask_ai": "💬 Ask a question",
+        "btn_add_record": "➕ Save a note",
+        "btn_add_record_full": "➕ Save a note",
         "btn_memory_on": "🧠 Memory: ✅",
         "btn_memory_off": "🧠 Memory: ❌",
         "btn_voice_on": "🎤 Voice: ✅",
@@ -1428,7 +1564,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "settings_memory": "🧠 AI memory: {status}",
         "settings_voice": "🎤 Voice mode: {status}",
         "settings_lang": "🌐 Language: {label}",
-        "settings_commands": "Commands:\n/menu · /ask · /memory · /remind · /credit · /lang",
+        "settings_commands": "/help — quick guide.",
+        "settings_tip": "💡 <b>AI memory</b> — remembers important facts.\n🎤 <b>Voice</b> — replies are also sent as voice.",
         "settings_extra": "Send 🎤 voice or 📷 photo — recognition is automatic.",
         "memory_on_toast": "Memory enabled",
         "memory_off_toast": "Memory disabled",
@@ -1453,8 +1590,9 @@ _STRINGS: dict[str, dict[str, str]] = {
         "not_found": "Not found",
         "module_sections": "Sections:",
         "module_more": "… and {count} more",
-        "module_ask_here": "💬 <b>Type your question here</b> — AI will answer in this module's context.",
-        "module_or_pick": "Or pick a section below.",
+        "module_ask_here": "💬 <b>Type your question here</b> — answers stay on this topic.",
+        "module_example_label": "Example:",
+        "module_or_pick": "Or pick a section or button below.",
         "submodule_ask": "💬 <b>Ask about «{sub}»</b> — answers stay in this section only.",
         "submodule_also": "You can also:\n• ➕ save a record\n• 🔍 search via «Life search»",
         "search_title": "🔍 <b>Life search</b>",
@@ -1471,7 +1609,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_not_found": "Profile not found",
         "family_add_name": "👤 Enter profile name (e.g. Mom, Son, Wife):",
         "family_name_short": "Name is too short.",
-        "family_add_relation": "Relation: self / spouse / child / parent / other",
+        "family_add_relation": "Who is this person?",
+        "family_rel_self": "Me",
+        "family_rel_spouse": "Spouse",
+        "family_rel_child": "Child",
+        "family_rel_parent": "Parent",
+        "family_rel_other": "Other",
         "family_added": "✅ Profile «{name}» added.",
         "ai_thinking": "⏳ Thinking…",
         "ai_module_thinking": "{emoji} Thinking in «{module}»…",
@@ -1481,15 +1624,19 @@ _STRINGS: dict[str, dict[str, str]] = {
         "record_new": "➕ <b>New record</b> ({module})",
         "record_send": "Send record text.",
         "record_send_finance": "Send record text.\nYou will be asked for the amount next.",
-        "record_amount": "💰 Enter amount (number) or 0 to skip:",
+        "record_amount": "💰 How much did you spend? (number, or 0 — no amount):",
         "record_amount_error": "Enter a number, e.g. 150000",
-        "record_saved": "✅ Record saved. Find via «🔍 Life search»",
+        "record_saved": "✅ Record saved.",
         "memory_cmd": "🧠 Send a fact to save to AI memory:",
         "memory_saved": "✅ Saved to AI memory.",
-        "remind_format": "🔔 Format:\n<code>Title | 2026-06-25 09:00</code>\n\nOr send title only — we'll ask for date.",
-        "remind_date_error": "Date format: YYYY-MM-DD HH:MM",
+        "remind_format": (
+            "🔔 Format:\n"
+            "<code>Title | 25.06.2026 09:00</code>\n\n"
+            "Or send title only — we'll ask for date."
+        ),
+        "remind_date_error": "Date format: DD.MM.YYYY HH:MM (e.g. 25.06.2026 09:00)",
         "remind_created": "✅ Reminder: {title} — {when}",
-        "remind_datetime": "📅 Enter date and time: <code>2026-06-25 09:00</code>",
+        "remind_datetime": "📅 Enter date and time: <code>25.06.2026 09:00</code>",
         "remind_default_title": "Reminder",
         "free_text_pick_module": "<i>For a focused answer, pick a module: Health, Car, Legal, etc.</i>",
         "weather_title": "🌿 <b>Ecology / weather</b>",
@@ -2060,9 +2207,55 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ntf_add_only_data": "Adding is available for subscriptions and visas only.",
         "eco_src_subscription": "Subscription",
         "eco_src_visa": "Visa",
-        "onb_welcome": "👋 <b>Welcome to Life AI!</b>\n\n14 modules. Tap «Start» to open the menu.",
+        "eco_src_visa": "Visa",
+        "help_text": (
+            "❓ <b>How to use Life AI</b>\n\n"
+            "1️⃣ <b>Main menu</b> — /menu or 🏠 «Back to modules»\n"
+            "2️⃣ <b>Pick a module</b> — Health, Finance, Car…\n"
+            "3️⃣ <b>Ask a question</b> — just type (no button needed)\n"
+            "4️⃣ <b>Save a note</b> — ➕ button in the module\n"
+            "5️⃣ <b>Find records</b> — ⚙️ Settings → 🔍 Search\n\n"
+            "⭐ Popular modules on the home screen; others by category."
+        ),
+        "mod_hint_health": "Symptoms, lab tests, medications, doctor visits.",
+        "mod_example_health": "«what does high hemoglobin mean»",
+        "mod_hint_car": "Service, oil, dashboard warnings, insurance.",
+        "mod_example_car": "«when to change oil at 100k km»",
+        "mod_hint_finance": "Income, expenses, budget, and goals.",
+        "mod_example_finance": "«how to plan a family budget»",
+        "mod_hint_business": "Business plans, ads, contracts, and sales.",
+        "mod_example_business": "«plan for opening a café»",
+        "mod_hint_legal": "Legal questions, documents, and applications.",
+        "mod_example_legal": "«documents needed to rent an apartment»",
+        "mod_hint_travel": "Routes, visas, trip budget, packing lists.",
+        "mod_example_travel": "«5-day Istanbul itinerary»",
+        "mod_hint_home": "Utilities, repairs, shopping, inventory.",
+        "mod_example_home": "«checklist before bathroom renovation»",
+        "mod_hint_shopping": "Product comparison and buying advice.",
+        "mod_example_shopping": "«iPhone vs Samsung for photos»",
+        "mod_hint_education": "Topics, exams, languages, homework.",
+        "mod_example_education": "«explain Pythagorean theorem simply»",
+        "mod_hint_nutrition": "Meal plans, calories, and recipes.",
+        "mod_example_nutrition": "«1800 kcal gluten-free menu»",
+        "mod_hint_fitness": "Workout plans and progress tracking.",
+        "mod_example_fitness": "«3-day home workout without equipment»",
+        "mod_hint_organizer": "Tasks, calendar, reminders, meetings.",
+        "mod_example_organizer": "«remind me to pay internet on the 1st»",
+        "mod_hint_ai_assistant": "Any questions, translations, text, photos.",
+        "mod_example_ai_assistant": "«translate to English: good morning»",
+        "mod_hint_vault": "Documents, passport, policies, receipts.",
+        "mod_example_vault": "«where to store passport scan»",
+        "onb_welcome": (
+            "👋 <b>Welcome to Life AI!</b>\n\n"
+            "<b>How to use:</b>\n"
+            "1️⃣ Pick a module (Health, Finance, Car…)\n"
+            "2️⃣ Type a question — AI answers on topic\n"
+            "3️⃣ «Save a note» — test results, expenses, reminders\n\n"
+            "🔍 Search and ⚙️ Settings — on the home screen.\n"
+            "❓ /help"
+        ),
         "onb_start_btn": "🚀 Start",
-        "onb_done": "✅ Done!",
+        "onb_done": "✅ Ready! You can use the bot.",
         "export_done": "📦 Your data export (JSON).",
         "cmd_expense_format": "Format: /expense Title | 50000",
         "cmd_expense_saved": "✅ Expense «{title}» — {amount} UZS",

@@ -10,6 +10,7 @@ from app.bot.keyboards import (
     back_menu_kb,
     categories_kb,
     category_modules_kb,
+    help_kb,
     language_kb,
     main_menu_kb,
     module_kb,
@@ -20,6 +21,7 @@ from app.bot.keyboards_ecosystem import ecosystem_features_kb, notifications_kb
 from app.bot.states import MemoryStates
 from app.core.i18n import LANG_LABELS, category_title, t
 from app.core.modules.catalog import CATEGORIES, MODULE_BY_ID
+from app.core.modules.ui_texts import module_example_text, module_hint_text
 from app.models.entities import User
 from app.services.ai_service import ask_ai
 from app.services.ecosystem_service import (
@@ -111,11 +113,13 @@ async def open_module(callback: CallbackQuery, user: User, session: AsyncSession
     await set_active_module(session, user, module_id)
     subs = "\n".join(f"• {s.title(lang)}" for s in mod.submodules[:8])
     extra = f"\n{t(lang, 'module_more', count=len(mod.submodules) - 8)}" if len(mod.submodules) > 8 else ""
+    hint = module_hint_text(module_id, lang)
+    example = module_example_text(module_id, lang)
+    example_line = f"\n{t(lang, 'module_example_label')} {example}\n" if example else "\n"
     text = (
         f"{mod.emoji} <b>{mod.title(lang)}</b>\n"
         f"<i>{category_title(lang, _module_category_idx(module_id))}</i>\n\n"
-        f"{mod.ai_hint_ru}\n\n"
-        f"<b>{t(lang, 'module_sections')}</b>\n{subs}{extra}\n\n"
+        f"{hint}{example_line}\n"
         f"{t(lang, 'module_ask_here')}\n"
         f"{t(lang, 'module_or_pick')}"
     )
@@ -218,10 +222,17 @@ async def hub_settings(callback: CallbackQuery, user: User) -> None:
         f"{t(lang, 'settings_memory', status=mem)}\n"
         f"{t(lang, 'settings_voice', status=voice)}\n"
         f"{t(lang, 'settings_lang', label=LANG_LABELS.get(lang, lang.upper()))}\n\n"
-        f"{t(lang, 'settings_commands')}\n\n"
+        f"{t(lang, 'settings_tip')}\n\n"
         f"{t(lang, 'settings_extra')}",
         reply_markup=settings_kb(user.memory_enabled, user.voice_mode, lang),
     )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "hub:help")
+async def hub_help(callback: CallbackQuery, user: User) -> None:
+    lang = _lang(user)
+    await callback.message.edit_text(t(lang, "help_text"), reply_markup=help_kb(lang))
     await callback.answer()
 
 

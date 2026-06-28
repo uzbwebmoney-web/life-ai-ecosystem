@@ -22,6 +22,7 @@ class User(Base):
     active_module_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     active_submodule_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     onboarding_done: Mapped[bool] = mapped_column(Boolean, default=False)
+    welcome_pending: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
