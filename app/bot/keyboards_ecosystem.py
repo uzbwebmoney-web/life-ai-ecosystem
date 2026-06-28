@@ -4,9 +4,11 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.core.i18n import t
 from app.models.entities import AlertItem
-from app.services.notifications_service import alert_type_def(lang: str = "ru") -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
+from app.services.notifications_service import alert_type_def
+
+
+def ecosystem_features_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(        inline_keyboard=[
             [InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications")],
             [InlineKeyboardButton(text=t(lang, "eco_btn_memory"), callback_data="set:memory")],
             [InlineKeyboardButton(text=t(lang, "btn_search"), callback_data="hub:search")],
