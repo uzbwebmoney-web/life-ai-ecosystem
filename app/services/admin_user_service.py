@@ -281,12 +281,13 @@ async def admin_set_user_plan(
     if plan_key not in PLANS:
         return None
     user.plan_id = plan_key
-    # Admin override: effective plan must match stored plan (trial must not hide the change).
-    user.trial_expires_at = None
     if plan_key == "free":
         user.plan_expires_at = None
+        # Past date (not None) — otherwise ensure_user_subscription_fields re-grants signup trial.
+        user.trial_expires_at = datetime.utcnow() - timedelta(days=1)
     else:
         user.plan_expires_at = datetime.utcnow() + timedelta(days=max(1, days))
+        user.trial_expires_at = None
     await session.commit()
     await session.refresh(user)
     return user

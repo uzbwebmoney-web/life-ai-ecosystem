@@ -39,13 +39,13 @@ async def reply_with_generated_image(message: Message, user: User, session: Asyn
         return
     blocked = feature_allowed(user, "image_gen")
     if blocked:
-        await message.answer(t(lang, blocked))
+        await message.answer(t(lang, blocked), parse_mode="HTML", reply_markup=kb)
         return
     quality = image_quality_for_user(user)
     img_credits = image_generation_credits(quality)  # type: ignore[arg-type]
     quota_msg = await check_image_gen_quota(session, user, lang=lang, credits=img_credits)
     if quota_msg:
-        await message.answer(quota_msg)
+        await message.answer(quota_msg, parse_mode="HTML", reply_markup=kb)
         return
     wait_msg = await message.answer(t(lang, "ast_image_generating"))
     try:

@@ -286,8 +286,24 @@ EXTRA_RU: dict[str, str] = {
     "sub_packages_addon_title": "📦 Разовые пакеты:",
     "sub_addon_line": "• {name} — <b>{price}</b>",
     "quota_photo_monthly": "⚠️ Лимит анализа фото {used}/{limit}. /subscription",
-    "quota_image_gen_monthly": "⚠️ Лимит генерации изображений {used}/{limit}. /subscription",
-    "quota_image_gen": "🎨 Генерация изображений — от Basic. /subscription",
+    "quota_image_gen_monthly": (
+        "⚠️ Лимит картинок на этот месяц исчерпан ({used} из {limit}).\n\n"
+        "Генерация изображений включена в ваш тариф, но количество созданий в месяц ограничено. "
+        "Лимит обновится в начале следующего месяца, либо можно перейти на тариф с большим лимитом.\n\n"
+        "Подробнее: /subscription"
+    ),
+    "quota_image_gen": (
+        "🎨 <b>Создание картинок недоступно на тарифе Free</b>\n\n"
+        "Вы отправили запрос на генерацию изображения (например, «нарисуй…», «создай картинку…»). "
+        "На бесплатном тарифе доступны текстовые ответы AI и другие разделы бота, "
+        "но <b>генерация изображений по описанию не включена</b> — это отдельная функция: "
+        "она использует модель GPT-Image и списывает AI-кредиты за каждую картинку.\n\n"
+        "<b>Что можно сделать:</b>\n"
+        "• 🎓 <b>Student</b> ($2.99) — 10 картинок в месяц\n"
+        "• 🥉 <b>Basic</b> ($5.99) — 40 картинок в месяц\n"
+        "• 🥈 Premium / 🥇 Pro — ещё больше\n\n"
+        "Тарифы и лимиты: /subscription"
+    ),
     "quota_ocr": "📄 OCR — от Basic. /subscription",
     "quota_doc_translate": "🌐 Перевод документов — от Basic. /subscription",
     "quota_pdf": "📎 PDF/DOCX — от Basic. /subscription",
@@ -593,6 +609,24 @@ EXTRA_UZ: dict[str, str] = {
         "So'rov narxi: {cost} AI-kredit\n"
         "Qolgan: {left} AI-kredit\n\n"
         "Balansni to'ldiring yoki tarifni oshiring: /subscription"
+    ),
+    "quota_image_gen_monthly": (
+        "⚠️ Bu oy uchun rasm yaratish limiti tugadi ({used} / {limit}).\n\n"
+        "Tarifingizda rasm yaratish bor, lekin oyiga cheklangan. "
+        "Limit yangi oy boshida yangilanadi yoki kattaroq limitli tarifga o'ting.\n\n"
+        "Batafsil: /subscription"
+    ),
+    "quota_image_gen": (
+        "🎨 <b>Free tarifida rasm yaratish yo'q</b>\n\n"
+        "Siz rasm yaratish so'rovi yubordingiz (masalan, «chiz…», «rasm yarat…»). "
+        "Bepul tarifda matnli AI va boshqa bo'limlar ishlaydi, "
+        "lekin <b>tavsif bo'yicha rasm yaratish kirmaydi</b> — bu alohida funksiya: "
+        "GPT-Image modeli ishlatiladi va har bir rasm uchun AI-kredit yechiladi.\n\n"
+        "<b>Nima qilish mumkin:</b>\n"
+        "• 🎓 <b>Student</b> ($2.99) — oyiga 10 rasm\n"
+        "• 🥉 <b>Basic</b> ($5.99) — oyiga 40 rasm\n"
+        "• 🥈 Premium / 🥇 Pro — yanada ko'p\n\n"
+        "Tariflar: /subscription"
     ),
     "sub_credits_total": "💎 Oylik AI-kreditlar: {total}",
     "sub_credits_used": "📉 Sarflangan: {used}",
@@ -922,6 +956,24 @@ EXTRA_EN: dict[str, str] = {
         "Request cost: {cost} AI credits\n"
         "You have left: {left} AI credits\n\n"
         "Top up or upgrade your plan: /subscription"
+    ),
+    "quota_image_gen_monthly": (
+        "⚠️ Image generation limit reached for this month ({used} of {limit}).\n\n"
+        "Your plan includes image generation, but the number of images per month is limited. "
+        "The limit resets at the start of next month, or you can upgrade to a plan with a higher cap.\n\n"
+        "Details: /subscription"
+    ),
+    "quota_image_gen": (
+        "🎨 <b>Image generation is not available on the Free plan</b>\n\n"
+        "You sent a request to create an image (e.g. “draw…”, “generate a picture…”). "
+        "On the free plan you can use text AI and other bot sections, "
+        "but <b>image generation from a text prompt is not included</b> — it's a separate feature: "
+        "it uses the GPT-Image model and spends AI credits per image.\n\n"
+        "<b>What you can do:</b>\n"
+        "• 🎓 <b>Student</b> ($2.99) — 10 images per month\n"
+        "• 🥉 <b>Basic</b> ($5.99) — 40 images per month\n"
+        "• 🥈 Premium / 🥇 Pro — even more\n\n"
+        "Plans: /subscription"
     ),
     "sub_credits_total": "💎 Monthly AI credits: {total}",
     "sub_credits_used": "📉 Used: {used}",

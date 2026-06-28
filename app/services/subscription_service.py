@@ -244,6 +244,8 @@ async def ensure_user_subscription_fields(session: AsyncSession, user: User) -> 
 
         changed = True
 
+    # Grant signup trial only once: trial_expires_at stays None until first grant.
+    # Admin downgrade to free sets trial to a past date — must not re-grant here.
     if user.trial_expires_at is None and user.plan_id == "free" and not user.plan_expires_at:
 
         user.trial_expires_at = _utcnow() + timedelta(days=TRIAL_DAYS)
@@ -804,11 +806,22 @@ def format_usage_summary(user: User, *, lang: str) -> str:
 
 
 
-    info = plan_info(user)
-
     _reset_usage_counters(user)
 
-    limits = info.limits
+    stored = normalize_plan_id(user.plan_id or "free")
+
+    effective = effective_plan_id(user)
+
+    info = PLANS[effective]
+
+    stored_info = PLANS.get(stored, PLANS["free"])
+
+    on_signup_trial = (
+        stored == "free"
+        and effective == "premium"
+        and user.trial_expires_at is not None
+        and user.trial_expires_at > _utcnow()
+    )
 
     total = credits_total(user)
 
@@ -826,15 +839,21 @@ def format_usage_summary(user: User, *, lang: str) -> str:
 
         "",
 
-        t(lang, "sub_current_plan", plan=f"{info.emoji} {t(lang, info.name_key)}"),
-
-        t(lang, "sub_ai_model", model=model_routing_label(user, lang=lang)),
-
     ]
 
-    if user.trial_expires_at and user.trial_expires_at > _utcnow() and effective_plan_id(user) == "premium":
+    if on_signup_trial:
+
+        lines.append(
+            t(lang, "sub_current_plan", plan=f"{stored_info.emoji} {t(lang, stored_info.name_key)}")
+        )
 
         lines.append(t(lang, "sub_trial_until", date=user.trial_expires_at.strftime("%d.%m.%Y")))
+
+    else:
+
+        lines.append(t(lang, "sub_current_plan", plan=f"{info.emoji} {t(lang, info.name_key)}"))
+
+    lines.append(t(lang, "sub_ai_model", model=model_routing_label(user, lang=lang)))
 
     if user.plan_expires_at and user.plan_id != "free":
 

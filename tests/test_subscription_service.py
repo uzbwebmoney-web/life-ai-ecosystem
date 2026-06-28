@@ -4,6 +4,7 @@ from app.core.plans import PLANS, format_uzs, usd_to_stars, usd_to_uzs
 from app.models.entities import User
 from app.services.subscription_service import (
     credits_left,
+    credits_total,
     effective_plan_id,
     module_allowed,
 )
@@ -17,6 +18,17 @@ def test_effective_plan_trial():
 def test_effective_plan_free_after_trial():
     user = User(id=1, telegram_id=1, plan_id="free", trial_expires_at=datetime.utcnow() - timedelta(days=1))
     assert effective_plan_id(user) == "free"
+
+
+def test_admin_downgrade_to_free_uses_free_limits():
+    user = User(
+        id=1,
+        telegram_id=1,
+        plan_id="free",
+        trial_expires_at=datetime.utcnow() - timedelta(days=1),
+    )
+    assert effective_plan_id(user) == "free"
+    assert credits_total(user) == PLANS["free"].limits.ai_credits_monthly
 
 
 def test_legacy_family_maps_to_premium():
