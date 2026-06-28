@@ -98,3 +98,37 @@ def vault_cancel_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="vlt:cancel")]]
     )
+
+
+def vault_unlock_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")]]
+    )
+
+
+def vault_lock_settings_kb(has_lock: bool, lang: str = "ru") -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = []
+    if has_lock:
+        rows.append(
+            [InlineKeyboardButton(text=t(lang, "vlt_lock_change_btn"), callback_data="set:vault_lock:change")]
+        )
+        rows.append(
+            [InlineKeyboardButton(text=t(lang, "vlt_lock_lock_now_btn"), callback_data="set:vault_lock:locknow")]
+        )
+        rows.append(
+            [InlineKeyboardButton(text=t(lang, "vlt_lock_disable_btn"), callback_data="set:vault_lock:disable")]
+        )
+    else:
+        rows.append(
+            [InlineKeyboardButton(text=t(lang, "vlt_lock_enable_btn"), callback_data="set:vault_lock:enable")]
+        )
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_back_settings"), callback_data="hub:settings")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def vault_lock_cancel_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="set:vault_lock:cancel")]
+        ]
+    )

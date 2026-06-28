@@ -36,8 +36,11 @@ async def get_or_create_user(
     session.add(profile)
     await session.flush()
     user.active_profile_id = profile.id
+    from app.services.subscription_service import ensure_user_subscription_fields
+
     await session.commit()
     await session.refresh(user)
+    await ensure_user_subscription_fields(session, user)
     return user
 
 
@@ -233,7 +236,16 @@ async def add_memory(
     content: str,
     module_id: str | None = None,
     profile_id: int | None = None,
-) -> MemoryEntry:
+    *,
+    user: User | None = None,
+    lang: str = "ru",
+) -> MemoryEntry | None:
+    if user is not None:
+        from app.services.subscription_service import check_memory_quota
+
+        err = await check_memory_quota(session, user, lang=lang)
+        if err:
+            return None
     entry = MemoryEntry(user_id=user_id, content=content, module_id=module_id, profile_id=profile_id)
     session.add(entry)
     await session.commit()
@@ -262,7 +274,15 @@ async def add_reminder(
     due_at: datetime,
     module_id: str = "notifications",
     profile_id: int | None = None,
-) -> Reminder:
+    user: User | None = None,
+    lang: str = "ru",
+) -> Reminder | None:
+    if user is not None:
+        from app.services.subscription_service import check_reminder_quota
+
+        err = await check_reminder_quota(session, user, lang=lang)
+        if err:
+            return None
     reminder = Reminder(
         user_id=user_id,
         title=title,

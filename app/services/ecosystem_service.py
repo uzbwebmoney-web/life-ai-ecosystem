@@ -13,6 +13,7 @@ from app.services.credit_loans import list_credit_loans_for_users, next_credit_p
 from app.services.finance_service import list_finance_bills
 from app.services.health_service import list_health_medications, user_local_now
 from app.services.home_service import list_home_utilities
+from app.services.vault_lock_service import filter_vault_records_for_search
 from app.services.household_service import effective_data_user_ids
 from app.services.life_data import list_calendar_events, list_upcoming_reminders, search_memory, search_records
 from app.services.notifications_service import alert_source_key, alert_type_def, list_alert_items
@@ -32,6 +33,7 @@ class UnifiedSearchResult:
     memory: list[MemoryEntry] = field(default_factory=list)
     events: list[CalendarEvent] = field(default_factory=list)
     reminders: list[Reminder] = field(default_factory=list)
+    vault_hidden_count: int = 0
 
     def has_any(self) -> bool:
         return bool(self.records or self.memory or self.events or self.reminders)
@@ -217,11 +219,14 @@ async def unified_search(
             events.append(e)
         for rem in await search_reminders(session, uid, query, limit=limit):
             reminders.append(rem)
+    trimmed = records[:limit]
+    visible, hidden = filter_vault_records_for_search(user, trimmed)
     return UnifiedSearchResult(
-        records=records[:limit],
+        records=visible,
         memory=memory[:limit],
         events=events[:limit],
         reminders=reminders[:limit],
+        vault_hidden_count=hidden,
     )
 
 
@@ -262,6 +267,8 @@ def format_unified_search(results: UnifiedSearchResult, lang: str, query: str) -
         lines.append(f"\n<b>{t(lang, 'search_memory')}</b>")
         for entry in results.memory[:5]:
             lines.append(f"• {entry.content[:120]}")
+    if results.vault_hidden_count:
+        lines.append(f"\n<i>{t(lang, 'search_vault_hidden')}</i>")
     if not results.has_any():
         lines.append(t(lang, "search_nothing"))
     return lines

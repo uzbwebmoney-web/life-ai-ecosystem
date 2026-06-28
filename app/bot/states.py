@@ -102,6 +102,14 @@ class VaultStates(StatesGroup):
     waiting_attachment = State()
 
 
+class VaultLockStates(StatesGroup):
+    waiting_unlock = State()
+    waiting_set_password = State()
+    waiting_confirm_password = State()
+    waiting_remove_password = State()
+    waiting_change_old = State()
+
+
 class OrganizerStates(StatesGroup):
     waiting_task_title = State()
     waiting_task_due = State()
@@ -122,6 +130,10 @@ class NotificationsStates(StatesGroup):
 
 class ScanStates(StatesGroup):
     waiting_photo = State()
+
+
+class PaymentStates(StatesGroup):
+    waiting_receipt = State()
 
 
 class OnboardingStates(StatesGroup):

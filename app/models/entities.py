@@ -25,6 +25,17 @@ class User(Base):
     welcome_pending: Mapped[bool] = mapped_column(Boolean, default=False)
     household_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("households.id"), nullable=True)
     last_daily_feed_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    vault_password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    plan_id: Mapped[str] = mapped_column(String(16), default="free")
+    plan_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    trial_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    ai_bonus_balance: Mapped[int] = mapped_column(Integer, default=0)
+    ai_used_today: Mapped[int] = mapped_column(Integer, default=0)
+    ai_used_month: Mapped[int] = mapped_column(Integer, default=0)
+    ai_usage_day: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    ai_usage_month: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    referral_code: Mapped[str | None] = mapped_column(String(16), nullable=True, unique=True)
+    referred_by_user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -139,6 +150,22 @@ class MemoryEntry(Base):
     profile_id: Mapped[int | None] = mapped_column(ForeignKey("family_profiles.id"), nullable=True)
     module_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     content: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class PaymentOrder(Base):
+    __tablename__ = "payment_orders"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    product_type: Mapped[str] = mapped_column(String(16), index=True)
+    product_id: Mapped[str] = mapped_column(String(32), index=True)
+    amount_uzs: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(20), default="awaiting_receipt", index=True)
+    receipt_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    receipt_submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    admin_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
 
 

@@ -19,8 +19,9 @@ from app.bot.keyboards import (
     settings_kb,
     submodule_kb,
 )
+from app.bot.keyboards_vault import vault_lock_cancel_kb, vault_lock_settings_kb
 from app.bot.keyboards_ecosystem import ecosystem_features_kb, notifications_kb
-from app.bot.states import MemoryStates
+from app.bot.states import MemoryStates, VaultLockStates
 from app.core.i18n import LANG_LABELS, category_title, t
 from app.core.modules.catalog import CATEGORIES, MODULE_BY_ID
 from app.core.modules.ui_texts import module_example_text, module_hint_text
@@ -42,6 +43,15 @@ from app.services.life_data import (
     toggle_memory,
     toggle_voice_mode,
 )
+from app.services.vault_lock_service import (
+    clear_vault_password,
+    is_vault_protected,
+    lock_vault,
+    lock_vault_on_menu_exit,
+    set_vault_password,
+    validate_password_strength,
+    verify_vault_password,
+)
 
 router = Router()
 
@@ -52,6 +62,7 @@ def _lang(user: User) -> str:
 
 @router.callback_query(F.data == "hub:menu")
 async def hub_menu(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    lock_vault_on_menu_exit(user)
     await clear_active_module(session, user)
     await edit_dashboard(callback, user, session)
     await callback.answer()
@@ -206,6 +217,8 @@ async def hub_search_query(message: Message, state: FSMContext, user: User, sess
             module_hint=hint,
             memory_context=context,
             language=lang,
+            session=session,
+            user=user,
         )
         lines.append(f"\n🤖 <b>{t(lang, 'eco_search_ai_title')}</b>\n{answer}")
         await loading.delete()
@@ -218,14 +231,21 @@ async def hub_settings(callback: CallbackQuery, user: User) -> None:
     lang = _lang(user)
     mem = "✅" if user.memory_enabled else "❌"
     voice = "✅" if user.voice_mode else "❌"
+    vault_status = t(lang, "status_on") if is_vault_protected(user) else t(lang, "status_off")
     await callback.message.edit_text(
         f"{t(lang, 'settings_title')}\n\n"
         f"{t(lang, 'settings_memory', status=mem)}\n"
         f"{t(lang, 'settings_voice', status=voice)}\n"
+        f"{t(lang, 'settings_vault_lock', status=vault_status)}\n"
         f"{t(lang, 'settings_lang', label=LANG_LABELS.get(lang, lang.upper()))}\n\n"
         f"{t(lang, 'settings_tip')}\n\n"
         f"{t(lang, 'settings_extra')}",
-        reply_markup=settings_kb(user.memory_enabled, user.voice_mode, lang),
+        reply_markup=settings_kb(
+            user.memory_enabled,
+            user.voice_mode,
+            lang,
+            vault_locked=is_vault_protected(user),
+        ),
     )
     await callback.answer()
 
@@ -259,14 +279,171 @@ async def settings_set_language(callback: CallbackQuery, user: User, session: As
 async def settings_toggle_memory(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     lang = _lang(user)
     enabled = await toggle_memory(session, user)
-    await callback.message.edit_reply_markup(reply_markup=settings_kb(enabled, user.voice_mode, lang))
+    await callback.message.edit_reply_markup(
+        reply_markup=settings_kb(
+            enabled,
+            user.voice_mode,
+            lang,
+            vault_locked=is_vault_protected(user),
+        )
+    )
     await callback.answer(t(lang, "memory_on_toast") if enabled else t(lang, "memory_off_toast"))
 
 
 @router.callback_query(F.data == "set:voice")
 async def settings_toggle_voice(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     lang = _lang(user)
+    from app.services.subscription_service import feature_allowed
+
+    if not user.voice_mode:
+        blocked = feature_allowed(user, "voice")
+        if blocked:
+            await callback.answer(t(lang, blocked), show_alert=True)
+            return
     enabled = await toggle_voice_mode(session, user)
     await callback.answer(t(lang, "voice_on_toast") if enabled else t(lang, "voice_off_toast"))
     if callback.message and callback.message.text:
-        await callback.message.edit_reply_markup(reply_markup=settings_kb(user.memory_enabled, enabled, lang))
+        await callback.message.edit_reply_markup(
+            reply_markup=settings_kb(
+                user.memory_enabled,
+                enabled,
+                lang,
+                vault_locked=is_vault_protected(user),
+            )
+        )
+
+
+async def _show_vault_lock_settings(target, user: User, *, edit: bool = False) -> None:
+    lang = _lang(user)
+    protected = is_vault_protected(user)
+    text = t(lang, "vlt_lock_settings_intro_on" if protected else "vlt_lock_settings_intro_off")
+    kb = vault_lock_settings_kb(protected, lang)
+    if edit:
+        await target.edit_text(text, reply_markup=kb)
+    else:
+        await target.answer(text, reply_markup=kb)
+
+
+@router.callback_query(F.data == "set:vault_lock")
+async def settings_vault_lock_menu(callback: CallbackQuery, user: User) -> None:
+    await _show_vault_lock_settings(callback.message, user, edit=True)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "set:vault_lock:cancel")
+async def settings_vault_lock_cancel(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    await state.clear()
+    await hub_settings(callback, user)
+
+
+@router.callback_query(F.data == "set:vault_lock:enable")
+async def settings_vault_lock_enable(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    lang = _lang(user)
+    await state.clear()
+    await state.set_state(VaultLockStates.waiting_set_password)
+    await callback.message.answer(
+        t(lang, "vlt_lock_set_prompt"),
+        reply_markup=vault_lock_cancel_kb(lang),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "set:vault_lock:change")
+async def settings_vault_lock_change(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    lang = _lang(user)
+    if not is_vault_protected(user):
+        await callback.answer(t(lang, "vlt_lock_not_enabled"), show_alert=True)
+        return
+    await state.clear()
+    await state.update_data(vlt_lock_action="change")
+    await state.set_state(VaultLockStates.waiting_change_old)
+    await callback.message.answer(
+        t(lang, "vlt_lock_old_prompt"),
+        reply_markup=vault_lock_cancel_kb(lang),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "set:vault_lock:disable")
+async def settings_vault_lock_disable(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    lang = _lang(user)
+    if not is_vault_protected(user):
+        await callback.answer(t(lang, "vlt_lock_not_enabled"), show_alert=True)
+        return
+    await state.clear()
+    await state.update_data(vlt_lock_action="disable")
+    await state.set_state(VaultLockStates.waiting_remove_password)
+    await callback.message.answer(
+        t(lang, "vlt_lock_remove_prompt"),
+        reply_markup=vault_lock_cancel_kb(lang),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "set:vault_lock:locknow")
+async def settings_vault_lock_now(callback: CallbackQuery, user: User) -> None:
+    lang = _lang(user)
+    if not is_vault_protected(user):
+        await callback.answer(t(lang, "vlt_lock_not_enabled"), show_alert=True)
+        return
+    lock_vault(user.id)
+    await callback.answer(t(lang, "vlt_lock_locked_now"))
+
+
+@router.message(VaultLockStates.waiting_set_password)
+async def settings_vault_set_password(message: Message, state: FSMContext, user: User) -> None:
+    lang = _lang(user)
+    password = (message.text or "").strip()
+    if not validate_password_strength(password):
+        await message.answer(t(lang, "vlt_lock_weak"))
+        return
+    await state.update_data(vlt_new_password=password)
+    await state.set_state(VaultLockStates.waiting_confirm_password)
+    await message.answer(t(lang, "vlt_lock_confirm_prompt"), reply_markup=vault_lock_cancel_kb(lang))
+
+
+@router.message(VaultLockStates.waiting_confirm_password)
+async def settings_vault_confirm_password(
+    message: Message,
+    state: FSMContext,
+    user: User,
+    session: AsyncSession,
+) -> None:
+    lang = _lang(user)
+    password = (message.text or "").strip()
+    data = await state.get_data()
+    expected = str(data.get("vlt_new_password") or "")
+    if password != expected:
+        await message.answer(t(lang, "vlt_lock_mismatch"))
+        return
+    await set_vault_password(session, user, password)
+    await state.clear()
+    await message.answer(t(lang, "vlt_lock_enabled"))
+
+
+@router.message(VaultLockStates.waiting_change_old)
+async def settings_vault_change_old(message: Message, state: FSMContext, user: User) -> None:
+    lang = _lang(user)
+    password = (message.text or "").strip()
+    if not verify_vault_password(user, password):
+        await message.answer(t(lang, "vlt_lock_wrong"))
+        return
+    await state.set_state(VaultLockStates.waiting_set_password)
+    await message.answer(t(lang, "vlt_lock_set_prompt"), reply_markup=vault_lock_cancel_kb(lang))
+
+
+@router.message(VaultLockStates.waiting_remove_password)
+async def settings_vault_remove_password(
+    message: Message,
+    state: FSMContext,
+    user: User,
+    session: AsyncSession,
+) -> None:
+    lang = _lang(user)
+    password = (message.text or "").strip()
+    if not verify_vault_password(user, password):
+        await message.answer(t(lang, "vlt_lock_wrong"))
+        return
+    await clear_vault_password(session, user)
+    await state.clear()
+    await message.answer(t(lang, "vlt_lock_disabled"))

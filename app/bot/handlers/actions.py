@@ -94,6 +94,8 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
         memory_context=memory_ctx,
         profile_context=profile_ctx,
         language=lang,
+        session=session,
+        user=user,
     )
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or back_menu_kb(lang)

@@ -137,13 +137,22 @@ def language_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def settings_kb(memory_on: bool, voice_on: bool, lang: str = "ru") -> InlineKeyboardMarkup:
+def settings_kb(
+    memory_on: bool,
+    voice_on: bool,
+    lang: str = "ru",
+    *,
+    vault_locked: bool = False,
+) -> InlineKeyboardMarkup:
     mem_label = t(lang, "btn_memory_on") if memory_on else t(lang, "btn_memory_off")
     voice_label = t(lang, "btn_voice_on") if voice_on else t(lang, "btn_voice_off")
+    vault_label = t(lang, "vlt_lock_settings_on") if vault_locked else t(lang, "vlt_lock_settings_off")
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=mem_label, callback_data="set:memory")],
             [InlineKeyboardButton(text=voice_label, callback_data="set:voice")],
+            [InlineKeyboardButton(text=vault_label, callback_data="set:vault_lock")],
+            [InlineKeyboardButton(text=t(lang, "sub_btn_menu"), callback_data="sub:menu")],
             [
                 InlineKeyboardButton(text=t(lang, "btn_search"), callback_data="hub:search"),
                 InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications"),

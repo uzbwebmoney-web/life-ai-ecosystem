@@ -118,6 +118,115 @@ EXTRA_RU: dict[str, str] = {
     "eco_src_delivery": "Доставка",
     "eco_src_appointment": "Запись",
     "eco_src_custom": "Напоминание",
+    "btn_subscription": "💎 Подписка",
+    "sub_btn_menu": "💎 Подписка и лимиты",
+    "sub_btn_usage": "📊 Мои лимиты",
+    "sub_btn_plans": "💳 Тарифы",
+    "sub_btn_packages": "📦 Пакеты AI-запросов",
+    "sub_btn_referral": "🎁 Пригласить друга",
+    "sub_btn_buy": "Оформить",
+    "sub_btn_back": "↩️ Назад",
+    "sub_menu_intro": (
+        "💎 <b>Подписка и лимиты</b>\n\n"
+        "Все разделы бота доступны всем — платите только за объём.\n"
+        "Цены в сумах (курс ЦБ ~12 017 so'm / $1).\n\n"
+        "🎁 Первые 7 дней — Premium бесплатно."
+    ),
+    "sub_plans_title": "💳 <b>Тарифы</b>",
+    "sub_plans_hint": "Нажмите тариф для подробностей или «Оформить».",
+    "sub_packages_title": "📦 <b>Пакеты AI-запросов</b>",
+    "sub_packages_hint": "Разовая покупка — запросы не сгорают.",
+    "sub_package_line": "• {name}: <b>{requests}</b> зап. — <b>{price}</b>",
+    "sub_usage_title": "📊 <b>Ваши лимиты</b>",
+    "sub_current_plan": "Тариф: {plan}",
+    "sub_trial_until": "🎁 Premium trial до {date}",
+    "sub_paid_until": "Оплачен до {date}",
+    "sub_ai_daily": "AI сегодня: {used} / {limit}",
+    "sub_ai_monthly": "AI в месяц: {used} / {limit}",
+    "sub_ai_bonus": "Бонусные запросы: {bonus}",
+    "sub_storage_limit": "Хранилище: до {limit} МБ",
+    "sub_memory_limit": "Память AI: до {limit} фактов",
+    "sub_memory_unlimited": "Память AI: без ограничений",
+    "sub_referral_info": (
+        "🎁 <b>Пригласите друга</b>\n\n"
+        "Вы и друг — по <b>{bonus}</b> AI-запросов.\n\n"
+        "Ссылка:\n{link}\n\nКод: <code>{code}</code>"
+    ),
+    "sub_referral_applied": "🎁 Реферальный бонус начислен!",
+    "sub_trial_welcome": "🎁 Premium {days} дней + {bonus} AI-запросов. /subscription — тарифы.",
+    "sub_buy_plan": "💳 <b>{plan}</b>\n<b>{price}</b> / мес\n\nОплата: {contact}\nУкажите тариф и @username.",
+    "sub_buy_package": "📦 <b>{name}</b> — {requests} зап.\n<b>{price}</b>\n\nОплата: {contact}",
+    "sub_payment_default": "администратору бота",
+    "pay_instructions": (
+        "💳 <b>Оплата заявки #{order_id}</b>\n\n"
+        "Товар: {product}\n"
+        "Сумма: <b>{amount}</b>\n\n"
+        "Переведите <b>точную сумму</b> на карту:\n"
+        "<code>{card}</code>{holder_line}\n\n"
+        "После перевода отправьте <b>скриншот чека</b> (фото) в этот чат."
+    ),
+    "pay_card_holder": "Получатель: {holder}",
+    "pay_card_not_set": "карта не настроена",
+    "pay_card_not_configured": "Оплата временно недоступна. Напишите администратору.",
+    "pay_product_invalid": "Этот тариф нельзя оформить.",
+    "pay_cancelled": "❌ Заявка отменена.",
+    "pay_order_not_found": "Заявка не найдена или уже обработана.",
+    "pay_receipt_received": "✅ Чек получен (заявка #{order_id}). Ожидайте подтверждения администратора.",
+    "pay_approved": "✅ Оплата подтверждена!\n\n{product} активирован.",
+    "pay_rejected": "❌ Оплата не подтверждена. Если перевод был — напишите администратору.",
+    "pay_admin_notify": "💰 <b>Новая заявка на оплату #{order_id}</b>",
+    "pay_admin_order": (
+        "📋 <b>Заявка #{order_id}</b>\n"
+        "Пользователь: {user} (<code>{telegram_id}</code>)\n"
+        "Товар: {product}\n"
+        "Сумма: <b>{amount}</b>\n"
+        "Чек: {submitted}\n"
+        "Статус: {status}"
+    ),
+    "pay_admin_list_title": "💰 <b>Заявки на оплату</b>",
+    "pay_admin_empty": "Нет заявок, ожидающих подтверждения.",
+    "pay_admin_receipt": "Скриншот чека",
+    "pay_admin_approve": "✅ Подтвердить",
+    "pay_admin_reject": "❌ Отклонить",
+    "pay_admin_done_approved": "✅ Подтверждено, тариф активирован.",
+    "pay_admin_done_rejected": "❌ Заявка #{order_id} отклонена.",
+    "pay_admin_approved_toast": "Подтверждено",
+    "pay_admin_rejected_toast": "Отклонено",
+    "pay_admin_pending_count": "⏳ Заявок на оплату: <b>{count}</b>",
+    "pay_order_already_processed": "Заявка уже обработана.",
+    "plan_price_free": "Бесплатно",
+    "plan_price_monthly": "<b>{price}</b> / мес (~${usd})",
+    "plan_free_name": "Free",
+    "plan_free_desc": "Все модули, лимиты по объёму.",
+    "plan_basic_name": "Basic",
+    "plan_basic_desc": "Для большинства пользователей.",
+    "plan_premium_name": "Premium",
+    "plan_premium_desc": "Для активных пользователей.",
+    "plan_pro_name": "Pro",
+    "plan_pro_desc": "Почти без лимитов + лучшая модель.",
+    "plan_family_name": "Семейная",
+    "plan_family_desc": "До 5 человек в одном аккаунте.",
+    "plan_pkg_100": "100 AI-запросов",
+    "plan_pkg_500": "500 AI-запросов",
+    "plan_pkg_1000": "1000 AI-запросов",
+    "plan_limit_ai_daily": "{n} AI-запросов в день",
+    "plan_limit_ai_monthly": "{n} AI-запросов в месяц",
+    "plan_limit_reminders": "До {n} напоминаний",
+    "plan_limit_reminders_unlimited": "Без лимита напоминаний",
+    "plan_limit_storage_mb": "Хранилище {n} МБ",
+    "plan_limit_storage_gb": "Хранилище {n} ГБ",
+    "plan_all_modules": "Все модули доступны",
+    "plan_feature_voice": "Голосовые сообщения",
+    "plan_feature_photo": "AI-анализ фото",
+    "plan_feature_priority": "Приоритетная скорость",
+    "plan_feature_premium_model": "Приоритетная AI-модель",
+    "quota_ai_daily": "⚠️ Дневной лимит AI исчерпан. /subscription",
+    "quota_ai_monthly": "⚠️ Месячный лимит AI исчерпан. /subscription",
+    "quota_voice": "🎤 Голос — от Basic. /subscription",
+    "quota_photo_ai": "📷 AI-фото — от Basic. /subscription",
+    "quota_reminders": "⚠️ Лимит напоминаний {used}/{limit}. /subscription",
+    "quota_memory": "⚠️ Лимит памяти {used}/{limit}. /subscription",
+    "quota_storage": "⚠️ Хранилище {used}/{limit} МБ. /subscription",
 }
 
 EXTRA_UZ: dict[str, str] = {
@@ -265,6 +374,59 @@ EXTRA_UZ: dict[str, str] = {
     "eco_src_delivery": "Yetkazish",
     "eco_src_appointment": "Uchrashuv",
     "eco_src_custom": "Eslatma",
+    "sub_btn_menu": "💎 Obuna va limitlar",
+    "sub_menu_intro": "💎 <b>Obuna</b>\n\nBarcha bo'limlar ochiq — faqat hajm uchun to'lov.\n🎁 7 kun Premium bepul.",
+    "sub_btn_usage": "📊 Limitlarim",
+    "sub_btn_plans": "💳 Tariflar",
+    "sub_btn_packages": "📦 AI to'plamlari",
+    "sub_btn_referral": "🎁 Do'stni taklif qilish",
+    "sub_btn_buy": "Rasmiylashtirish",
+    "sub_btn_back": "↩️ Orqaga",
+    "quota_ai_daily": "⚠️ Kunlik AI limiti tugadi. /subscription",
+    "quota_voice": "🎤 Ovoz Basic dan. /subscription",
+    "quota_photo_ai": "📷 AI-foto Basic dan. /subscription",
+    "plan_price_free": "Bepul",
+    "plan_basic_name": "Basic",
+    "plan_premium_name": "Premium",
+    "plan_pro_name": "Pro",
+    "plan_family_name": "Oilaviy",
+    "pay_instructions": (
+        "💳 <b>To'lov arizasi #{order_id}</b>\n\n"
+        "Mahsulot: {product}\n"
+        "Summa: <b>{amount}</b>\n\n"
+        "Kartaga <b>aniq summani</b> o'tkazing:\n"
+        "<code>{card}</code>{holder_line}\n\n"
+        "O'tkazgandan keyin <b>chek skrinshotini</b> (foto) yuboring."
+    ),
+    "pay_card_holder": "Qabul qiluvchi: {holder}",
+    "pay_card_not_set": "karta sozlanmagan",
+    "pay_card_not_configured": "To'lov vaqtincha mavjud emas. Admin bilan bog'laning.",
+    "pay_product_invalid": "Bu tarifni rasmiylashtirib bo'lmaydi.",
+    "pay_cancelled": "❌ Ariza bekor qilindi.",
+    "pay_order_not_found": "Ariza topilmadi yoki allaqachon qayta ishlangan.",
+    "pay_receipt_received": "✅ Chek qabul qilindi (#{order_id}). Admin tasdig'ini kuting.",
+    "pay_approved": "✅ To'lov tasdiqlandi!\n\n{product} faollashtirildi.",
+    "pay_rejected": "❌ To'lov tasdiqlanmadi. O'tkazma bo'lsa — adminga yozing.",
+    "pay_admin_notify": "💰 <b>Yangi to'lov arizasi #{order_id}</b>",
+    "pay_admin_order": (
+        "📋 <b>Ariza #{order_id}</b>\n"
+        "Foydalanuvchi: {user} (<code>{telegram_id}</code>)\n"
+        "Mahsulot: {product}\n"
+        "Summa: <b>{amount}</b>\n"
+        "Chek: {submitted}\n"
+        "Holat: {status}"
+    ),
+    "pay_admin_list_title": "💰 <b>To'lov arizalari</b>",
+    "pay_admin_empty": "Tasdiq kutayotgan arizalar yo'q.",
+    "pay_admin_receipt": "Chek skrinshoti",
+    "pay_admin_approve": "✅ Tasdiqlash",
+    "pay_admin_reject": "❌ Rad etish",
+    "pay_admin_done_approved": "✅ Tasdiqlandi, tarif faollashtirildi.",
+    "pay_admin_done_rejected": "❌ Ariza #{order_id} rad etildi.",
+    "pay_admin_approved_toast": "Tasdiqlandi",
+    "pay_admin_rejected_toast": "Rad etildi",
+    "pay_admin_pending_count": "⏳ To'lov arizalari: <b>{count}</b>",
+    "pay_order_already_processed": "Ariza allaqachon qayta ishlangan.",
 }
 
 EXTRA_EN: dict[str, str] = {
@@ -418,4 +580,113 @@ EXTRA_EN: dict[str, str] = {
     "eco_src_delivery": "Delivery",
     "eco_src_appointment": "Appointment",
     "eco_src_custom": "Reminder",
+    "btn_subscription": "💎 Subscription",
+    "sub_btn_menu": "💎 Subscription & limits",
+    "sub_btn_usage": "📊 My limits",
+    "sub_btn_plans": "💳 Plans",
+    "sub_btn_packages": "📦 AI packages",
+    "sub_btn_referral": "🎁 Invite a friend",
+    "sub_btn_buy": "Subscribe",
+    "sub_btn_back": "↩️ Back",
+    "sub_menu_intro": (
+        "💎 <b>Subscription & limits</b>\n\n"
+        "All modules are open — you pay for volume.\n"
+        "Prices in UZS (CBU rate ~12,017 UZS / $1).\n\n"
+        "🎁 First 7 days — Premium free."
+    ),
+    "sub_plans_title": "💳 <b>Plans</b>",
+    "sub_plans_hint": "Tap a plan for details or Subscribe.",
+    "sub_packages_title": "📦 <b>AI request packages</b>",
+    "sub_packages_hint": "One-time purchase — bonus requests don't expire.",
+    "sub_package_line": "• {name}: <b>{requests}</b> requests — <b>{price}</b>",
+    "sub_usage_title": "📊 <b>Your limits</b>",
+    "sub_current_plan": "Plan: {plan}",
+    "sub_trial_until": "🎁 Premium trial until {date}",
+    "sub_paid_until": "Paid until {date}",
+    "sub_ai_daily": "AI today: {used} / {limit}",
+    "sub_ai_monthly": "AI this month: {used} / {limit}",
+    "sub_ai_bonus": "Bonus requests: {bonus}",
+    "sub_storage_limit": "Storage: up to {limit} MB",
+    "sub_memory_limit": "AI memory: up to {limit} facts",
+    "sub_memory_unlimited": "AI memory: unlimited",
+    "sub_referral_info": (
+        "🎁 <b>Invite a friend</b>\n\n"
+        "You both get <b>{bonus}</b> AI requests.\n\n"
+        "Link:\n{link}\n\nCode: <code>{code}</code>"
+    ),
+    "sub_referral_applied": "🎁 Referral bonus applied!",
+    "sub_trial_welcome": "🎁 Premium for {days} days + {bonus} AI requests. /subscription",
+    "sub_buy_plan": "💳 <b>{plan}</b>\n<b>{price}</b> / month\n\nPay via: {contact}",
+    "sub_buy_package": "📦 <b>{name}</b> — {requests} requests\n<b>{price}</b>\n\nPay via: {contact}",
+    "sub_payment_default": "the bot admin",
+    "pay_instructions": (
+        "💳 <b>Payment order #{order_id}</b>\n\n"
+        "Product: {product}\n"
+        "Amount: <b>{amount}</b>\n\n"
+        "Transfer the <b>exact amount</b> to:\n"
+        "<code>{card}</code>{holder_line}\n\n"
+        "Then send a <b>receipt screenshot</b> (photo) here."
+    ),
+    "pay_card_holder": "Recipient: {holder}",
+    "pay_card_not_set": "card not configured",
+    "pay_card_not_configured": "Payments are temporarily unavailable. Contact admin.",
+    "pay_product_invalid": "This plan cannot be purchased.",
+    "pay_cancelled": "❌ Order cancelled.",
+    "pay_order_not_found": "Order not found or already processed.",
+    "pay_receipt_received": "✅ Receipt received (order #{order_id}). Awaiting admin confirmation.",
+    "pay_approved": "✅ Payment confirmed!\n\n{product} activated.",
+    "pay_rejected": "❌ Payment not confirmed. If you paid, contact admin.",
+    "pay_admin_notify": "💰 <b>New payment order #{order_id}</b>",
+    "pay_admin_order": (
+        "📋 <b>Order #{order_id}</b>\n"
+        "User: {user} (<code>{telegram_id}</code>)\n"
+        "Product: {product}\n"
+        "Amount: <b>{amount}</b>\n"
+        "Receipt: {submitted}\n"
+        "Status: {status}"
+    ),
+    "pay_admin_list_title": "💰 <b>Payment orders</b>",
+    "pay_admin_empty": "No orders awaiting confirmation.",
+    "pay_admin_receipt": "Receipt screenshot",
+    "pay_admin_approve": "✅ Approve",
+    "pay_admin_reject": "❌ Reject",
+    "pay_admin_done_approved": "✅ Approved, plan activated.",
+    "pay_admin_done_rejected": "❌ Order #{order_id} rejected.",
+    "pay_admin_approved_toast": "Approved",
+    "pay_admin_rejected_toast": "Rejected",
+    "pay_admin_pending_count": "⏳ Pending payments: <b>{count}</b>",
+    "pay_order_already_processed": "Order already processed.",
+    "plan_price_free": "Free",
+    "plan_price_monthly": "<b>{price}</b> / mo (~${usd})",
+    "plan_free_name": "Free",
+    "plan_free_desc": "All modules, usage limits apply.",
+    "plan_basic_name": "Basic",
+    "plan_basic_desc": "For most users.",
+    "plan_premium_name": "Premium",
+    "plan_premium_desc": "For active users.",
+    "plan_pro_name": "Pro",
+    "plan_pro_desc": "Near-unlimited + premium model.",
+    "plan_family_name": "Family",
+    "plan_family_desc": "Up to 5 people.",
+    "plan_pkg_100": "100 AI requests",
+    "plan_pkg_500": "500 AI requests",
+    "plan_pkg_1000": "1000 AI requests",
+    "plan_limit_ai_daily": "{n} AI requests per day",
+    "plan_limit_ai_monthly": "{n} AI requests per month",
+    "plan_limit_reminders": "Up to {n} reminders",
+    "plan_limit_reminders_unlimited": "Unlimited reminders",
+    "plan_limit_storage_mb": "Storage {n} MB",
+    "plan_limit_storage_gb": "Storage {n} GB",
+    "plan_all_modules": "All modules available",
+    "plan_feature_voice": "Voice messages",
+    "plan_feature_photo": "AI photo analysis",
+    "plan_feature_priority": "Priority speed",
+    "plan_feature_premium_model": "Premium AI model",
+    "quota_ai_daily": "⚠️ Daily AI limit reached. /subscription",
+    "quota_ai_monthly": "⚠️ Monthly AI limit reached. /subscription",
+    "quota_voice": "🎤 Voice from Basic plan. /subscription",
+    "quota_photo_ai": "📷 AI photos from Basic. /subscription",
+    "quota_reminders": "⚠️ Reminder limit {used}/{limit}. /subscription",
+    "quota_memory": "⚠️ Memory limit {used}/{limit}. /subscription",
+    "quota_storage": "⚠️ Storage full {used}/{limit} MB. /subscription",
 }

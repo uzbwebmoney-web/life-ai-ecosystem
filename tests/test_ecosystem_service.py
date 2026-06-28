@@ -23,3 +23,9 @@ def test_format_unified_search_empty():
     text = "\n".join(lines)
     assert "масло" in text
     assert "Ничего" in text or "topilmadi" in text.lower() or "Nothing" in text
+
+
+def test_format_unified_search_vault_hidden_notice():
+    lines = format_unified_search(UnifiedSearchResult(vault_hidden_count=2), "ru", "паспорт")
+    text = "\n".join(lines)
+    assert "хранилища" in text.lower() or "скрыты" in text.lower()

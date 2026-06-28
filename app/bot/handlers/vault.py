@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.handlers.vault_access import require_vault_unlock, try_unlock_vault
 from app.bot.keyboards_vault import (
     vault_cancel_kb,
     vault_delete_confirm_kb,
@@ -12,7 +13,7 @@ from app.bot.keyboards_vault import (
     vault_items_kb,
     vault_module_kb,
 )
-from app.bot.states import VaultStates
+from app.bot.states import VaultLockStates, VaultStates
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
 from app.models.entities import User
@@ -123,17 +124,32 @@ async def _finalize_vault_item(
 
 
 @router.callback_query(F.data == "mod:vault")
-async def vault_module(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+async def vault_module(
+    callback: CallbackQuery,
+    state: FSMContext,
+    user: User,
+    session: AsyncSession,
+) -> None:
     lang = user.language
+    if not await require_vault_unlock(user, state, lang, "mod:vault", reply=callback):
+        return
     await set_active_module(session, user, "vault")
     await callback.message.edit_text(t(lang, "vlt_module_intro"), reply_markup=vault_module_kb(lang))
     await callback.answer()
 
 
 @router.callback_query(F.data.startswith("sub:vault:"))
-async def vault_submodule(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+async def vault_submodule(
+    callback: CallbackQuery,
+    state: FSMContext,
+    user: User,
+    session: AsyncSession,
+) -> None:
     lang = user.language
     sub_id = (callback.data or "").split(":")[2]
+    pending = f"sub:vault:{sub_id}"
+    if not await require_vault_unlock(user, state, lang, pending, reply=callback):
+        return
     mod = MODULE_BY_ID["vault"]
     sub = next((s for s in mod.submodules if s.id == sub_id), None)
     if not sub:
@@ -148,6 +164,8 @@ async def vault_submodule(callback: CallbackQuery, user: User, session: AsyncSes
 async def vault_add_start(callback: CallbackQuery, state: FSMContext, user: User) -> None:
     lang = user.language
     sub_id = (callback.data or "").split(":")[2]
+    if not await require_vault_unlock(user, state, lang, f"sub:vault:{sub_id}", reply=callback):
+        return
     await state.clear()
     await state.update_data(vlt_sub=sub_id, vlt_record_id=None)
     await state.set_state(VaultStates.waiting_title)
@@ -161,6 +179,8 @@ async def vault_attach_start(callback: CallbackQuery, state: FSMContext, user: U
     lang = user.language
     parts = (callback.data or "").split(":")
     sub_id = parts[2]
+    if not await require_vault_unlock(user, state, lang, f"sub:vault:{sub_id}", reply=callback):
+        return
     record_id = int(parts[3])
     await state.clear()
     await state.update_data(vlt_sub=sub_id, vlt_record_id=record_id)
@@ -246,12 +266,15 @@ async def vault_attach_skip(message: Message, state: FSMContext, user: User, ses
 async def vault_open(
     callback: CallbackQuery,
     bot: Bot,
+    state: FSMContext,
     user: User,
     session: AsyncSession,
 ) -> None:
     lang = user.language
     parts = (callback.data or "").split(":")
     sub_id = parts[2]
+    if not await require_vault_unlock(user, state, lang, f"sub:vault:{sub_id}", reply=callback):
+        return
     record_id = int(parts[3])
     record = await get_vault_item(session, user.id, record_id)
     if not record:
@@ -280,9 +303,17 @@ async def vault_open(
 
 
 @router.callback_query(F.data.startswith("vlt:pg:"))
-async def vault_page(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+async def vault_page(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
     parts = (callback.data or "").split(":")
     sub_id = parts[2]
+    if not await require_vault_unlock(
+        user,
+        state,
+        user.language,
+        f"sub:vault:{sub_id}",
+        reply=callback,
+    ):
+        return
     page = int(parts[3])
     await _show_items(callback.message, user, session, user.language, sub_id, edit=True, page=page)
     await callback.answer()
@@ -294,10 +325,12 @@ async def vault_noop(callback: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data.startswith("vlt:del:"))
-async def vault_delete_confirm(callback: CallbackQuery, user: User) -> None:
+async def vault_delete_confirm(callback: CallbackQuery, state: FSMContext, user: User) -> None:
     lang = user.language
     parts = (callback.data or "").split(":")
     sub_id = parts[2]
+    if not await require_vault_unlock(user, state, lang, f"sub:vault:{sub_id}", reply=callback):
+        return
     record_id = int(parts[3])
     await callback.message.edit_text(
         t(lang, "vlt_delete_confirm"),
@@ -307,10 +340,12 @@ async def vault_delete_confirm(callback: CallbackQuery, user: User) -> None:
 
 
 @router.callback_query(F.data.startswith("vlt:delok:"))
-async def vault_delete(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+async def vault_delete(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
     lang = user.language
     parts = (callback.data or "").split(":")
     sub_id = parts[2]
+    if not await require_vault_unlock(user, state, lang, f"sub:vault:{sub_id}", reply=callback):
+        return
     record_id = int(parts[3])
     ok = await delete_vault_item(session, user.id, record_id)
     if not ok:
@@ -321,7 +356,24 @@ async def vault_delete(callback: CallbackQuery, user: User, session: AsyncSessio
 
 
 @router.callback_query(F.data == "vlt:cancel")
-async def vault_cancel(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+async def vault_cancel(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
+    lang = user.language
     await state.clear()
-    await callback.message.answer(t(user.language, "vlt_module_intro"), reply_markup=vault_module_kb(user.language))
+    if not await require_vault_unlock(user, state, lang, "mod:vault", reply=callback):
+        return
+    await callback.message.answer(t(lang, "vlt_module_intro"), reply_markup=vault_module_kb(lang))
     await callback.answer()
+
+
+@router.message(VaultLockStates.waiting_unlock)
+async def vault_unlock_message(
+    message: Message,
+    state: FSMContext,
+    user: User,
+    session: AsyncSession,
+) -> None:
+    password = (message.text or "").strip()
+    if not password:
+        await message.answer(t(user.language, "vlt_lock_prompt"))
+        return
+    await try_unlock_vault(message, user, session, state, password)

@@ -52,6 +52,12 @@ from app.bot.handlers.media import router as media_router
 
 from app.bot.handlers.start import router as start_router
 
+from app.bot.handlers.admin import router as admin_router
+
+from app.bot.handlers.payment import router as payment_router
+
+from app.bot.handlers.subscription import router as subscription_router
+
 from app.bot.middlewares.db_user import DbUserMiddleware
 
 from app.core.config import settings
@@ -69,6 +75,12 @@ def create_dispatcher(session_maker: async_sessionmaker) -> Dispatcher:
     dp.callback_query.middleware(DbUserMiddleware(session_maker))
 
     dp.include_router(start_router)
+
+    dp.include_router(admin_router)
+
+    dp.include_router(subscription_router)
+
+    dp.include_router(payment_router)
 
     dp.include_router(health_router)
 

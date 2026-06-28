@@ -10,6 +10,7 @@ from app.bot.keyboards import dashboard_kb, help_kb, onboarding_kb, start_langua
 from app.core.i18n import LANG_LABELS, t
 from app.models.entities import User
 from app.services.life_data import complete_onboarding, mark_welcome_pending, set_user_language
+from app.services.vault_lock_service import lock_vault_on_menu_exit
 
 router = Router()
 
@@ -24,6 +25,12 @@ async def _show_welcome(message: Message, lang: str) -> None:
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, user: User, session: AsyncSession) -> None:
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) > 1 and parts[1].startswith("ref_"):
+        from app.services.subscription_service import apply_referral
+
+        if await apply_referral(session, user, parts[1][4:]):
+            await message.answer(t(user.language, "sub_referral_applied"))
     if user.onboarding_done:
         await _show_modules_menu(message, user, session)
         return
@@ -35,6 +42,7 @@ async def cmd_start(message: Message, user: User, session: AsyncSession) -> None
 
 @router.message(Command("menu"))
 async def cmd_menu(message: Message, user: User, session: AsyncSession) -> None:
+    lock_vault_on_menu_exit(user)
     await _show_modules_menu(message, user, session)
 
 
@@ -66,5 +74,6 @@ async def start_begin(callback: CallbackQuery, user: User, session: AsyncSession
     lang = user.language
     await complete_onboarding(session, user)
     await callback.message.edit_text(t(lang, "onb_done"))
+    await callback.message.answer(t(lang, "sub_trial_welcome", days=7, bonus=50))
     await edit_dashboard(callback, user, session)
     await callback.answer()

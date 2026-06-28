@@ -73,6 +73,8 @@ async def _process_photo(
     universal_scan: bool = False,
 ) -> None:
     lang = user.language
+    from app.services.subscription_service import check_ai_quota, consume_ai_request, feature_allowed
+
     if (
         not universal_scan
         and user.active_module_id == "vault"
@@ -86,9 +88,19 @@ async def _process_photo(
             return
         await message.answer(t(lang, "vlt_use_add_flow"))
         return
+    if not universal_scan:
+        blocked = feature_allowed(user, "photo_ai")
+        if blocked:
+            await message.answer(t(lang, blocked))
+            return
     file_id = message.photo[-1].file_id
     caption = (message.caption or "").strip()
     loading = await message.answer(t(lang, "photo_analyzing"))
+    if not universal_scan:
+        quota_msg = await check_ai_quota(session, user, lang=lang)
+        if quota_msg:
+            await loading.edit_text(quota_msg)
+            return
     image_url = await get_telegram_image_url(bot, file_id)
     car_mode = user.active_module_id == "car" and user.active_submodule_id in (None, "panel_photo")
     legal_mode = user.active_module_id == "legal" and user.active_submodule_id == "doc_check"
@@ -104,6 +116,8 @@ async def _process_photo(
             universal=universal_scan,
         ),
     )
+    if not universal_scan:
+        await consume_ai_request(session, user)
     lowered = analysis.lower()
     combined = f"{caption} {analysis}".lower()
 
@@ -137,6 +151,8 @@ async def _process_photo(
             memory_context=memory_ctx,
             profile_context=profile_ctx,
             language=lang,
+            session=session,
+            user=user,
         )
         extra = f"\n\n🍽 {recipes}"
 
@@ -178,6 +194,12 @@ async def _process_photo(
 @router.message(F.voice)
 async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSession) -> None:
     lang = user.language
+    from app.services.subscription_service import feature_allowed
+
+    blocked = feature_allowed(user, "voice")
+    if blocked:
+        await message.answer(t(lang, blocked))
+        return
     loading = await message.answer(t(lang, "voice_recognizing"))
     text = await transcribe_voice(bot, message.voice.file_id)
     if not text:
@@ -197,6 +219,8 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
         memory_context=memory_ctx,
         profile_context=profile_ctx,
         language=lang,
+        session=session,
+        user=user,
     )
     header = active_module_label(user.active_module_id, user.active_submodule_id, lang=lang)
     prefix = f"{header}\n\n" if header else "🤖 "
@@ -294,6 +318,8 @@ async def handle_link(message: Message, user: User, session: AsyncSession) -> No
         memory_context=memory_ctx,
         profile_context=profile_ctx,
         language=lang,
+        session=session,
+        user=user,
     )
     await message.answer(
         f"{t(lang, 'link_check')}\n\n{risk_emoji} {t(lang, 'link_risk', risk=check['risk'])}\n{check['summary']}\n\n🤖 {ai}",

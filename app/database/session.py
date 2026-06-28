@@ -36,6 +36,28 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
         "last_daily_feed_date": "VARCHAR(10)",
 
+        "vault_password_hash": "VARCHAR(255)",
+
+        "plan_id": "VARCHAR(16) DEFAULT 'free'",
+
+        "plan_expires_at": "DATETIME",
+
+        "trial_expires_at": "DATETIME",
+
+        "ai_bonus_balance": "INTEGER DEFAULT 0",
+
+        "ai_used_today": "INTEGER DEFAULT 0",
+
+        "ai_used_month": "INTEGER DEFAULT 0",
+
+        "ai_usage_day": "VARCHAR(10)",
+
+        "ai_usage_month": "VARCHAR(7)",
+
+        "referral_code": "VARCHAR(16)",
+
+        "referred_by_user_id": "INTEGER",
+
     },
 
     "calendar_events": {
