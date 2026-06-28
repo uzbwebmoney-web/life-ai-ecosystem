@@ -7,14 +7,12 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.i18n import t
-from app.models.entities import CalendarEvent, CreditLoan, LifeRecord, MemoryEntry, Reminder
+from app.models.entities import CalendarEvent, LifeRecord, MemoryEntry, Reminder
 from app.services.car_service import list_car_compliance, list_car_maintenance
-from app.services.credit_loans import list_credit_loans
 from app.services.finance_service import list_finance_bills
 from app.services.health_service import list_health_medications
 from app.services.home_service import list_home_utilities
 from app.services.life_data import list_calendar_events, list_upcoming_reminders, search_memory, search_records
-from app.services.notifications_service import list_alert_items
 
 
 @dataclass(order=True)
@@ -34,21 +32,6 @@ class UnifiedSearchResult:
 
     def has_any(self) -> bool:
         return bool(self.records or self.memory or self.events or self.reminders)
-
-
-def _next_credit_payment(loan: CreditLoan, now: datetime) -> datetime:
-    day = max(1, min(31, int(loan.payment_day)))
-    year, month = now.year, now.month
-    if now.day > day:
-        if month == 12:
-            year += 1
-            month = 1
-        else:
-            month += 1
-    import calendar
-
-    last = calendar.monthrange(year, month)[1]
-    return datetime(year, month, min(day, last), 9, 0)
 
 
 async def list_unified_notifications(
@@ -147,25 +130,6 @@ async def list_unified_notifications(
         items.append(
             EcosystemNotification(bill.due_at, "🏠", bill.title, t(lang, "eco_src_utilities"))
         )
-
-    for loan in await list_credit_loans(session, user_id):
-        due = _next_credit_payment(loan, now)
-        if due > horizon:
-            continue
-        items.append(
-            EcosystemNotification(
-                due,
-                "💳",
-                f"{loan.title} — {loan.monthly_payment:,.0f} {loan.currency}".replace(",", " "),
-                t(lang, "eco_src_credit"),
-            )
-        )
-
-    for alert in await list_alert_items(session, user_id, limit=20):
-        if alert.due_at < now or alert.due_at > horizon:
-            continue
-        source = t(lang, "eco_src_subscription") if alert.alert_type == "subscription" else t(lang, "eco_src_visa")
-        items.append(EcosystemNotification(alert.due_at, "📋", alert.title, source))
 
     items.sort()
     return items[:limit]

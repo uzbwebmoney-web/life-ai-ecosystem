@@ -14,11 +14,6 @@ _MODULE_DISCLAIMERS: dict[str, dict[str, str]] = {
         "uz": "Yurist o'rnini bosmaydi — umumiy ma'lumot va tartib.",
         "en": "Not a lawyer — general information and next steps only.",
     },
-    "emergency": {
-        "ru": "При угрозе жизни звоните 103, 112.",
-        "uz": "Hayot xavfi bo'lsa 103, 112 ga qo'ng'iroq qiling.",
-        "en": "If life is at risk, call emergency services immediately.",
-    },
     "finance": {
         "ru": "Не давай гарантий доходности.",
         "uz": "Daromad kafolati bermang.",

@@ -14,7 +14,6 @@ from app.services.ai_service import ask_ai
 from app.services.intent_router import detect_module, module_hint
 from app.services.life_data import add_memory, search_memory
 from app.services.module_context import active_module_label
-from app.services.weather_service import fetch_weather_summary
 
 router = Router()
 
@@ -68,15 +67,6 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
     lang = user.language
     text = (message.text or "").strip()
     if not text or len(text) < 3:
-        return
-
-    lowered = text.lower()
-    if any(k in lowered for k in ("погод", "weather", "ob-havo", "templeratur", "temperature")):
-        summary = await fetch_weather_summary()
-        await message.answer(f"{t(lang, 'weather_title')}\n\n{summary}", reply_markup=back_menu_kb(lang))
-        return
-
-    if user.active_module_id == "ai_assistant" and user.active_submodule_id == "images":
         return
 
     if user.active_module_id and user.active_module_id in MODULE_BY_ID:

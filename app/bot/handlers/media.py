@@ -176,7 +176,7 @@ async def handle_link(message: Message, user: User, session: AsyncSession) -> No
     risk_emoji = {"low": "🟢", "medium": "🟡", "high": "🔴"}.get(check["risk"], "⚪")
     ai = await ask_ai(
         user_message=f"Check link for fraud: {url}\nHeuristic: {check['summary']}",
-        module_hint=module_hint("security", lang=lang),
+        module_hint=module_hint("ai_assistant", lang=lang),
         language=lang,
     )
     await message.answer(

@@ -6,7 +6,7 @@ def test_detect_health_intent():
 
 
 def test_detect_finance_intent():
-    assert detect_module("сколько я потратил на подписки") == "finance"
+    assert detect_module("сколько я потратил на расходы в этом месяце") == "finance"
 
 
 def test_url_security_flags_ip():

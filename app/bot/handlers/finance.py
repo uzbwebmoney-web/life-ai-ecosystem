@@ -5,7 +5,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards_credits import credits_hub_kb
 from app.bot.keyboards_finance import (
     finance_analysis_kb,
     finance_bill_item_kb,
@@ -21,7 +20,7 @@ from app.bot.keyboards_finance import (
 from app.bot.states import FinanceStates
 from app.core.i18n import t
 from app.models.entities import User
-from app.services.credit_loans import format_amount, format_credit_loan_line, list_credit_loans
+from app.services.credit_loans import format_amount
 from app.services.finance_service import (
     add_finance_bill,
     add_finance_goal,
@@ -74,14 +73,6 @@ async def finance_submodule(callback: CallbackQuery, user: User, session: AsyncS
         await _show_bills(callback.message, user, session, lang, edit=True)
     elif sub_id == "analysis":
         await _show_analysis(callback.message, user, session, lang, edit=True)
-    elif sub_id == "loans":
-        loans = await list_credit_loans(session, user.id)
-        if loans:
-            body = "\n\n".join(format_credit_loan_line(loan) for loan in loans)
-            text = f"{t(lang, 'credits_my')}\n\n{body}\n\n{t(lang, 'credits_notify')}"
-        else:
-            text = f"{t(lang, 'credits_title')}\n\n{t(lang, 'credits_empty_short')}"
-        await callback.message.edit_text(text, reply_markup=credits_hub_kb(loans, lang))
     await callback.answer()
 
 

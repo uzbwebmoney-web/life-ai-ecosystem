@@ -15,5 +15,5 @@ def test_education_ai_hints():
 
 def test_module_hint_scoped_to_education():
     hint = build_module_ai_hint("education", "exams", lang="ru")
-    assert "Образование" in hint
+    assert "Обучение" in hint
     assert "экзамен" in hint.lower() or "подготов" in hint.lower()

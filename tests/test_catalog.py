@@ -1,9 +1,9 @@
 from app.core.modules.catalog import CATEGORIES, MODULES, MODULE_BY_ID
 
 
-def test_twenty_nine_modules():
-    assert len(MODULES) == 29
-    assert len(MODULE_BY_ID) == 29
+def test_fifteen_modules():
+    assert len(MODULES) == 15
+    assert len(MODULE_BY_ID) == 15
 
 
 def test_all_categories_reference_valid_modules():
@@ -12,7 +12,7 @@ def test_all_categories_reference_valid_modules():
         for mid in ids:
             assert mid in MODULE_BY_ID
             seen.add(mid)
-    assert len(seen) == 29
+    assert len(seen) == 15
 
 
 def test_each_module_has_submodules():

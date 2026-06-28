@@ -12,8 +12,8 @@ _STRINGS: dict[str, dict[str, str]] = {
     "ru": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Персональный помощник в жизни — <b>29 модулей</b>:\n"
-            "здоровье, авто, финансы, право, семья и другое.\n\n"
+            "Персональный помощник в жизни — <b>15 модулей</b>:\n"
+            "здоровье, авто, финансы, право, дом и другое.\n\n"
             "<b>Как пользоваться:</b>\n"
             "1. Выберите модуль (например ⚖️ Юридическая помощь или 🏥 Здоровье)\n"
             "2. Напишите вопрос — AI ответит <b>только по этой теме</b>\n"
@@ -22,14 +22,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         ),
         "choose_language": "🌐 Выберите язык интерфейса:",
         "language_changed": "✅ Язык изменён на {label}",
-        "main_menu": "🏠 <b>Главное меню</b>\n\n29 модулей — выберите раздел жизни:",
+        "main_menu": "🏠 <b>Главное меню</b>\n\n15 модулей — выберите раздел жизни:",
         "btn_dashboard": "📊 Панель управления",
         "btn_ai_assistant": "🤖 AI-ассистент",
         "btn_search": "🔍 Поиск по жизни",
         "btn_calendar": "📅 Календарь",
         "btn_family": "👨‍👩‍👧 Семья",
         "btn_voice": "🎤 Голосовой режим",
-        "btn_all_modules": "📚 Все 29 модулей",
+        "btn_all_modules": "📚 Все 15 модулей",
         "btn_settings": "⚙️ Настройки",
         "btn_language": "🌐 Язык",
         "btn_back_menu": "⬅️ Главное меню",
@@ -118,15 +118,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         "voice_failed": "⚠️ Не удалось распознать. Проверьте OPENAI_API_KEY.",
         "photo_analyzing": "📷 Анализирую фото (OCR/Vision)…",
         "photo_done": "📷 <b>Распознано</b>",
-        "cat_0": "Здоровье и семья",
-        "cat_1": "Деньги и карьера",
+        "cat_0": "Здоровье и питание",
+        "cat_1": "Деньги и бизнес",
         "cat_2": "Транспорт и путешествия",
-        "cat_3": "Дом и быт",
+        "cat_3": "Дом и покупки",
         "cat_4": "Обучение и спорт",
-        "cat_5": "Право и безопасность",
-        "cat_6": "AI и данные",
-        "cat_7": "Планирование",
-        "cat_8": "Медиа и технологии",
+        "cat_5": "Право",
+        "cat_6": "Планирование",
+        "cat_7": "AI и данные",
         "lang_reply_ru": "русском",
         "lang_reply_uz": "узбекском",
         "lang_reply_en": "английском",
@@ -639,7 +638,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_add_reminder": "➕ Напоминание",
         "eco_btn_memory": "🧠 AI-память",
         "eco_features_intro": (
-            "🌐 <b>Функции экосистемы</b> — объединяют все 29 модулей:\n\n"
+            "🌐 <b>Функции экосистемы</b> — объединяют все модули:\n\n"
             "🔔 <b>Единый центр уведомлений</b> — лекарства, встречи, платежи, ТО, дни рождения\n"
             "🧠 <b>AI-память</b> — {memory} (в настройках)\n"
             "🔍 <b>Поиск по данным</b> — «Когда менял масло?», «Анализ за март»\n"
@@ -688,7 +687,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Виза",
         "onb_welcome": (
             "👋 <b>Добро пожаловать в Life AI!</b>\n\n"
-            "29 модулей для жизни: здоровье, финансы, авто, право и другое.\n"
+            "15 модулей для жизни: здоровье, финансы, авто, право и другое.\n"
             "Выберите модуль → задайте вопрос AI или сохраните запись.\n\n"
             "Нажмите «Начать», чтобы открыть меню."
         ),
@@ -704,7 +703,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "uz": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Hayotingizda shaxsiy yordamchi — <b>29 ta modul</b>:\n"
+            "Hayotingizda shaxsiy yordamchi — <b>15 ta modul</b>:\n"
             "salomatlik, avto, moliya, huquq, oila va boshqalar.\n\n"
             "<b>Qanday foydalanish:</b>\n"
             "1. Modulni tanlang (masalan ⚖️ Yuridik yordam yoki 🏥 Salomatlik)\n"
@@ -714,7 +713,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         ),
         "choose_language": "🌐 Interfeys tilini tanlang:",
         "language_changed": "✅ Til o'zgartirildi: {label}",
-        "main_menu": "🏠 <b>Asosiy menyu</b>\n\n29 ta modul — hayot bo'limini tanlang:",
+        "main_menu": "🏠 <b>Asosiy menyu</b>\n\n15 ta modul — hayot bo'limini tanlang:",
         "btn_dashboard": "📊 Boshqaruv paneli",
         "btn_ai_assistant": "🤖 AI yordamchi",
         "btn_search": "🔍 Hayot bo'yicha qidiruv",
@@ -810,15 +809,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         "voice_failed": "⚠️ Tanib bo'lmadi. OPENAI_API_KEY ni tekshiring.",
         "photo_analyzing": "📷 Rasm tahlil qilinmoqda (OCR/Vision)…",
         "photo_done": "📷 <b>Tanildi</b>",
-        "cat_0": "Salomatlik va oila",
-        "cat_1": "Pul va martaba",
+        "cat_0": "Salomatlik va ovqatlanish",
+        "cat_1": "Pul va biznes",
         "cat_2": "Transport va sayohat",
-        "cat_3": "Uy va kundalik hayot",
+        "cat_3": "Uy va xaridlar",
         "cat_4": "Ta'lim va sport",
-        "cat_5": "Huquq va xavfsizlik",
-        "cat_6": "AI va ma'lumotlar",
-        "cat_7": "Rejalashtirish",
-        "cat_8": "Media va texnologiya",
+        "cat_5": "Huquq",
+        "cat_6": "Rejalashtirish",
+        "cat_7": "AI va ma'lumotlar",
         "lang_reply_ru": "rus",
         "lang_reply_uz": "o'zbek",
         "lang_reply_en": "ingliz",
@@ -1374,7 +1372,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ntf_add_only_data": "Faqat obuna va viza uchun qo'shish.",
         "eco_src_subscription": "Obuna",
         "eco_src_visa": "Viza",
-        "onb_welcome": "👋 <b>Life AI ga xush kelibsiz!</b>\n\n29 ta modul. «Boshlash» tugmasini bosing.",
+        "onb_welcome": "👋 <b>Life AI ga xush kelibsiz!</b>\n\n15 ta modul. «Boshlash» tugmasini bosing.",
         "onb_start_btn": "🚀 Boshlash",
         "onb_done": "✅ Tayyor!",
         "export_done": "📦 Ma'lumotlaringiz eksporti (JSON).",
@@ -1387,7 +1385,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "en": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Your personal life assistant — <b>29 modules</b>:\n"
+            "Your personal life assistant — <b>15 modules</b>:\n"
             "health, car, finance, legal, family, and more.\n\n"
             "<b>How to use:</b>\n"
             "1. Pick a module (e.g. ⚖️ Legal help or 🏥 Health)\n"
@@ -1397,14 +1395,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         ),
         "choose_language": "🌐 Choose interface language:",
         "language_changed": "✅ Language changed to {label}",
-        "main_menu": "🏠 <b>Main menu</b>\n\n29 modules — pick a life area:",
+        "main_menu": "🏠 <b>Main menu</b>\n\n15 modules — pick a life area:",
         "btn_dashboard": "📊 Dashboard",
         "btn_ai_assistant": "🤖 AI assistant",
         "btn_search": "🔍 Life search",
         "btn_calendar": "📅 Calendar",
         "btn_family": "👨‍👩‍👧 Family",
         "btn_voice": "🎤 Voice mode",
-        "btn_all_modules": "📚 All 29 modules",
+        "btn_all_modules": "📚 All 15 modules",
         "btn_settings": "⚙️ Settings",
         "btn_language": "🌐 Language",
         "btn_back_menu": "⬅️ Main menu",
@@ -1493,15 +1491,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         "voice_failed": "⚠️ Could not recognize. Check OPENAI_API_KEY.",
         "photo_analyzing": "📷 Analyzing photo (OCR/Vision)…",
         "photo_done": "📷 <b>Recognized</b>",
-        "cat_0": "Health & family",
-        "cat_1": "Money & career",
+        "cat_0": "Health & nutrition",
+        "cat_1": "Money & business",
         "cat_2": "Transport & travel",
-        "cat_3": "Home & daily life",
+        "cat_3": "Home & shopping",
         "cat_4": "Education & sport",
-        "cat_5": "Law & security",
-        "cat_6": "AI & data",
-        "cat_7": "Planning",
-        "cat_8": "Media & tech",
+        "cat_5": "Legal",
+        "cat_6": "Planning",
+        "cat_7": "AI & data",
         "lang_reply_ru": "Russian",
         "lang_reply_uz": "Uzbek",
         "lang_reply_en": "English",
@@ -2014,7 +2011,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_add_reminder": "➕ Reminder",
         "eco_btn_memory": "🧠 AI memory",
         "eco_features_intro": (
-            "🌐 <b>Ecosystem features</b> — connect all 29 modules:\n\n"
+            "🌐 <b>Ecosystem features</b> — connect all modules:\n\n"
             "🔔 <b>Notification center</b> — meds, meetings, payments, car service, birthdays\n"
             "🧠 <b>AI memory</b> — {memory}\n"
             "🔍 <b>Life search</b> — «When did I change oil?»\n"
@@ -2057,7 +2054,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ntf_add_only_data": "Adding is available for subscriptions and visas only.",
         "eco_src_subscription": "Subscription",
         "eco_src_visa": "Visa",
-        "onb_welcome": "👋 <b>Welcome to Life AI!</b>\n\n29 modules. Tap «Start» to open the menu.",
+        "onb_welcome": "👋 <b>Welcome to Life AI!</b>\n\n15 modules. Tap «Start» to open the menu.",
         "onb_start_btn": "🚀 Start",
         "onb_done": "✅ Done!",
         "export_done": "📦 Your data export (JSON).",

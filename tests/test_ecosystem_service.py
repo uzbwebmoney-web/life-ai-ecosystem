@@ -1,10 +1,8 @@
-from datetime import datetime
 
 from app.services.ecosystem_service import (
     UnifiedSearchResult,
     build_search_ai_context,
     format_unified_search,
-    _next_credit_payment,
 )
 
 
@@ -25,13 +23,3 @@ def test_format_unified_search_empty():
     text = "\n".join(lines)
     assert "масло" in text
     assert "Ничего" in text or "topilmadi" in text.lower() or "Nothing" in text
-
-
-def test_next_credit_payment():
-    from app.models.entities import CreditLoan
-
-    loan = CreditLoan(payment_day=15, monthly_payment=500000, currency="UZS", title="Test")
-    now = datetime(2026, 6, 20)
-    due = _next_credit_payment(loan, now)
-    assert due.month == 7
-    assert due.day == 15
