@@ -17,6 +17,7 @@ from app.services.admin_service import (
     format_recent_users_message,
     list_recent_users,
 )
+from app.services.ai_usage_service import fetch_ai_cost_stats, format_ai_cost_stats_message
 from app.services.payment_service import (
     approve_payment_order,
     count_pending_orders,
@@ -97,6 +98,20 @@ async def admin_users(callback: CallbackQuery, user: User, session: AsyncSession
         reply_markup=admin_back_kb(lang),
     )
     await callback.answer()
+
+
+@router.callback_query(F.data == "adm:costs")
+async def admin_costs(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    if not is_admin(user):
+        await callback.answer()
+        return
+    lang = user.language
+    stats = await fetch_ai_cost_stats(session)
+    await callback.message.edit_text(
+        format_ai_cost_stats_message(stats, lang=lang),
+        reply_markup=admin_back_kb(lang),
+    )
+    await callback.answer(t(lang, "admin_refreshed"))
 
 
 async def _load_order_users(session: AsyncSession, orders: list[PaymentOrder]) -> dict[int, User]:

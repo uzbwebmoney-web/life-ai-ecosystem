@@ -21,7 +21,14 @@ async def transcribe_voice(bot: Bot, file_id: str) -> str:
     return (result.text or "").strip()
 
 
-async def analyze_image_url(image_url: str, prompt: str, *, model: str | None = None) -> str:
+async def analyze_image_url(
+    image_url: str,
+    prompt: str,
+    *,
+    model: str | None = None,
+    session=None,
+    user_id: int | None = None,
+) -> str:
     if not settings.openai_api_key.strip():
         return "⚠️ OPENAI_API_KEY не задан — OCR/vision недоступен."
     client = AsyncOpenAI(api_key=settings.openai_api_key)
@@ -41,6 +48,10 @@ async def analyze_image_url(image_url: str, prompt: str, *, model: str | None = 
         ],
         **chat_token_limit_kwargs(use_model, 1500),
     )
+    if session is not None and user_id is not None:
+        from app.services.ai_usage_service import record_ai_usage
+
+        await record_ai_usage(session, user_id, use_model, response, source="vision")
     from app.services.text_format import format_ai_reply
 
     return format_ai_reply((response.choices[0].message.content or "").strip())

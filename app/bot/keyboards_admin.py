@@ -11,6 +11,7 @@ def admin_menu_kb(lang: str = "ru") -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text=t(lang, "admin_btn_stats"), callback_data="adm:stats")],
             [InlineKeyboardButton(text=t(lang, "admin_btn_users"), callback_data="adm:users")],
             [InlineKeyboardButton(text=t(lang, "admin_btn_orders"), callback_data="adm:orders")],
+            [InlineKeyboardButton(text=t(lang, "admin_btn_costs"), callback_data="adm:costs")],
             [
                 InlineKeyboardButton(text=t(lang, "admin_btn_refresh"), callback_data="adm:stats"),
                 InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu"),

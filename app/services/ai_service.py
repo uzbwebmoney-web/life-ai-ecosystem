@@ -72,6 +72,8 @@ async def ask_ai(
     raw = (response.choices[0].message.content or "").strip()
     if user is not None and session is not None:
         from app.services.subscription_service import consume_ai_request
+        from app.services.ai_usage_service import record_ai_usage
 
         await consume_ai_request(session, user, model=model)
+        await record_ai_usage(session, user.id, model, response, source="chat")
     return format_ai_reply(raw)

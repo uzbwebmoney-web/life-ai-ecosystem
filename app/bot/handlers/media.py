@@ -127,6 +127,8 @@ async def _process_photo(
             universal=universal_scan,
         ),
         model=vision_model,
+        session=session,
+        user_id=user.id,
     )
     if not universal_scan:
         await consume_photo_analysis(session, user)
