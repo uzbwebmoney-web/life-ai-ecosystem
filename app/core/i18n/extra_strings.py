@@ -19,9 +19,9 @@ EXTRA_RU: dict[str, str] = {
     "dash_daily_tip": "Напишите вопрос или отправьте 📷 — бот поймёт сам.",
     "btn_scan": "📷 Сканер",
     "btn_sos": "🚨 SOS",
-    "btn_all_modules_short": "📂 Модули",
+    "btn_all_modules_short": "📂 Все разделы",
     "btn_household": "👨‍👩‍👧 Семейный доступ",
-    "all_modules_pick": "📂 <b>Все модули</b>\n\nВыберите:",
+    "all_modules_pick": "📂 <b>Все разделы</b>\n\nВыберите:",
     "scan_prompt": "📷 <b>Универсальный сканер</b>\n\nОтправьте фото: чек, анализ, договор, рецепт, ошибку авто, холодильник…\nAI сам определит тип и сохранит в архив.",
     "scan_saved": "✅ Сохранено в {folder}",
     "remember_saved": "✅ Запомнил: {text}",
@@ -43,13 +43,13 @@ EXTRA_RU: dict[str, str] = {
     "act_save_memory": "🧠 Сохранить в память",
     "act_save_expense": "💰 Записать расход",
     "act_hint_car_profile": "🚗 Напишите модель авто — сохраню в профиль.\nПример: «BYD Song Plus 2025»",
-    "act_hint_car_service": "🔧 Модуль «Авто → ТО» открыт. Добавьте дату замены масла.",
-    "act_hint_car_insurance": "🛡 Модуль «Авто → Страховка» открыт.",
-    "act_hint_med_course": "💊 Модуль «Здоровье → Лекарства» открыт.",
-    "act_hint_med_remind": "⏰ Модуль «Здоровье → Приём лекарств» открыт.",
-    "act_hint_travel_plan": "✈️ Модуль «Путешествия» открыт.",
-    "act_hint_travel_passport": "🛂 Модуль «Сейф → Паспорт» открыт.",
-    "act_hint_save_expense": "💰 Модуль «Финансы → Расходы» открыт.",
+    "act_hint_car_service": "🔧 Раздел «Авто → ТО» открыт. Добавьте дату замены масла.",
+    "act_hint_car_insurance": "🛡 Раздел «Авто → Страховка» открыт.",
+    "act_hint_med_course": "💊 Раздел «Здоровье → Лекарства» открыт.",
+    "act_hint_med_remind": "⏰ Раздел «Здоровье → Приём лекарств» открыт.",
+    "act_hint_travel_plan": "✈️ Раздел «Путешествия» открыт.",
+    "act_hint_travel_passport": "🛂 Раздел «Сейф → Паспорт» открыт.",
+    "act_hint_save_expense": "💰 Раздел «Финансы → Расходы» открыт.",
     "act_hint_save_memory": "🧠 Напишите «Запомни: …» — сохраню навсегда.",
     "sos_menu": "🚨 <b>SOS — срочная помощь</b>\n\nВыберите ситуацию:",
     "sos_btn_first_aid": "🩹 Первая помощь",
@@ -99,9 +99,9 @@ EXTRA_UZ: dict[str, str] = {
     "dash_daily_tip": "Savol yozing yoki 📷 yuboring.",
     "btn_scan": "📷 Skaner",
     "btn_sos": "🚨 SOS",
-    "btn_all_modules_short": "📂 Modullar",
+    "btn_all_modules_short": "📂 Bo'limlar",
     "btn_household": "👨‍👩‍👧 Oilaviy kirish",
-    "all_modules_pick": "📂 <b>Barcha modullar</b>",
+    "all_modules_pick": "📂 <b>Barcha bo'limlar</b>\n\nTanlang:",
     "scan_prompt": "📷 <b>Skaner</b>\n\nRasm yuboring — AI turi aniqlaydi va arxivga saqlaydi.",
     "scan_saved": "✅ {folder} ga saqlandi",
     "remember_saved": "✅ Eslab qoldim: {text}",
@@ -124,26 +124,58 @@ EXTRA_UZ: dict[str, str] = {
     "act_save_expense": "💰 Xarajat",
     "act_hint_car_profile": "🚗 Avto modelini yozing.",
     "act_hint_car_service": "🔧 Avto → TO ochildi.",
-    "act_hint_car_insurance": "🛡 Sug'urta moduli.",
-    "act_hint_med_course": "💊 Dorilar moduli.",
-    "act_hint_med_remind": "⏰ Eslatmalar moduli.",
-    "act_hint_travel_plan": "✈️ Sayohat moduli.",
-    "act_hint_travel_passport": "🛂 Pasport moduli.",
-    "act_hint_save_expense": "💰 Moliya moduli.",
+    "act_hint_car_insurance": "🛡 «Avto → Sug'urta» bo'limi ochildi.",
+    "act_hint_med_course": "💊 «Salomatlik → Dorilar» bo'limi ochildi.",
+    "act_hint_med_remind": "⏰ «Salomatlik → Eslatmalar» bo'limi ochildi.",
+    "act_hint_travel_plan": "✈️ «Sayohat» bo'limi ochildi.",
+    "act_hint_travel_passport": "🛂 «Seyf → Pasport» bo'limi ochildi.",
+    "act_hint_save_expense": "💰 «Moliya → Xarajatlar» bo'limi ochildi.",
     "act_hint_save_memory": "🧠 «Eslab qol: …» deb yozing.",
-    "sos_menu": "🚨 <b>SOS</b>",
+    "sos_menu": "🚨 <b>SOS — tezkor yordam</b>\n\nVaziyatni tanlang:",
     "sos_btn_first_aid": "🩹 Birinchi yordam",
     "sos_btn_phones": "📞 Telefonlar",
-    "sos_btn_accident": "🚗 Avariya",
-    "sos_btn_passport": "🛂 Pasport",
+    "sos_btn_accident": "🚗 Yo'l-transport hodisasi",
+    "sos_btn_passport": "🛂 Pasport yo'qolishi",
     "sos_btn_poison": "☠️ Zaharlanish",
     "sos_btn_burn": "🔥 Kuyish",
-    "sos_first_aid": "🩹 103 chaqiring. Bu faqat ma'lumot.",
-    "sos_phones": "📞 103 · 102 · 1015",
-    "sos_accident": "🚗 Avariya: 102, foto, sug'urta.",
-    "sos_passport": "🛂 Pasport yo'qolsa: politsiya, MVD.",
-    "sos_poison": "☠️ 103. Qusishni majbur qilmang.",
-    "sos_burn": "🔥 Suv bilan sovuting 15–20 daq.",
+    "sos_first_aid": (
+        "🩹 <b>Birinchi yordam</b>\n\n"
+        "1. Oni va nafas olishni baholang\n"
+        "2. 103 chaqiring (tez yordam)\n"
+        "3. Umurtqa pog'onasi jarohati bo'lsa — harakat qilmang\n"
+        "4. Qon ketayotgan bo'lsa — bosuvchi bandaj\n\n"
+        "⚠️ Bu ma'lumot, shifokor o'rnini bosa olmaydi."
+    ),
+    "sos_phones": "📞 <b>Telefonlar (O'zbekiston)</b>\n\n103 — tez yordam\n102 — politsiya\n1015 — yong'in\n104 — gaz",
+    "sos_accident": (
+        "🚗 <b>Yo'l-transport hodisasi</b>\n\n"
+        "1. Avariya chiroqlarini yoqing\n"
+        "2. 102 chaqiring\n"
+        "3. Joyni suratga oling\n"
+        "4. Tushunarsiz hujjatlarga imzo qo'ymang\n"
+        "5. Sug'urtaga xabar bering"
+    ),
+    "sos_passport": (
+        "🛂 <b>Pasport yo'qolishi</b>\n\n"
+        "1. Politsiyaga ariza bering\n"
+        "2. Elchixona / Ichki ishlar organiga murojaat qiling\n"
+        "3. Yo'qolganlik haqidagi ma'lumotnomani saqlang\n"
+        "4. Chet el pasporti muddatini oldindan tekshiring"
+    ),
+    "sos_poison": (
+        "☠️ <b>Zaharlanish</b>\n\n"
+        "1. 103 chaqiring\n"
+        "2. Shifokor aytmasdan qusishni majbur qilmang\n"
+        "3. Qadoq / qoldiqlarni saqlang\n"
+        "4. Agar hushida bo'lsangiz — suv iching"
+    ),
+    "sos_burn": (
+        "🔥 <b>Kuyish</b>\n\n"
+        "1. Suv bilan 15–20 daqiqa sovuting\n"
+        "2. Pufakchalarni yormang\n"
+        "3. Yog' surmang\n"
+        "4. Katta maydonda — 103 chaqiring"
+    ),
     "weather_unavailable": "Ob-havo vaqtincha mavjud emas.",
     "weather_now": "🌤 Hozir: {temp}°C, namlik {humidity}%, shamol {wind} m/s",
     "weather_today_range": "📈 Bugun: {tmin}°…{tmax}°C",
@@ -172,9 +204,9 @@ EXTRA_EN: dict[str, str] = {
     "dash_daily_tip": "Ask a question or send 📷 — the bot will figure it out.",
     "btn_scan": "📷 Scan",
     "btn_sos": "🚨 SOS",
-    "btn_all_modules_short": "📂 Modules",
+    "btn_all_modules_short": "📂 Sections",
     "btn_household": "👨‍👩‍👧 Family access",
-    "all_modules_pick": "📂 <b>All modules</b>",
+    "all_modules_pick": "📂 <b>All sections</b>\n\nPick one:",
     "scan_prompt": "📷 <b>Universal scanner</b>\n\nSend a photo — AI classifies and archives it.",
     "scan_saved": "✅ Saved to {folder}",
     "remember_saved": "✅ Remembered: {text}",
@@ -196,27 +228,65 @@ EXTRA_EN: dict[str, str] = {
     "act_save_memory": "🧠 Save to memory",
     "act_save_expense": "💰 Log expense",
     "act_hint_car_profile": "🚗 Type your car model — I'll save it.",
-    "act_hint_car_service": "🔧 Car → Service module open.",
-    "act_hint_car_insurance": "🛡 Insurance module open.",
-    "act_hint_med_course": "💊 Health → Medications open.",
-    "act_hint_med_remind": "⏰ Med reminders open.",
-    "act_hint_travel_plan": "✈️ Travel module open.",
-    "act_hint_travel_passport": "🛂 Vault → Passport open.",
-    "act_hint_save_expense": "💰 Finance → Expenses open.",
+    "act_hint_car_service": "🔧 Car → Service is open.",
+    "act_hint_car_insurance": "🛡 Car → Insurance is open.",
+    "act_hint_med_course": "💊 Health → Medications is open.",
+    "act_hint_med_remind": "⏰ Health → Med reminders is open.",
+    "act_hint_travel_plan": "✈️ Travel is open.",
+    "act_hint_travel_passport": "🛂 Vault → Passport is open.",
+    "act_hint_save_expense": "💰 Finance → Expenses is open.",
     "act_hint_save_memory": "🧠 Type «Remember: …» to save forever.",
-    "sos_menu": "🚨 <b>SOS — emergency</b>",
+    "sos_menu": "🚨 <b>SOS — emergency help</b>\n\nPick a situation:",
     "sos_btn_first_aid": "🩹 First aid",
     "sos_btn_phones": "📞 Phone numbers",
     "sos_btn_accident": "🚗 Car accident",
     "sos_btn_passport": "🛂 Lost passport",
     "sos_btn_poison": "☠️ Poisoning",
     "sos_btn_burn": "🔥 Burn",
-    "sos_first_aid": "🩹 Call emergency services. This is info only, not medical advice.",
-    "sos_phones": "📞 103 · 102 · 1015 (Uzbekistan)",
-    "sos_accident": "🚗 Accident: call police, photos, insurance.",
-    "sos_passport": "🛂 Lost passport: police report, embassy/MVD.",
-    "sos_poison": "☠️ Call 103. Don't induce vomiting unless told.",
-    "sos_burn": "🔥 Cool with water 15–20 min. Call 103 if severe.",
+    "sos_first_aid": (
+        "🩹 <b>First aid</b>\n\n"
+        "1. Check consciousness and breathing\n"
+        "2. Call 103 (ambulance)\n"
+        "3. Don't move the person if you suspect a spinal injury\n"
+        "4. For bleeding — apply direct pressure\n\n"
+        "⚠️ This is guidance only, not a substitute for a doctor."
+    ),
+    "sos_phones": (
+        "📞 <b>Phone numbers (Uzbekistan)</b>\n\n"
+        "103 — ambulance\n"
+        "102 — police\n"
+        "1015 — fire service\n"
+        "104 — gas emergency"
+    ),
+    "sos_accident": (
+        "🚗 <b>Car accident</b>\n\n"
+        "1. Turn on hazard lights\n"
+        "2. Call 102\n"
+        "3. Take photos of the scene\n"
+        "4. Don't sign unclear paperwork\n"
+        "5. Notify your insurer"
+    ),
+    "sos_passport": (
+        "🛂 <b>Lost passport</b>\n\n"
+        "1. File a report with the police\n"
+        "2. Contact the embassy / MVD\n"
+        "3. Keep the loss certificate\n"
+        "4. Check your passport expiry date in advance"
+    ),
+    "sos_poison": (
+        "☠️ <b>Poisoning</b>\n\n"
+        "1. Call 103\n"
+        "2. Don't induce vomiting unless a doctor tells you to\n"
+        "3. Keep the packaging / any remaining substance\n"
+        "4. Drink water only if you're conscious"
+    ),
+    "sos_burn": (
+        "🔥 <b>Burn</b>\n\n"
+        "1. Cool with water for 15–20 minutes\n"
+        "2. Don't pop blisters\n"
+        "3. Don't apply oil or grease\n"
+        "4. For large burns — call 103"
+    ),
     "weather_unavailable": "Weather temporarily unavailable.",
     "weather_now": "🌤 Now: {temp}°C, humidity {humidity}%, wind {wind} m/s",
     "weather_today_range": "📈 Today: {tmin}°…{tmax}°C",

@@ -12,12 +12,11 @@ _STRINGS: dict[str, dict[str, str]] = {
     "ru": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Персональный помощник в жизни — <b>14 модулей</b>:\n"
-            "здоровье, авто, финансы, право, дом и другое.\n\n"
+            "Помощник по жизни: здоровье, авто, финансы, право, дом и другое.\n\n"
             "<b>Как пользоваться:</b>\n"
-            "1. Выберите модуль (например ⚖️ Юридическая помощь или 🏥 Здоровье)\n"
+            "1. Выберите тему (например ⚖️ Юридическая помощь или 🏥 Здоровье)\n"
             "2. Напишите вопрос — AI ответит <b>только по этой теме</b>\n"
-            "3. Сохраняйте записи и напоминания внутри модуля\n\n"
+            "3. Сохраняйте записи и напоминания внутри раздела\n\n"
             "🧠 Память AI · 🔍 Поиск · 📊 Панель · 🔔 Напоминания"
         ),
         "choose_language": "🌐 Выберите язык интерфейса:",
@@ -25,10 +24,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "language_changed": "✅ Язык изменён на {label}",
         "main_menu": (
             "🧠 <b>Life AI</b>\n\n"
-            "Выберите модуль ниже.\n\n"
-            "💡 Откройте модуль и <b>просто напишите вопрос</b> — кнопка не обязательна."
+            "Выберите, чем заняться.\n\n"
+            "💡 Можно <b>просто написать вопрос</b> — кнопка не обязательна."
         ),
-        "btn_all_by_category": "📂 Все модули по категориям",
+        "btn_all_by_category": "📂 Все разделы",
         "btn_open_menu": "🚀 Открыть меню",
         "btn_help": "❓ Помощь",
         "btn_search_record": "🔍 Найти запись",
@@ -38,12 +37,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_calendar": "📅 Календарь",
         "btn_family": "👨‍👩‍👧 Семья",
         "btn_voice": "🎤 Голосовой режим",
-        "btn_all_modules": "📚 Все 14 модулей",
+        "btn_all_modules": "📚 Все разделы",
         "btn_settings": "⚙️ Настройки",
         "btn_language": "🌐 Язык",
-        "btn_back_menu": "🏠 К списку модулей",
+        "btn_back_menu": "🏠 Главная",
         "btn_back_categories": "⬅️ Категории",
-        "btn_back_module": "⬅️ К модулю",
+        "btn_back_module": "⬅️ Назад",
         "btn_ask_ai": "💬 Задать вопрос",
         "btn_add_record": "➕ Сохранить заметку",
         "btn_add_record_full": "➕ Сохранить заметку",
@@ -77,15 +76,15 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 Память AI: <b>{memory}</b>\n\n"
             "💰 Доходы: <b>{income:.0f}</b> | Расходы: <b>{expense:.0f}</b>\n"
             "📈 Баланс: <b>{balance:.0f}</b>\n\n"
-            "📦 Модулей: <b>{modules}</b>"
+            "📦 Разделов: <b>{modules}</b>"
         ),
-        "all_modules": "📚 <b>Все модули</b> ({count})\n\nВыберите категорию:",
-        "pick_module": "📂 <b>{category}</b>\n\nВыберите модуль:",
-        "module_not_found": "Модуль не найден",
+        "all_modules": "📚 <b>Категории</b> ({count})\n\nВыберите:",
+        "pick_module": "📂 <b>{category}</b>\n\nЧто вас интересует?",
+        "module_not_found": "Раздел не найден",
         "not_found": "Не найдено",
         "module_sections": "Разделы:",
         "module_more": "… и ещё {count}",
-        "module_ask_here": "💬 <b>Напишите вопрос прямо сюда</b> — ответ будет по теме модуля.",
+        "module_ask_here": "💬 <b>Напишите вопрос прямо сюда</b> — отвечу по этой теме.",
         "module_example_label": "Пример:",
         "module_or_pick": "Или выберите раздел или кнопку ниже.",
         "submodule_ask": "💬 <b>Задайте вопрос по теме «{sub}»</b> — ответ будет только по этому разделу.",
@@ -96,7 +95,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "search_results": "🔍 Результаты по «<b>{query}</b>»",
         "search_records": "Записи:",
         "search_memory": "Память AI:",
-        "search_nothing": "Ничего не найдено. Добавьте запись в нужном модуле.",
+        "search_nothing": "Ничего не найдено. Добавьте запись в нужном разделе.",
         "family_title": "👨‍👩‍👧 <b>Семейный режим</b>",
         "family_desc": "Профили для записей здоровья, календаря и напоминаний.",
         "family_active": "Активный профиль: <b>{name}</b>",
@@ -112,8 +111,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_rel_other": "Другое",
         "family_added": "✅ Профиль «{name}» добавлен.",
         "ai_thinking": "⏳ Думаю…",
-        "ai_module_thinking": "{emoji} Думаю в модуле «{module}»…",
-        "ai_ask_module": "🤖 Модуль «{module}». Напишите ваш вопрос:",
+        "ai_module_thinking": "{emoji} Думаю на тему «{module}»…",
+        "ai_ask_module": "💬 <b>{module}</b> — напишите ваш вопрос:",
         "ai_assistant_title": "🤖 <b>AI-ассистент</b>",
         "ai_assistant_ask": "Задайте любой вопрос:",
         "record_new": "➕ <b>Новая запись</b> ({module})",
@@ -133,7 +132,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "remind_created": "✅ Напоминание: {title} — {when}",
         "remind_datetime": "📅 Введите дату и время: <code>25.06.2026 09:00</code>",
         "remind_default_title": "Напоминание",
-        "free_text_pick_module": "<i>Для точного ответа выберите модуль: Здоровье, Авто, Юридическая помощь и т.д.</i>",
+        "free_text_pick_module": "<i>Для точного ответа выберите тему: Здоровье, Авто, Право и т.д.</i>",
         "weather_title": "🌿 <b>Экология / погода</b>",
         "voice_recognizing": "🎤 Распознаю…",
         "voice_failed": "⚠️ Не удалось распознать. Проверьте OPENAI_API_KEY.",
@@ -659,7 +658,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_add_reminder": "➕ Напоминание",
         "eco_btn_memory": "🧠 AI-память",
         "eco_features_intro": (
-            "🌐 <b>Функции экосистемы</b> — объединяют все модули:\n\n"
+            "🌐 <b>Функции экосистемы</b> — всё в одном месте:\n\n"
             "🔔 <b>Единый центр уведомлений</b> — лекарства, встречи, платежи, ТО, дни рождения\n"
             "🧠 <b>AI-память</b> — {memory} (в настройках)\n"
             "🔍 <b>Поиск по данным</b> — «Когда менял масло?», «Анализ за март»\n"
@@ -668,7 +667,7 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🌐 <b>Языки</b> — русский, узбекский, английский"
         ),
         "eco_notifications_title": "🔔 <b>Единый центр уведомлений</b>",
-        "eco_notifications_empty": "Ближайших событий нет. Добавьте напоминания в модулях.",
+        "eco_notifications_empty": "Ближайших событий нет. Добавьте напоминания в разделах.",
         "eco_src_reminder": "Напоминание",
         "eco_src_organizer": "Органайзер",
         "eco_src_health": "Здоровье",
@@ -690,11 +689,11 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ntf_module_intro": (
             "🔔 <b>Уведомления</b>\n\n"
             "Единый центр: лекарства, ТО, коммуналка, подписки, кредиты, визы.\n"
-            "Подписки и визы — добавляйте здесь; остальное — в соответствующих модулях."
+            "Подписки и визы — добавляйте здесь; остальное — в нужных разделах."
         ),
-        "ntf_sub_hint": "Добавьте напоминание или перейдите в модуль для настройки.",
+        "ntf_sub_hint": "Добавьте напоминание или перейдите в раздел для настройки.",
         "ntf_add": "➕ Добавить",
-        "ntf_open_module": "↗️ Открыть модуль",
+        "ntf_open_module": "↗️ Открыть раздел",
         "ntf_empty": "Пока пусто.",
         "ntf_title_prompt": "Название (Netflix, виза США…):",
         "ntf_title_short": "Слишком короткое название.",
@@ -708,10 +707,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Виза",
         "help_text": (
             "❓ <b>Как пользоваться Life AI</b>\n\n"
-            "1️⃣ <b>Главное меню</b> — /menu или 🏠 «К списку модулей»\n"
-            "2️⃣ <b>Выберите модуль</b> — Здоровье, Финансы, Авто и др.\n"
+            "1️⃣ <b>Главная</b> — /menu или 🏠 «Главная»\n"
+            "2️⃣ <b>Выберите тему</b> — Здоровье, Финансы, Авто и др.\n"
             "3️⃣ <b>Задайте вопрос</b> — просто напишите текст (кнопка не обязательна)\n"
-            "4️⃣ <b>Сохранить заметку</b> — кнопка ➕ в модуле\n"
+            "4️⃣ <b>Сохранить заметку</b> — кнопка ➕ в разделе\n"
             "5️⃣ <b>Найти запись</b> — ⚙️ Настройки → 🔍 Поиск"
         ),
         "mod_hint_health": "Симптомы, анализы, лекарства, визиты к врачу и мед. документы.",
@@ -745,7 +744,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "onb_welcome": (
             "👋 <b>Добро пожаловать в Life AI!</b>\n\n"
             "<b>Как пользоваться:</b>\n"
-            "1️⃣ Выберите модуль (Здоровье, Финансы, Авто…)\n"
+            "1️⃣ Выберите тему (Здоровье, Финансы, Авто…)\n"
             "2️⃣ Напишите вопрос текстом — AI ответит по теме\n"
             "3️⃣ «Сохранить заметку» — записать анализ, расход, напоминание\n\n"
             "🔍 Поиск и ⚙️ Настройки — внизу главного экрана.\n"
@@ -756,19 +755,18 @@ _STRINGS: dict[str, dict[str, str]] = {
         "export_done": "📦 Экспорт ваших данных (JSON).",
         "cmd_expense_format": "Формат: /expense Название | 50000",
         "cmd_expense_saved": "✅ Расход «{title}» — {amount} UZS",
-        "cmd_oil_hint": "🚗 Модуль «Авто → ТО» активен. Напишите, когда меняли масло, или добавьте через меню.",
+        "cmd_oil_hint": "🚗 Раздел «Авто → ТО» открыт. Напишите, когда меняли масло, или добавьте через меню.",
         "vlt_delete_confirm": "🗑 Удалить эту запись? Это действие нельзя отменить.",
         "vlt_confirm_yes": "✅ Да, удалить",
     },
     "uz": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Hayotingizda shaxsiy yordamchi — <b>14 ta modul</b>:\n"
-            "salomatlik, avto, moliya, huquq, oila va boshqalar.\n\n"
+            "Hayotingizda shaxsiy yordamchi: salomatlik, avto, moliya, huquq va boshqalar.\n\n"
             "<b>Qanday foydalanish:</b>\n"
-            "1. Modulni tanlang (masalan ⚖️ Yuridik yordam yoki 🏥 Salomatlik)\n"
+            "1. Mavzuni tanlang (masalan ⚖️ Yuridik yordam yoki 🏥 Salomatlik)\n"
             "2. Savol yozing — AI <b>faqat shu mavzuda</b> javob beradi\n"
-            "3. Yozuvlar va eslatmalarni modul ichida saqlang\n\n"
+            "3. Yozuvlar va eslatmalarni shu bo'limda saqlang\n\n"
             "🧠 AI xotira · 🔍 Qidiruv · 📊 Panel · 🔔 Eslatmalar"
         ),
         "choose_language": "🌐 Interfeys tilini tanlang:",
@@ -776,10 +774,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "language_changed": "✅ Til o'zgartirildi: {label}",
         "main_menu": (
             "🧠 <b>Life AI</b>\n\n"
-            "Quyidan modulni tanlang.\n\n"
-            "💡 Modulni oching va <b>savol yozing</b> — tugma shart emas."
+            "Nima qilishni tanlang.\n\n"
+            "💡 <b>Savol yozing</b> — tugma shart emas."
         ),
-        "btn_all_by_category": "📂 Barcha modullar",
+        "btn_all_by_category": "📂 Barcha bo'limlar",
         "btn_open_menu": "🚀 Menyuni ochish",
         "btn_help": "❓ Yordam",
         "btn_search_record": "🔍 Yozuvni topish",
@@ -789,12 +787,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_calendar": "📅 Taqvim",
         "btn_family": "👨‍👩‍👧 Oila",
         "btn_voice": "🎤 Ovozli rejim",
-        "btn_all_modules": "📚 Barcha 14 modul",
+        "btn_all_modules": "📚 Barcha bo'limlar",
         "btn_settings": "⚙️ Sozlamalar",
         "btn_language": "🌐 Til",
-        "btn_back_menu": "🏠 Modullar ro'yxati",
+        "btn_back_menu": "🏠 Bosh sahifa",
         "btn_back_categories": "⬅️ Kategoriyalar",
-        "btn_back_module": "⬅️ Modulga",
+        "btn_back_module": "⬅️ Orqaga",
         "btn_ask_ai": "💬 Savol berish",
         "btn_add_record": "➕ Eslatma saqlash",
         "btn_add_record_full": "➕ Eslatma saqlash",
@@ -828,15 +826,15 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 AI xotira: <b>{memory}</b>\n\n"
             "💰 Daromad: <b>{income:.0f}</b> | Xarajat: <b>{expense:.0f}</b>\n"
             "📈 Balans: <b>{balance:.0f}</b>\n\n"
-            "📦 Modullar: <b>{modules}</b>"
+            "📦 Bo'limlar: <b>{modules}</b>"
         ),
-        "all_modules": "📚 <b>Barcha modullar</b> ({count})\n\nKategoriyani tanlang:",
-        "pick_module": "📂 <b>{category}</b>\n\nModulni tanlang:",
-        "module_not_found": "Modul topilmadi",
+        "all_modules": "📚 <b>Kategoriyalar</b> ({count})\n\nTanlang:",
+        "pick_module": "📂 <b>{category}</b>\n\nNima qiziq?",
+        "module_not_found": "Bo'lim topilmadi",
         "not_found": "Topilmadi",
         "module_sections": "Bo'limlar:",
         "module_more": "… yana {count} ta",
-        "module_ask_here": "💬 <b>Savolni shu yerga yozing</b> — javob shu modul bo'yicha bo'ladi.",
+        "module_ask_here": "💬 <b>Savolni shu yerga yozing</b> — shu mavzuda javob beraman.",
         "module_example_label": "Misol:",
         "module_or_pick": "Yoki bo'lim yoki tugmani tanlang.",
         "submodule_ask": "💬 <b>«{sub}» mavzusida savol bering</b> — javob faqat shu bo'lim bo'yicha.",
@@ -847,7 +845,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "search_results": "🔍 «<b>{query}</b>» bo'yicha natijalar",
         "search_records": "Yozuvlar:",
         "search_memory": "AI xotira:",
-        "search_nothing": "Hech narsa topilmadi. Kerakli modulda yozuv qo'shing.",
+        "search_nothing": "Hech narsa topilmadi. Kerakli bo'limda yozuv qo'shing.",
         "family_title": "👨‍👩‍👧 <b>Oilaviy rejim</b>",
         "family_desc": "Salomatlik, taqvim va eslatmalar uchun profillar.",
         "family_active": "Faol profil: <b>{name}</b>",
@@ -863,8 +861,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_rel_other": "Boshqa",
         "family_added": "✅ «{name}» profili qo'shildi.",
         "ai_thinking": "⏳ O'ylayapman…",
-        "ai_module_thinking": "{emoji} «{module}» modulida o'ylayapman…",
-        "ai_ask_module": "🤖 «{module}» moduli. Savolingizni yozing:",
+        "ai_module_thinking": "{emoji} «{module}» mavzusida o'ylayapman…",
+        "ai_ask_module": "💬 <b>{module}</b> — savolingizni yozing:",
         "ai_assistant_title": "🤖 <b>AI yordamchi</b>",
         "ai_assistant_ask": "Har qanday savol bering:",
         "record_new": "➕ <b>Yangi yozuv</b> ({module})",
@@ -884,7 +882,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "remind_created": "✅ Eslatma: {title} — {when}",
         "remind_datetime": "📅 Sana va vaqt: <code>25.06.2026 09:00</code>",
         "remind_default_title": "Eslatma",
-        "free_text_pick_module": "<i>Aniq javob uchun modul tanlang: Salomatlik, Avto, Yuridik yordam va hokazo.</i>",
+        "free_text_pick_module": "<i>Aniq javob uchun mavzuni tanlang: Salomatlik, Avto, Huquq va hokazo.</i>",
         "weather_title": "🌿 <b>Ekologiya / ob-havo</b>",
         "voice_recognizing": "🎤 Taniyapman…",
         "voice_failed": "⚠️ Tanib bo'lmadi. OPENAI_API_KEY ni tekshiring.",
@@ -1410,7 +1408,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_add_reminder": "➕ Eslatma",
         "eco_btn_memory": "🧠 AI xotira",
         "eco_features_intro": (
-            "🌐 <b>Ekotizim funksiyalari</b> — 29 modulni birlashtiradi:\n\n"
+            "🌐 <b>Ekotizim funksiyalari</b> — hammasi bir joyda:\n\n"
             "🔔 <b>Bildirishnomalar markazi</b> — dori, uchrashuv, to'lov, TO, tug'ilgan kunlar\n"
             "🧠 <b>AI xotira</b> — {memory}\n"
             "🔍 <b>Qidiruv</b> — «Qachon yog' almashtirdim?»\n"
@@ -1419,7 +1417,7 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🌐 <b>Tillar</b> — rus, o'zbek, ingliz"
         ),
         "eco_notifications_title": "🔔 <b>Bildirishnomalar markazi</b>",
-        "eco_notifications_empty": "Yaqin voqealar yo'q. Modullarda eslatma qo'shing.",
+        "eco_notifications_empty": "Yaqin voqealar yo'q. Bo'limlarda eslatma qo'shing.",
         "eco_src_reminder": "Eslatma",
         "eco_src_organizer": "Tashkilotchi",
         "eco_src_health": "Salomatlik",
@@ -1439,9 +1437,9 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_voice_mode_hint": "🎤 Ovozli rejim yoqilgan — ovoz bilan davom eting.",
         "gen_ai_hint": "Savol yozing yoki «AI dan so'rash» tugmasini bosing.",
         "ntf_module_intro": "🔔 <b>Bildirishnomalar</b> — dori, TO, kommunal, obuna, kredit, viza.",
-        "ntf_sub_hint": "Eslatma qo'shing yoki modulga o'ting.",
+        "ntf_sub_hint": "Eslatma qo'shing yoki kerakli bo'limga o'ting.",
         "ntf_add": "➕ Qo'shish",
-        "ntf_open_module": "↗️ Modulni ochish",
+        "ntf_open_module": "↗️ Bo'limga o'tish",
         "ntf_empty": "Hozircha bo'sh.",
         "ntf_title_prompt": "Nomi (Netflix, viza…):",
         "ntf_title_short": "Nom juda qisqa.",
@@ -1456,8 +1454,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Viza",
         "help_text": (
             "❓ <b>Life AI dan qanday foydalanish</b>\n\n"
-            "1️⃣ <b>Asosiy menyu</b> — /menu yoki 🏠 «Modullar ro'yxati»\n"
-            "2️⃣ <b>Modul tanlang</b> — Salomatlik, Moliya, Avto…\n"
+            "1️⃣ <b>Bosh sahifa</b> — /menu yoki 🏠 «Bosh sahifa»\n"
+            "2️⃣ <b>Mavzuni tanlang</b> — Salomatlik, Moliya, Avto…\n"
             "3️⃣ <b>Savol bering</b> — matn yozing (tugma shart emas)\n"
             "4️⃣ <b>Eslatma saqlash</b> — ➕ tugmasi\n"
             "5️⃣ <b>Topish</b> — ⚙️ Sozlamalar → 🔍 Qidiruv"
@@ -1493,7 +1491,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "onb_welcome": (
             "👋 <b>Life AI ga xush kelibsiz!</b>\n\n"
             "<b>Qanday foydalanish:</b>\n"
-            "1️⃣ Modul tanlang (Salomatlik, Moliya, Avto…)\n"
+            "1️⃣ Mavzuni tanlang (Salomatlik, Moliya, Avto…)\n"
             "2️⃣ Savol yozing — AI javob beradi\n"
             "3️⃣ «Eslatma saqlash» — tahlil, xarajat, eslatma\n\n"
             "🔍 Qidiruv va ⚙️ Sozlamalar — bosh ekranda.\n"
@@ -1504,19 +1502,18 @@ _STRINGS: dict[str, dict[str, str]] = {
         "export_done": "📦 Ma'lumotlaringiz eksporti (JSON).",
         "cmd_expense_format": "Format: /expense Nomi | 50000",
         "cmd_expense_saved": "✅ Xarajat «{title}» — {amount} UZS",
-        "cmd_oil_hint": "🚗 «Avto → TO» moduli faol.",
+        "cmd_oil_hint": "🚗 «Avto → TO» bo'limi ochildi. Yog' almashtirish sanasini yozing yoki menyudan qo'shing.",
         "vlt_delete_confirm": "🗑 Bu yozuvni o'chirish?",
         "vlt_confirm_yes": "✅ Ha, o'chirish",
     },
     "en": {
         "welcome": (
             "🧠 <b>Life AI Ecosystem</b>\n\n"
-            "Your personal life assistant — <b>14 modules</b>:\n"
-            "health, car, finance, legal, family, and more.\n\n"
+            "Your personal life assistant — health, car, finance, legal, and more.\n\n"
             "<b>How to use:</b>\n"
-            "1. Pick a module (e.g. ⚖️ Legal help or 🏥 Health)\n"
+            "1. Pick a topic (e.g. ⚖️ Legal help or 🏥 Health)\n"
             "2. Ask a question — AI answers <b>only in that topic</b>\n"
-            "3. Save notes and reminders inside the module\n\n"
+            "3. Save notes and reminders in that section\n\n"
             "🧠 AI memory · 🔍 Search · 📊 Dashboard · 🔔 Reminders"
         ),
         "choose_language": "🌐 Choose interface language:",
@@ -1524,10 +1521,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "language_changed": "✅ Language changed to {label}",
         "main_menu": (
             "🧠 <b>Life AI</b>\n\n"
-            "Pick a module below.\n\n"
-            "💡 Open a module and <b>type your question</b> — no button required."
+            "What would you like to do?\n\n"
+            "💡 <b>Type your question</b> — no button required."
         ),
-        "btn_all_by_category": "📂 All modules by category",
+        "btn_all_by_category": "📂 All sections",
         "btn_open_menu": "🚀 Open menu",
         "btn_help": "❓ Help",
         "btn_search_record": "🔍 Find record",
@@ -1537,12 +1534,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_calendar": "📅 Calendar",
         "btn_family": "👨‍👩‍👧 Family",
         "btn_voice": "🎤 Voice mode",
-        "btn_all_modules": "📚 All 14 modules",
+        "btn_all_modules": "📚 All sections",
         "btn_settings": "⚙️ Settings",
         "btn_language": "🌐 Language",
-        "btn_back_menu": "🏠 Back to modules",
+        "btn_back_menu": "🏠 Home",
         "btn_back_categories": "⬅️ Categories",
-        "btn_back_module": "⬅️ Back to module",
+        "btn_back_module": "⬅️ Back",
         "btn_ask_ai": "💬 Ask a question",
         "btn_add_record": "➕ Save a note",
         "btn_add_record_full": "➕ Save a note",
@@ -1576,11 +1573,11 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 AI memory: <b>{memory}</b>\n\n"
             "💰 Income: <b>{income:.0f}</b> | Expenses: <b>{expense:.0f}</b>\n"
             "📈 Balance: <b>{balance:.0f}</b>\n\n"
-            "📦 Modules: <b>{modules}</b>"
+            "📦 Sections: <b>{modules}</b>"
         ),
-        "all_modules": "📚 <b>All modules</b> ({count})\n\nPick a category:",
-        "pick_module": "📂 <b>{category}</b>\n\nPick a module:",
-        "module_not_found": "Module not found",
+        "all_modules": "📚 <b>Categories</b> ({count})\n\nPick one:",
+        "pick_module": "📂 <b>{category}</b>\n\nWhat interests you?",
+        "module_not_found": "Section not found",
         "not_found": "Not found",
         "module_sections": "Sections:",
         "module_more": "… and {count} more",
@@ -1595,7 +1592,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "search_results": "🔍 Results for «<b>{query}</b>»",
         "search_records": "Records:",
         "search_memory": "AI memory:",
-        "search_nothing": "Nothing found. Add a record in the right module.",
+        "search_nothing": "Nothing found. Add a record in the right section.",
         "family_title": "👨‍👩‍👧 <b>Family mode</b>",
         "family_desc": "Profiles for health records, calendar, and reminders.",
         "family_active": "Active profile: <b>{name}</b>",
@@ -1611,8 +1608,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_rel_other": "Other",
         "family_added": "✅ Profile «{name}» added.",
         "ai_thinking": "⏳ Thinking…",
-        "ai_module_thinking": "{emoji} Thinking in «{module}»…",
-        "ai_ask_module": "🤖 Module «{module}». Type your question:",
+        "ai_module_thinking": "{emoji} Thinking about «{module}»…",
+        "ai_ask_module": "💬 <b>{module}</b> — type your question:",
         "ai_assistant_title": "🤖 <b>AI assistant</b>",
         "ai_assistant_ask": "Ask anything:",
         "record_new": "➕ <b>New record</b> ({module})",
@@ -1632,7 +1629,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "remind_created": "✅ Reminder: {title} — {when}",
         "remind_datetime": "📅 Enter date and time: <code>25.06.2026 09:00</code>",
         "remind_default_title": "Reminder",
-        "free_text_pick_module": "<i>For a focused answer, pick a module: Health, Car, Legal, etc.</i>",
+        "free_text_pick_module": "<i>For a focused answer, pick a topic: Health, Car, Legal, etc.</i>",
         "weather_title": "🌿 <b>Ecology / weather</b>",
         "voice_recognizing": "🎤 Recognizing…",
         "voice_failed": "⚠️ Could not recognize. Check OPENAI_API_KEY.",
@@ -2158,7 +2155,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_add_reminder": "➕ Reminder",
         "eco_btn_memory": "🧠 AI memory",
         "eco_features_intro": (
-            "🌐 <b>Ecosystem features</b> — connect all modules:\n\n"
+            "🌐 <b>Ecosystem features</b> — everything in one place:\n\n"
             "🔔 <b>Notification center</b> — meds, meetings, payments, car service, birthdays\n"
             "🧠 <b>AI memory</b> — {memory}\n"
             "🔍 <b>Life search</b> — «When did I change oil?»\n"
@@ -2167,7 +2164,7 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🌐 <b>Languages</b> — Russian, Uzbek, English"
         ),
         "eco_notifications_title": "🔔 <b>Notification center</b>",
-        "eco_notifications_empty": "No upcoming events. Add reminders in modules.",
+        "eco_notifications_empty": "No upcoming events. Add reminders in the relevant sections.",
         "eco_src_reminder": "Reminder",
         "eco_src_organizer": "Organizer",
         "eco_src_health": "Health",
@@ -2187,9 +2184,9 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_voice_mode_hint": "🎤 Voice mode is on — you can keep talking by voice.",
         "gen_ai_hint": "Type a question or tap «Ask AI».",
         "ntf_module_intro": "🔔 <b>Alerts</b> — meds, service, utilities, subscriptions, loans, visas.",
-        "ntf_sub_hint": "Add a reminder or open the related module.",
+        "ntf_sub_hint": "Add a reminder or open the relevant section.",
         "ntf_add": "➕ Add",
-        "ntf_open_module": "↗️ Open module",
+        "ntf_open_module": "↗️ Open section",
         "ntf_empty": "Nothing here yet.",
         "ntf_title_prompt": "Title (Netflix, US visa…):",
         "ntf_title_short": "Title too short.",
@@ -2204,10 +2201,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Visa",
         "help_text": (
             "❓ <b>How to use Life AI</b>\n\n"
-            "1️⃣ <b>Main menu</b> — /menu or 🏠 «Back to modules»\n"
-            "2️⃣ <b>Pick a module</b> — Health, Finance, Car…\n"
+            "1️⃣ <b>Home</b> — /menu or 🏠 «Home»\n"
+            "2️⃣ <b>Pick a topic</b> — Health, Finance, Car…\n"
             "3️⃣ <b>Ask a question</b> — just type (no button needed)\n"
-            "4️⃣ <b>Save a note</b> — ➕ button in the module\n"
+            "4️⃣ <b>Save a note</b> — ➕ button\n"
             "5️⃣ <b>Find records</b> — ⚙️ Settings → 🔍 Search"
         ),
         "mod_hint_health": "Symptoms, lab tests, medications, doctor visits.",
@@ -2241,7 +2238,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "onb_welcome": (
             "👋 <b>Welcome to Life AI!</b>\n\n"
             "<b>How to use:</b>\n"
-            "1️⃣ Pick a module (Health, Finance, Car…)\n"
+            "1️⃣ Pick a topic (Health, Finance, Car…)\n"
             "2️⃣ Type a question — AI answers on topic\n"
             "3️⃣ «Save a note» — test results, expenses, reminders\n\n"
             "🔍 Search and ⚙️ Settings — on the home screen.\n"
@@ -2252,7 +2249,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "export_done": "📦 Your data export (JSON).",
         "cmd_expense_format": "Format: /expense Title | 50000",
         "cmd_expense_saved": "✅ Expense «{title}» — {amount} UZS",
-        "cmd_oil_hint": "🚗 Car → Service module is active.",
+        "cmd_oil_hint": "🚗 Car → Service is open. Tell me when you changed the oil, or add it via the menu.",
         "vlt_delete_confirm": "🗑 Delete this entry?",
         "vlt_confirm_yes": "✅ Yes, delete",
     },
