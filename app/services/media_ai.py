@@ -28,6 +28,8 @@ async def analyze_image_url(
     model: str | None = None,
     session=None,
     user_id: int | None = None,
+    user=None,
+    bot: Bot | None = None,
 ) -> str:
     if not settings.openai_api_key.strip():
         return "⚠️ OPENAI_API_KEY не задан — OCR/vision недоступен."
@@ -49,9 +51,22 @@ async def analyze_image_url(
         **chat_token_limit_kwargs(use_model, 1500),
     )
     if session is not None and user_id is not None:
-        from app.services.ai_usage_service import record_ai_usage
+        from app.services.ai_usage_service import extract_usage, record_ai_usage
 
         await record_ai_usage(session, user_id, use_model, response, source="vision")
+        if bot is not None and user is not None:
+            from app.services.admin_notify_service import notify_admins_ai_request
+
+            prompt_tokens, completion_tokens = extract_usage(response)
+            await notify_admins_ai_request(
+                bot,
+                user,
+                model=use_model,
+                source="vision",
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                preview=prompt,
+            )
     from app.services.text_format import format_ai_reply
 
     return format_ai_reply((response.choices[0].message.content or "").strip())

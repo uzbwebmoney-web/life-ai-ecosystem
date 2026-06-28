@@ -234,6 +234,7 @@ async def hub_search_query(message: Message, state: FSMContext, user: User, sess
             language=lang,
             session=session,
             user=user,
+            bot=message.bot,
         )
         lines.append(f"\n🤖 <b>{t(lang, 'eco_search_ai_title')}</b>\n{answer}")
         await loading.delete()

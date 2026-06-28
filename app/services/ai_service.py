@@ -16,6 +16,7 @@ async def ask_ai(
     language: str = "ru",
     session=None,
     user=None,
+    bot=None,
 ) -> str:
     if user is not None and session is not None:
         from app.services.subscription_service import check_ai_quota, consume_ai_request
@@ -76,4 +77,18 @@ async def ask_ai(
 
         await consume_ai_request(session, user, model=model)
         await record_ai_usage(session, user.id, model, response, source="chat")
+        if bot is not None:
+            from app.services.admin_notify_service import notify_admins_ai_request
+            from app.services.ai_usage_service import extract_usage
+
+            prompt_tokens, completion_tokens = extract_usage(response)
+            await notify_admins_ai_request(
+                bot,
+                user,
+                model=model,
+                source="chat",
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                preview=user_message,
+            )
     return format_ai_reply(raw)

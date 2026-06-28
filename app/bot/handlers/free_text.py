@@ -50,6 +50,7 @@ async def _answer_in_module(
         language=lang,
         session=session,
         user=user,
+        bot=message.bot,
     )
     header = active_module_label(module_id, submodule_id, lang=lang)
     actions = suggest_actions(text, answer, lang)
@@ -120,6 +121,7 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
         language=lang,
         session=session,
         user=user,
+        bot=message.bot,
     )
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or back_menu_kb(lang)

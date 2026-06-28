@@ -175,6 +175,23 @@ EXTRA_RU: dict[str, str] = {
     "pay_approved": "✅ Оплата подтверждена!\n\n{product} активирован.",
     "pay_rejected": "❌ Оплата не подтверждена. Если перевод был — напишите администратору.",
     "pay_admin_notify": "💰 <b>Новая заявка на оплату #{order_id}</b>",
+    "admin_notify_new_user": (
+        "👤 <b>Новый пользователь</b>\n"
+        "Telegram: <code>{telegram_id}</code> | {username}\n"
+        "Язык бота: <b>{bot_lang}</b> | язык Telegram: {telegram_lang}\n"
+        "Часовой пояс: {utc_offset}\n"
+        "План: {plan_id}"
+    ),
+    "admin_notify_ai_request": (
+        "🤖 <b>AI запрос</b>\n"
+        "event: {event}\n"
+        "user_id: <code>{telegram_id}</code>\n"
+        "username: {username}\n"
+        "lang: {user_lang}\n"
+        "model: {model}\n"
+        "tokens: in {prompt_tokens} / out {completion_tokens}\n"
+        "message: {preview}"
+    ),
     "pay_admin_order": (
         "📋 <b>Заявка #{order_id}</b>\n"
         "Пользователь: {user} (<code>{telegram_id}</code>)\n"
@@ -460,6 +477,23 @@ EXTRA_UZ: dict[str, str] = {
     "pay_approved": "✅ To'lov tasdiqlandi!\n\n{product} faollashtirildi.",
     "pay_rejected": "❌ To'lov tasdiqlanmadi. O'tkazma bo'lsa — adminga yozing.",
     "pay_admin_notify": "💰 <b>Yangi to'lov arizasi #{order_id}</b>",
+    "admin_notify_new_user": (
+        "👤 <b>Yangi foydalanuvchi</b>\n"
+        "Telegram: <code>{telegram_id}</code> | {username}\n"
+        "Bot tili: <b>{bot_lang}</b> | Telegram tili: {telegram_lang}\n"
+        "Vaqt mintaqasi: {utc_offset}\n"
+        "Tarif: {plan_id}"
+    ),
+    "admin_notify_ai_request": (
+        "🤖 <b>AI so'rov</b>\n"
+        "event: {event}\n"
+        "user_id: <code>{telegram_id}</code>\n"
+        "username: {username}\n"
+        "lang: {user_lang}\n"
+        "model: {model}\n"
+        "tokens: in {prompt_tokens} / out {completion_tokens}\n"
+        "message: {preview}"
+    ),
     "pay_admin_order": (
         "📋 <b>Ariza #{order_id}</b>\n"
         "Foydalanuvchi: {user} (<code>{telegram_id}</code>)\n"
@@ -705,6 +739,23 @@ EXTRA_EN: dict[str, str] = {
     "pay_approved": "✅ Payment confirmed!\n\n{product} activated.",
     "pay_rejected": "❌ Payment not confirmed. If you paid, contact admin.",
     "pay_admin_notify": "💰 <b>New payment order #{order_id}</b>",
+    "admin_notify_new_user": (
+        "👤 <b>New user</b>\n"
+        "Telegram: <code>{telegram_id}</code> | {username}\n"
+        "Bot language: <b>{bot_lang}</b> | Telegram language: {telegram_lang}\n"
+        "Timezone: {utc_offset}\n"
+        "Plan: {plan_id}"
+    ),
+    "admin_notify_ai_request": (
+        "🤖 <b>AI request</b>\n"
+        "event: {event}\n"
+        "user_id: <code>{telegram_id}</code>\n"
+        "username: {username}\n"
+        "lang: {user_lang}\n"
+        "model: {model}\n"
+        "tokens: in {prompt_tokens} / out {completion_tokens}\n"
+        "message: {preview}"
+    ),
     "pay_admin_order": (
         "📋 <b>Order #{order_id}</b>\n"
         "User: {user} (<code>{telegram_id}</code>)\n"

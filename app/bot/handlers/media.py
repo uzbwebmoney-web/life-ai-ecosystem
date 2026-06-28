@@ -129,6 +129,8 @@ async def _process_photo(
         model=vision_model,
         session=session,
         user_id=user.id,
+        user=user,
+        bot=message.bot,
     )
     if not universal_scan:
         await consume_photo_analysis(session, user)
@@ -167,6 +169,7 @@ async def _process_photo(
             language=lang,
             session=session,
             user=user,
+            bot=message.bot,
         )
         extra = f"\n\n🍽 {recipes}"
 
@@ -235,6 +238,7 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
         language=lang,
         session=session,
         user=user,
+        bot=message.bot,
     )
     header = active_module_label(user.active_module_id, user.active_submodule_id, lang=lang)
     prefix = f"{header}\n\n" if header else "🤖 "
@@ -334,6 +338,7 @@ async def handle_link(message: Message, user: User, session: AsyncSession) -> No
         language=lang,
         session=session,
         user=user,
+        bot=message.bot,
     )
     await message.answer(
         f"{t(lang, 'link_check')}\n\n{risk_emoji} {t(lang, 'link_risk', risk=check['risk'])}\n{check['summary']}\n\n🤖 {ai}",

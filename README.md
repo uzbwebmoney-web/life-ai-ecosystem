@@ -88,6 +88,8 @@ PRO_OPENAI_MODEL=gpt-5.5
 PAYMENT_CARD_NUMBER=8600123456789012
 PAYMENT_CARD_HOLDER=IVAN IVANOV
 ADMIN_TELEGRAM_IDS=ваш_id
+ADMIN_NEW_USER_NOTIFY=true
+ADMIN_AI_REQUEST_NOTIFY=true
 ```
 
 Команда **`/admin`** — меню с кнопками:
@@ -95,6 +97,10 @@ ADMIN_TELEGRAM_IDS=ваш_id
 - 👥 Последние пользователи
 - 💰 Заявки на оплату (ожидают подтверждения)
 - 💵 **Расходы AI** — стоимость OpenAI за сегодня / 7 / 30 дней / всего, разбивка по моделям и топ пользователей (тарифы: GPT-4o mini, GPT-5.4 Mini, GPT-5.5)
+
+**Push-уведомления админу в Telegram** (на `ADMIN_TELEGRAM_IDS`):
+- 👤 новый пользователь — после завершения онбординга (`Начать`)
+- 🤖 каждый AI-запрос (чат и анализ фото) — модель, токены, текст запроса
 
 Telegram id узнать: [@userinfobot](https://t.me/userinfobot)
 

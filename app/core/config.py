@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     webhook_host: str = Field(default="0.0.0.0", alias="WEBHOOK_HOST")
     webhook_port: int = Field(default=8080, alias="WEBHOOK_PORT")
     admin_telegram_ids: str = Field(default="", alias="ADMIN_TELEGRAM_IDS")
+    admin_new_user_notify: bool = Field(default=True, alias="ADMIN_NEW_USER_NOTIFY")
+    admin_ai_request_notify: bool = Field(default=True, alias="ADMIN_AI_REQUEST_NOTIFY")
 
     @property
     def admin_telegram_id_list(self) -> list[int]:
