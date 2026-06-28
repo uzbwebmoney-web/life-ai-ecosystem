@@ -5,7 +5,8 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards import help_kb, home_menu_kb, onboarding_kb, start_language_kb
+from app.bot.handlers.dashboard_view import edit_dashboard, send_dashboard
+from app.bot.keyboards import dashboard_kb, help_kb, onboarding_kb, start_language_kb
 from app.core.i18n import LANG_LABELS, t
 from app.models.entities import User
 from app.services.life_data import complete_onboarding, mark_welcome_pending, set_user_language
@@ -13,9 +14,8 @@ from app.services.life_data import complete_onboarding, mark_welcome_pending, se
 router = Router()
 
 
-async def _show_modules_menu(message: Message, user: User) -> None:
-    lang = user.language
-    await message.answer(t(lang, "main_menu"), reply_markup=home_menu_kb(lang))
+async def _show_modules_menu(message: Message, user: User, session: AsyncSession) -> None:
+    await send_dashboard(message, user, session)
 
 
 async def _show_welcome(message: Message, lang: str) -> None:
@@ -23,9 +23,9 @@ async def _show_welcome(message: Message, lang: str) -> None:
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message, user: User) -> None:
+async def cmd_start(message: Message, user: User, session: AsyncSession) -> None:
     if user.onboarding_done:
-        await _show_modules_menu(message, user)
+        await _show_modules_menu(message, user, session)
         return
     if user.welcome_pending:
         await _show_welcome(message, user.language)
@@ -34,8 +34,8 @@ async def cmd_start(message: Message, user: User) -> None:
 
 
 @router.message(Command("menu"))
-async def cmd_menu(message: Message, user: User) -> None:
-    await _show_modules_menu(message, user)
+async def cmd_menu(message: Message, user: User, session: AsyncSession) -> None:
+    await _show_modules_menu(message, user, session)
 
 
 @router.message(Command("help"))
@@ -66,5 +66,5 @@ async def start_begin(callback: CallbackQuery, user: User, session: AsyncSession
     lang = user.language
     await complete_onboarding(session, user)
     await callback.message.edit_text(t(lang, "onb_done"))
-    await callback.message.answer(t(lang, "main_menu"), reply_markup=home_menu_kb(lang))
+    await edit_dashboard(callback, user, session)
     await callback.answer()

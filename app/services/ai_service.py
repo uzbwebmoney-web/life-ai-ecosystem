@@ -12,6 +12,7 @@ async def ask_ai(
     user_message: str,
     module_hint: str = "",
     memory_context: str = "",
+    profile_context: str = "",
     language: str = "ru",
 ) -> str:
     if not settings.openai_api_key.strip():
@@ -31,8 +32,11 @@ async def ask_ai(
         f"Отвечай на {reply_lang} языке, структурированно и практично. "
         "Не используй markdown (**жирный**, *курсив*, ```код```) — только обычный текст и списки. "
         "Если задан контекст модуля — строго придерживайся его темы. "
+        "Используй известные факты о пользователе — не спрашивай то, что уже известно. "
         f"{module_hint}"
     )
+    if profile_context:
+        system += f"\n\n{profile_context}"
     if memory_context:
         system += f"\n\nКонтекст из памяти пользователя:\n{memory_context}"
 

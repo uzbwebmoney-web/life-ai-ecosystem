@@ -117,5 +117,9 @@ class NotificationsStates(StatesGroup):
     waiting_amount = State()
 
 
+class ScanStates(StatesGroup):
+    waiting_photo = State()
+
+
 class OnboardingStates(StatesGroup):
     waiting_confirm = State()

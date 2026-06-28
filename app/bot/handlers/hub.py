@@ -6,10 +6,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.handlers.dashboard_view import edit_dashboard
 from app.bot.keyboards import (
     back_menu_kb,
     categories_kb,
     category_modules_kb,
+    dashboard_kb,
     help_kb,
     language_kb,
     main_menu_kb,
@@ -50,9 +52,8 @@ def _lang(user: User) -> str:
 
 @router.callback_query(F.data == "hub:menu")
 async def hub_menu(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
-    lang = _lang(user)
     await clear_active_module(session, user)
-    await callback.message.edit_text(t(lang, "main_menu"), reply_markup=main_menu_kb(lang))
+    await edit_dashboard(callback, user, session)
     await callback.answer()
 
 
@@ -249,7 +250,7 @@ async def settings_set_language(callback: CallbackQuery, user: User, session: As
     new_lang = await set_user_language(session, user, code)
     await callback.message.edit_text(
         t(new_lang, "language_changed", label=LANG_LABELS[new_lang]),
-        reply_markup=main_menu_kb(new_lang),
+        reply_markup=dashboard_kb(new_lang),
     )
     await callback.answer()
 

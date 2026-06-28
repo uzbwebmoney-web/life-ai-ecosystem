@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.database.session import SessionLocal, init_db
 
 from app.services.reminder_worker import reminder_worker
+from app.services.daily_feed_worker import daily_feed_worker
 
 
 
@@ -33,8 +34,9 @@ async def main() -> None:
     dp = create_dispatcher(SessionLocal)
 
     reminder_worker.start(bot, SessionLocal)
+    daily_feed_worker.start(bot, SessionLocal)
 
-    logging.info("Life AI Ecosystem — 14 modules, voice, OCR, family, reminders")
+    logging.info("Life AI — dashboard, memory, scan, SOS, daily feed")
 
     try:
 
@@ -69,6 +71,7 @@ async def main() -> None:
     finally:
 
         await reminder_worker.stop()
+        await daily_feed_worker.stop()
 
 
 

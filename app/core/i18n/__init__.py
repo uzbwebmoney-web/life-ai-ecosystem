@@ -25,8 +25,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "language_changed": "✅ Язык изменён на {label}",
         "main_menu": (
             "🧠 <b>Life AI</b>\n\n"
-            "⭐ <b>Частые модули</b> — ниже.\n"
-            "📂 Остальные — «Все модули по категориям».\n\n"
+            "Выберите модуль ниже.\n\n"
             "💡 Откройте модуль и <b>просто напишите вопрос</b> — кнопка не обязательна."
         ),
         "btn_all_by_category": "📂 Все модули по категориям",
@@ -713,9 +712,7 @@ _STRINGS: dict[str, dict[str, str]] = {
             "2️⃣ <b>Выберите модуль</b> — Здоровье, Финансы, Авто и др.\n"
             "3️⃣ <b>Задайте вопрос</b> — просто напишите текст (кнопка не обязательна)\n"
             "4️⃣ <b>Сохранить заметку</b> — кнопка ➕ в модуле\n"
-            "5️⃣ <b>Найти запись</b> — ⚙️ Настройки → 🔍 Поиск\n\n"
-            "⭐ Частые модули на главном экране, остальные — по категориям.\n"
-            "🔔 Напоминания: /remind или модуль «Органайзер»"
+            "5️⃣ <b>Найти запись</b> — ⚙️ Настройки → 🔍 Поиск"
         ),
         "mod_hint_health": "Симптомы, анализы, лекарства, визиты к врачу и мед. документы.",
         "mod_example_health": "«что значит повышенный гемоглобин»",
@@ -779,8 +776,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "language_changed": "✅ Til o'zgartirildi: {label}",
         "main_menu": (
             "🧠 <b>Life AI</b>\n\n"
-            "⭐ <b>Tez-tez modullar</b> — quyida.\n"
-            "📂 Qolganlari — «Barcha modullar».\n\n"
+            "Quyidan modulni tanlang.\n\n"
             "💡 Modulni oching va <b>savol yozing</b> — tugma shart emas."
         ),
         "btn_all_by_category": "📂 Barcha modullar",
@@ -1464,8 +1460,7 @@ _STRINGS: dict[str, dict[str, str]] = {
             "2️⃣ <b>Modul tanlang</b> — Salomatlik, Moliya, Avto…\n"
             "3️⃣ <b>Savol bering</b> — matn yozing (tugma shart emas)\n"
             "4️⃣ <b>Eslatma saqlash</b> — ➕ tugmasi\n"
-            "5️⃣ <b>Topish</b> — ⚙️ Sozlamalar → 🔍 Qidiruv\n\n"
-            "⭐ Tez modullar bosh ekranda, qolganlari kategoriyalar bo'yicha."
+            "5️⃣ <b>Topish</b> — ⚙️ Sozlamalar → 🔍 Qidiruv"
         ),
         "mod_hint_health": "Alomatlar, tahlillar, dorilar, shifokor tashriflari.",
         "mod_example_health": "«gemoglobin yuqori bo'lsa nima degani»",
@@ -1529,8 +1524,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "language_changed": "✅ Language changed to {label}",
         "main_menu": (
             "🧠 <b>Life AI</b>\n\n"
-            "⭐ <b>Popular modules</b> — below.\n"
-            "📂 More — «All modules by category».\n\n"
+            "Pick a module below.\n\n"
             "💡 Open a module and <b>type your question</b> — no button required."
         ),
         "btn_all_by_category": "📂 All modules by category",
@@ -2214,8 +2208,7 @@ _STRINGS: dict[str, dict[str, str]] = {
             "2️⃣ <b>Pick a module</b> — Health, Finance, Car…\n"
             "3️⃣ <b>Ask a question</b> — just type (no button needed)\n"
             "4️⃣ <b>Save a note</b> — ➕ button in the module\n"
-            "5️⃣ <b>Find records</b> — ⚙️ Settings → 🔍 Search\n\n"
-            "⭐ Popular modules on the home screen; others by category."
+            "5️⃣ <b>Find records</b> — ⚙️ Settings → 🔍 Search"
         ),
         "mod_hint_health": "Symptoms, lab tests, medications, doctor visits.",
         "mod_example_health": "«what does high hemoglobin mean»",
@@ -2264,6 +2257,13 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_confirm_yes": "✅ Yes, delete",
     },
 }
+
+
+from app.core.i18n.extra_strings import EXTRA_EN, EXTRA_RU, EXTRA_UZ
+
+_STRINGS["ru"].update(EXTRA_RU)
+_STRINGS["uz"].update(EXTRA_UZ)
+_STRINGS["en"].update(EXTRA_EN)
 
 
 def normalize_lang(lang: str | None) -> str:

@@ -32,6 +32,10 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
         "welcome_pending": "BOOLEAN DEFAULT 0",
 
+        "household_id": "INTEGER",
+
+        "last_daily_feed_date": "VARCHAR(10)",
+
     },
 
     "calendar_events": {

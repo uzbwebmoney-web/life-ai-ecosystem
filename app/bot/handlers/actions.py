@@ -11,12 +11,14 @@ from app.bot.states import AiChatStates, MemoryStates, RecordStates, ReminderSta
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
 from app.models.entities import User
+from app.services.ai_context import build_ai_memory_context
 from app.services.ai_service import ask_ai
 from app.services.date_parse import parse_datetime_flexible
 from app.services.export_service import build_user_export
 from app.services.intent_router import module_hint
-from app.services.life_data import add_memory, add_record, add_reminder, search_memory, set_active_module
+from app.services.life_data import add_memory, add_record, add_reminder, set_active_module
 from app.services.media_ai import synthesize_speech
+from app.services.proactive_service import proactive_kb, suggest_actions
 
 router = Router()
 
@@ -68,14 +70,18 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
     data = await state.get_data()
     hint = str(data.get("ai_module_hint") or "")
     module_id = str(data.get("ai_module_id") or "ai_assistant")
-    memory_ctx = ""
-    if user.memory_enabled:
-        entries = await search_memory(session, user.id, text, limit=3)
-        if entries:
-            memory_ctx = "\n".join(e.content for e in entries)
+    profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
     loading = await message.answer(t(lang, "ai_thinking"))
-    answer = await ask_ai(user_message=text, module_hint=hint, memory_context=memory_ctx, language=lang)
-    await loading.edit_text(f"🤖 {answer}")
+    answer = await ask_ai(
+        user_message=text,
+        module_hint=hint,
+        memory_context=memory_ctx,
+        profile_context=profile_ctx,
+        language=lang,
+    )
+    actions = suggest_actions(text, answer, lang)
+    kb = proactive_kb(actions, lang) or back_menu_kb(lang)
+    await loading.edit_text(f"🤖 {answer}", reply_markup=kb)
     await _maybe_send_voice(message, user, answer)
     if user.memory_enabled:
         await add_memory(

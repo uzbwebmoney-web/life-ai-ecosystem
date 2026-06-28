@@ -3,87 +3,67 @@ from __future__ import annotations
 import re
 
 from aiogram import Bot, F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards import back_menu_kb
+from app.bot.keyboards import back_menu_kb, dashboard_kb, record_saved_kb
+from app.bot.states import ScanStates
 from app.core.i18n import ai_reply_language, t
 from app.models.entities import User
+from app.services.ai_context import build_ai_memory_context
 from app.services.ai_service import ask_ai
 from app.services.intent_router import check_url_security, module_hint
-from app.services.life_data import add_memory, add_record, search_memory
-from app.services.module_context import active_module_label
+from app.services.life_data import add_memory, add_record
+from app.services.life_profile_service import parse_remember_text
 from app.services.media_ai import analyze_image_url, get_telegram_image_url, transcribe_voice
+from app.services.module_context import active_module_label
+from app.services.proactive_service import proactive_kb, suggest_actions
+from app.services.scanner_service import archive_label, archive_meta, classify_scan, parse_amount_from_text, universal_scan_prompt
 from app.services.vault_service import VAULT_FILE_SUBMODULES
 
 router = Router()
 
 
-def _vision_prompt(lang: str, caption: str = "", *, car_dashboard: bool = False, legal_document: bool = False, assistant_photo: bool = False) -> str:
+def _vision_prompt(
+    lang: str,
+    caption: str = "",
+    *,
+    car_dashboard: bool = False,
+    legal_document: bool = False,
+    assistant_photo: bool = False,
+    universal: bool = False,
+) -> str:
+    if universal:
+        return universal_scan_prompt(lang, caption)
     reply_lang = ai_reply_language(lang)
     if assistant_photo:
         prompt = (
             "Analyze this photo in detail: objects, people, text (OCR), documents, receipts, "
-            "scenes, colors, context. Answer the user's question if provided. "
-            f"Reply in {reply_lang}."
+            f"scenes, colors, context. Reply in {reply_lang}."
         )
     elif car_dashboard:
         prompt = (
-            "This is a car instrument panel / dashboard photo. Identify warning lights, error codes, "
-            "gauges. Explain meaning, urgency, whether safe to drive, recommended checks. "
+            "Car dashboard photo. Warning lights, error codes, urgency, safe to drive. "
             f"Reply in {reply_lang}."
         )
     elif legal_document:
-        prompt = (
-            "This is a legal document photo. Identify document type, parties, dates, key terms, "
-            "potential risks, missing clauses, inconsistencies. Do not give definitive legal advice — "
-            "note what should be verified with a lawyer. "
-            f"Reply in {reply_lang}."
-        )
+        prompt = f"Legal document photo. Key terms and risks. Reply in {reply_lang}."
     else:
-        prompt = (
-            "Analyze the image. If receipt — store, date, amount, currency, items. "
-            "If document — type, key fields, dates. If car error — code and description. "
-            f"Reply in {reply_lang}."
-        )
+        prompt = f"Analyze image: receipt, document, or car error. Reply in {reply_lang}."
     if caption:
         prompt += f"\nUser caption: {caption}"
     return prompt
 
 
-@router.message(F.voice)
-async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSession) -> None:
-    lang = user.language
-    loading = await message.answer(t(lang, "voice_recognizing"))
-    text = await transcribe_voice(bot, message.voice.file_id)
-    if not text:
-        await loading.edit_text(t(lang, "voice_failed"))
-        return
-    await loading.edit_text(f"🎤 <i>{text}</i>")
-    hint = module_hint(user.active_module_id, user.active_submodule_id, lang=lang) if user.active_module_id else ""
-    memory_ctx = ""
-    if user.memory_enabled:
-        entries = await search_memory(session, user.id, text, limit=3)
-        if entries:
-            memory_ctx = "\n".join(e.content for e in entries)
-    if user.voice_mode:
-        await message.answer(t(lang, "eco_voice_mode_hint"))
-    answer = await ask_ai(user_message=text, module_hint=hint, memory_context=memory_ctx, language=lang)
-    header = active_module_label(user.active_module_id, user.active_submodule_id, lang=lang)
-    prefix = f"{header}\n\n" if header else "🤖 "
-    await message.answer(f"{prefix}{answer}")
-    if user.memory_enabled:
-        await add_memory(
-            session,
-            user.id,
-            f"[voice] Q: {text[:200]}\nA: {answer[:400]}",
-            module_id=user.active_module_id or "ai_assistant",
-            profile_id=user.active_profile_id,
-        )
-
-
-@router.message(F.photo)
-async def handle_photo(message: Message, bot: Bot, user: User, session: AsyncSession) -> None:
+async def _process_photo(
+    message: Message,
+    bot: Bot,
+    user: User,
+    session: AsyncSession,
+    *,
+    universal_scan: bool = False,
+) -> None:
     lang = user.language
     file_id = message.photo[-1].file_id
     caption = (message.caption or "").strip()
@@ -97,30 +77,49 @@ async def handle_photo(message: Message, bot: Bot, user: User, session: AsyncSes
         _vision_prompt(
             lang,
             caption,
-            car_dashboard=car_mode,
-            legal_document=legal_mode,
-            assistant_photo=assistant_photo,
+            car_dashboard=car_mode and not universal_scan,
+            legal_document=legal_mode and not universal_scan,
+            assistant_photo=assistant_photo and not universal_scan,
+            universal=universal_scan,
         ),
     )
     lowered = analysis.lower()
     combined = f"{caption} {analysis}".lower()
-    module_id = "vault"
-    sub_id = "receipts"
-    vault_mode = user.active_module_id == "vault"
-    if vault_mode and user.active_submodule_id in VAULT_FILE_SUBMODULES:
-        module_id, sub_id = "vault", user.active_submodule_id
-    if legal_mode:
-        module_id, sub_id = "legal", "doc_check"
-    elif assistant_photo:
-        module_id, sub_id = "ai_assistant", "photo"
-    elif car_mode or any(x in lowered for x in ("ошибк", "error", "obd", "двигател", "xato", "check engine", "dashboard")):
-        module_id, sub_id = "car", "panel_photo"
-    elif any(x in lowered for x in ("паспорт", "договор", "полис", "passport", "contract")):
-        module_id, sub_id = "vault", "documents"
-    elif user.active_module_id == "health" or any(
-        x in combined for x in ("анализ", "tahlil", "analysis", "blood", "qon", "справк", "medical", "lab")
-    ):
-        module_id, sub_id = "health", "documents"
+
+    if universal_scan:
+        module_id, sub_id, folder = classify_scan(analysis, caption)
+    else:
+        module_id, sub_id, folder = "vault", "receipts", "receipts"
+        vault_mode = user.active_module_id == "vault"
+        if vault_mode and user.active_submodule_id in VAULT_FILE_SUBMODULES:
+            module_id, sub_id = "vault", user.active_submodule_id
+            folder = user.active_submodule_id if user.active_submodule_id != "documents" else "contracts"
+        if legal_mode:
+            module_id, sub_id, folder = "legal", "doc_check", "contracts"
+        elif assistant_photo:
+            module_id, sub_id, folder = "ai_assistant", "photo", "photos"
+        elif car_mode or any(x in lowered for x in ("ошибк", "error", "obd", "dashboard", "check engine")):
+            module_id, sub_id, folder = "car", "panel_photo", "car"
+        elif any(x in lowered for x in ("паспорт", "passport", "договор", "contract", "полис")):
+            module_id, sub_id, folder = "vault", "documents", "passport"
+        elif user.active_module_id == "health" or any(
+            x in combined for x in ("анализ", "tahlil", "analysis", "blood", "medical", "lab")
+        ):
+            module_id, sub_id, folder = "health", "documents", "analyses"
+
+    amount = parse_amount_from_text(analysis)
+    extra = ""
+    if any(x in combined for x in ("холодильник", "fridge", "recipe", "retsept", "ovqat")):
+        profile_ctx, memory_ctx = await build_ai_memory_context(session, user, caption or "food")
+        recipes = await ask_ai(
+            user_message=f"Suggest 2-3 recipes from visible products:\n{analysis[:800]}",
+            module_hint=module_hint("nutrition", "recipes", lang=lang),
+            memory_context=memory_ctx,
+            profile_context=profile_ctx,
+            language=lang,
+        )
+        extra = f"\n\n🍽 {recipes}"
+
     await add_record(
         session,
         user_id=user.id,
@@ -128,9 +127,63 @@ async def handle_photo(message: Message, bot: Bot, user: User, session: AsyncSes
         submodule_id=sub_id,
         title=caption[:200] or t(lang, "photo_title_default"),
         body=f"file_id={file_id}\n\n{analysis}",
+        amount=amount,
+        currency="UZS" if amount else None,
         profile_id=user.active_profile_id,
+        meta_json=archive_meta(folder, scan=universal_scan),
     )
-    await loading.edit_text(f"{t(lang, 'photo_done')}\n\n{analysis}", reply_markup=back_menu_kb(lang))
+    folder_label = archive_label(folder, lang)
+    text = f"{t(lang, 'photo_done')}\n{folder_label}\n\n{analysis}{extra}"
+    if amount:
+        text += f"\n\n💰 {amount:,.0f} UZS"
+    await loading.edit_text(text, reply_markup=record_saved_kb(lang))
+
+
+@router.message(F.voice)
+async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    loading = await message.answer(t(lang, "voice_recognizing"))
+    text = await transcribe_voice(bot, message.voice.file_id)
+    if not text:
+        await loading.edit_text(t(lang, "voice_failed"))
+        return
+    await loading.edit_text(f"🎤 <i>{text}</i>")
+    remember = parse_remember_text(text)
+    if remember:
+        await add_memory(session, user.id, remember, module_id="profile", profile_id=user.active_profile_id)
+        await message.answer(t(lang, "remember_saved", text=remember[:200]), reply_markup=dashboard_kb(lang))
+        return
+    hint = module_hint(user.active_module_id, user.active_submodule_id, lang=lang) if user.active_module_id else ""
+    profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
+    answer = await ask_ai(
+        user_message=text,
+        module_hint=hint,
+        memory_context=memory_ctx,
+        profile_context=profile_ctx,
+        language=lang,
+    )
+    header = active_module_label(user.active_module_id, user.active_submodule_id, lang=lang)
+    prefix = f"{header}\n\n" if header else "🤖 "
+    actions = suggest_actions(text, answer, lang)
+    kb = proactive_kb(actions, lang) or dashboard_kb(lang)
+    await message.answer(f"{prefix}{answer}", reply_markup=kb)
+    if user.memory_enabled:
+        await add_memory(
+            session,
+            user.id,
+            f"[voice] Q: {text[:200]}\nA: {answer[:400]}",
+            module_id=user.active_module_id or "ai_assistant",
+            profile_id=user.active_profile_id,
+        )
+
+
+@router.message(F.photo)
+async def handle_photo(message: Message, bot: Bot, user: User, session: AsyncSession, state: FSMContext) -> None:
+    current = await state.get_state()
+    universal = current == ScanStates.waiting_photo.state
+    await _process_photo(message, bot, user, session, universal_scan=universal)
+    if universal:
+        await state.clear()
 
 
 @router.message(F.document)
@@ -154,15 +207,12 @@ async def handle_document(message: Message, user: User, session: AsyncSession) -
         title=name[:200],
         body=f"file_id={doc.file_id}\nmime={doc.mime_type}",
         profile_id=user.active_profile_id,
+        meta_json=archive_meta("contracts"),
     )
     if assistant_docs:
-        caption = (message.caption or "").strip()
-        hint = t(lang, "ast_doc_saved", name=name)
-        if caption:
-            hint = f"{hint}\n\n{t(lang, 'ast_doc_caption_note')}"
-        await message.answer(hint, reply_markup=back_menu_kb(lang))
+        await message.answer(t(lang, "ast_doc_saved", name=name), reply_markup=back_menu_kb(lang))
         return
-    await message.answer(t(lang, "doc_saved", name=name), reply_markup=back_menu_kb(lang))
+    await message.answer(t(lang, "doc_saved", name=name), reply_markup=record_saved_kb(lang))
 
 
 @router.message(F.text.regexp(r"https?://\S+"))
@@ -174,9 +224,12 @@ async def handle_link(message: Message, user: User, session: AsyncSession) -> No
     url = match.group(0).rstrip(").,")
     check = check_url_security(url)
     risk_emoji = {"low": "🟢", "medium": "🟡", "high": "🔴"}.get(check["risk"], "⚪")
+    profile_ctx, memory_ctx = await build_ai_memory_context(session, user, url)
     ai = await ask_ai(
         user_message=f"Check link for fraud: {url}\nHeuristic: {check['summary']}",
         module_hint=module_hint("ai_assistant", lang=lang),
+        memory_context=memory_ctx,
+        profile_context=profile_ctx,
         language=lang,
     )
     await message.answer(

@@ -4,7 +4,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.core.i18n import LANG_LABELS, SUPPORTED_LANGUAGES, t
 from app.core.modules.catalog import CATEGORIES, MODULES, MODULE_BY_ID, ModuleDef
-from app.core.modules.ui_texts import POPULAR_MODULE_IDS
 from app.models.entities import FamilyProfile
 
 
@@ -31,21 +30,68 @@ def _module_btn(mod: ModuleDef, lang: str) -> InlineKeyboardButton:
     )
 
 
-def home_menu_kb(lang: str = "ru") -> InlineKeyboardMarkup:
-    rows: list[list[InlineKeyboardButton]] = []
-    popular: list[InlineKeyboardButton] = []
-    for mid in POPULAR_MODULE_IDS:
+def dashboard_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    quick_ids = ("health", "car", "legal", "finance", "ai_assistant")
+    row1 = []
+    for mid in quick_ids:
         mod = MODULE_BY_ID.get(mid)
         if mod:
-            popular.append(_module_btn(mod, lang))
-    rows.append(popular[:2])
-    if len(popular) > 2:
-        rows.append(popular[2:4])
+            row1.append(_module_btn(mod, lang))
+    rows: list[list[InlineKeyboardButton]] = []
+    for i in range(0, len(row1), 2):
+        rows.append(row1[i : i + 2])
     rows.append(
-        [InlineKeyboardButton(text=t(lang, "btn_all_by_category"), callback_data="hub:categories")]
+        [
+            InlineKeyboardButton(text=t(lang, "btn_search"), callback_data="hub:search"),
+            InlineKeyboardButton(text=t(lang, "btn_scan"), callback_data="hub:scan"),
+        ]
     )
-    rows.append([InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings")])
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_sos"), callback_data="hub:sos")])
+    rows.append(
+        [
+            InlineKeyboardButton(text=t(lang, "btn_all_modules_short"), callback_data="hub:all_modules"),
+            InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings"),
+        ]
+    )
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def home_menu_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    return dashboard_kb(lang)
+
+
+def all_modules_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = []
+    pair: list[InlineKeyboardButton] = []
+    for mod in MODULES:
+        pair.append(_module_btn(mod, lang))
+        if len(pair) == 2:
+            rows.append(pair)
+            pair = []
+    if pair:
+        rows.append(pair)
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def sos_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    from app.services.sos_service import SOS_TOPICS
+
+    rows = [
+        [InlineKeyboardButton(text=t(lang, f"sos_btn_{topic}"), callback_data=f"sos:{topic}")]
+        for topic in SOS_TOPICS
+    ]
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def household_kb(lang: str, invite_code: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "household_copy_code", code=invite_code), callback_data="hh:code")],
+            [InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")],
+        ]
+    )
 
 
 def modules_menu_kb(lang: str = "ru") -> InlineKeyboardMarkup:
@@ -88,6 +134,7 @@ def settings_kb(memory_on: bool, voice_on: bool, lang: str = "ru") -> InlineKeyb
             ],
             [InlineKeyboardButton(text=t(lang, "btn_language"), callback_data="hub:language")],
             [InlineKeyboardButton(text=t(lang, "btn_family_profiles"), callback_data="hub:family")],
+            [InlineKeyboardButton(text=t(lang, "btn_household"), callback_data="hub:household")],
             [InlineKeyboardButton(text=t(lang, "btn_help"), callback_data="hub:help")],
             [InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")],
         ]
@@ -122,6 +169,7 @@ def family_relation_kb(lang: str = "ru") -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text=t(lang, "family_rel_child"), callback_data="fam:rel:child"),
                 InlineKeyboardButton(text=t(lang, "family_rel_parent"), callback_data="fam:rel:parent"),
             ],
+            [InlineKeyboardButton(text=t(lang, "family_rel_pet"), callback_data="fam:rel:pet")],
             [InlineKeyboardButton(text=t(lang, "family_rel_other"), callback_data="fam:rel:other")],
             [InlineKeyboardButton(text=t(lang, "btn_cancel"), callback_data="hub:family")],
         ]

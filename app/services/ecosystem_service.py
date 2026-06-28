@@ -200,7 +200,10 @@ def format_unified_search(results: UnifiedSearchResult, lang: str, query: str) -
         lines.append(f"<b>{t(lang, 'search_records')}</b>")
         for record in results.records[:5]:
             body = f" — {record.body[:80]}" if record.body else ""
-            lines.append(f"• [{record.module_id}/{record.submodule_id}] {record.title}{body}")
+            archive = ""
+            if record.meta_json and "archive_folder" in record.meta_json:
+                archive = " 📁"
+            lines.append(f"• [{record.module_id}] {record.title}{archive}{body}")
     if results.events:
         lines.append(f"\n<b>{t(lang, 'eco_search_events')}</b>")
         for event in results.events[:5]:

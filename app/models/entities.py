@@ -23,6 +23,8 @@ class User(Base):
     active_submodule_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     onboarding_done: Mapped[bool] = mapped_column(Boolean, default=False)
     welcome_pending: Mapped[bool] = mapped_column(Boolean, default=False)
+    household_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("households.id"), nullable=True)
+    last_daily_feed_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -93,6 +95,37 @@ class Reminder(Base):
     due_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     sent: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Household(Base):
+    __tablename__ = "households"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    name: Mapped[str] = mapped_column(String(128), default="Семья")
+    invite_code: Mapped[str] = mapped_column(String(12), unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class HouseholdMember(Base):
+    __tablename__ = "household_members"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    household_id: Mapped[int] = mapped_column(ForeignKey("households.id"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
+    role: Mapped[str] = mapped_column(String(16), default="member")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class LifeProfileFact(Base):
+    __tablename__ = "life_profile_facts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    category: Mapped[str] = mapped_column(String(32), default="general")
+    fact_key: Mapped[str] = mapped_column(String(64), index=True)
+    fact_value: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class MemoryEntry(Base):
