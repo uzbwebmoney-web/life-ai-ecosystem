@@ -25,6 +25,8 @@ async def analyze_image_url(image_url: str, prompt: str) -> str:
     if not settings.openai_api_key.strip():
         return "⚠️ OPENAI_API_KEY не задан — OCR/vision недоступен."
     client = AsyncOpenAI(api_key=settings.openai_api_key)
+    from app.services.openai_compat import chat_token_limit_kwargs
+
     response = await client.chat.completions.create(
         model=settings.openai_model,
         messages=[
@@ -36,7 +38,7 @@ async def analyze_image_url(image_url: str, prompt: str) -> str:
                 ],
             }
         ],
-        max_tokens=1500,
+        **chat_token_limit_kwargs(settings.openai_model, 1500),
     )
     return (response.choices[0].message.content or "").strip()
 

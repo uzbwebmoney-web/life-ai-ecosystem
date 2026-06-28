@@ -34,12 +34,14 @@ async def ask_ai(
     if memory_context:
         system += f"\n\nКонтекст из памяти пользователя:\n{memory_context}"
 
+    from app.services.openai_compat import chat_token_limit_kwargs
+
     response = await client.chat.completions.create(
         model=settings.openai_model,
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user_message},
         ],
-        max_tokens=1200,
+        **chat_token_limit_kwargs(settings.openai_model, 1200),
     )
     return (response.choices[0].message.content or "").strip()
