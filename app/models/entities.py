@@ -147,6 +147,7 @@ class CreditLoan(Base):
     profile_id: Mapped[int | None] = mapped_column(ForeignKey("family_profiles.id"), nullable=True)
     title: Mapped[str] = mapped_column(String(255))
     total_amount: Mapped[float] = mapped_column(Float)
+    remaining_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     monthly_payment: Mapped[float] = mapped_column(Float)
     payment_day: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(8), default="UZS")

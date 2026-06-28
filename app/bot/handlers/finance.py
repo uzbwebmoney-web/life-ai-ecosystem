@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from aiogram import F, Router
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,9 +26,11 @@ from app.core.i18n import t
 from app.models.entities import User
 from app.services.credit_loans import (
     add_credit_loan,
+    apply_credit_payment,
     deactivate_credit_loan,
     format_amount,
     format_credit_loan_line,
+    get_credit_loan,
     list_credit_loans,
 )
 from app.services.finance_service import (
@@ -560,6 +563,62 @@ async def fin_loan_delete(callback: CallbackQuery, user: User, session: AsyncSes
         return
     await _show_loans(callback.message, user, session, lang, edit=True)
     await callback.answer(t(lang, "credits_removed"))
+
+
+@router.message(Command("credit"))
+async def cmd_credit(message: Message, user: User, session: AsyncSession) -> None:
+    await set_active_module(session, user, "finance", submodule_id="loans")
+    await _show_loans(message, user, session, user.language)
+
+
+@router.callback_query(F.data.startswith("fin:loan:pay:"))
+async def fin_loan_pay_start(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    loan_id = int((callback.data or "").split(":")[3])
+    loan = await get_credit_loan(session, user.id, loan_id)
+    if not loan:
+        await callback.answer(t(lang, "credits_not_found"), show_alert=True)
+        return
+    await state.update_data(credit_pay_loan_id=loan_id)
+    await state.set_state(CreditStates.waiting_payment_amount)
+    await callback.message.answer(
+        t(lang, "credits_payment_prompt", title=loan.title, monthly=format_amount(loan.monthly_payment, loan.currency)),
+        reply_markup=finance_cancel_kb(lang),
+    )
+    await callback.answer()
+
+
+@router.message(CreditStates.waiting_payment_amount)
+async def fin_loan_pay_amount(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    paid = parse_amount(message.text or "")
+    if paid is None or paid <= 0:
+        await message.answer(t(lang, "credits_monthly_error"))
+        return
+    data = await state.get_data()
+    loan_id = int(data.get("credit_pay_loan_id") or 0)
+    loan = await apply_credit_payment(session, user.id, loan_id, paid)
+    if not loan:
+        await message.answer(t(lang, "credits_not_found"))
+        await state.clear()
+        return
+    from app.services.credit_loans import loan_remaining
+
+    remaining = loan_remaining(loan)
+    if remaining <= 0:
+        await message.answer(t(lang, "credits_paid_off", title=loan.title))
+    else:
+        await message.answer(
+            t(
+                lang,
+                "credits_payment_saved",
+                paid=format_amount(paid, loan.currency),
+                remaining=format_amount(remaining, loan.currency),
+            )
+        )
+    await state.clear()
+    if loan.active:
+        await _show_loans(message, user, session, lang)
 
 
 @router.callback_query(F.data == "fin:cancel")

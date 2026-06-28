@@ -44,6 +44,12 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
     },
 
+    "credit_loans": {
+
+        "remaining_amount": "FLOAT",
+
+    },
+
 }
 
 
@@ -91,4 +97,18 @@ async def init_db() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     await _migrate_sqlite_columns()
+
+    async with engine.begin() as conn:
+
+        await conn.execute(
+
+            text(
+
+                "UPDATE credit_loans SET remaining_amount = total_amount "
+
+                "WHERE remaining_amount IS NULL"
+
+            )
+
+        )
 

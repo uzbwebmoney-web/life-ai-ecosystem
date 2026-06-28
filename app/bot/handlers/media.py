@@ -16,7 +16,7 @@ from app.services.ai_service import ask_ai
 from app.services.intent_router import check_url_security, module_hint
 from app.services.life_data import add_memory, add_record
 from app.services.life_profile_service import parse_remember_text
-from app.services.media_ai import analyze_image_url, get_telegram_image_url, transcribe_voice
+from app.services.media_ai import analyze_image_url, get_telegram_image_url, synthesize_speech, transcribe_voice
 from app.services.module_context import active_module_label
 from app.services.proactive_service import proactive_kb, suggest_actions
 from app.services.scanner_service import archive_label, archive_meta, classify_scan, parse_amount_from_text, universal_scan_prompt
@@ -61,6 +61,7 @@ async def _process_photo(
     bot: Bot,
     user: User,
     session: AsyncSession,
+    state: FSMContext | None = None,
     *,
     universal_scan: bool = False,
 ) -> None:
@@ -133,10 +134,17 @@ async def _process_photo(
         meta_json=archive_meta(folder, scan=universal_scan),
     )
     folder_label = archive_label(folder, lang)
-    text = f"{t(lang, 'photo_done')}\n{folder_label}\n\n{analysis}{extra}"
+    text = f"{t(lang, 'scan_saved', folder=folder_label) if universal_scan else t(lang, 'photo_done')}\n{folder_label}\n\n{analysis}{extra}"
     if amount:
         text += f"\n\n💰 {amount:,.0f} UZS"
-    await loading.edit_text(text, reply_markup=record_saved_kb(lang))
+    kb = record_saved_kb(lang)
+    if universal_scan:
+        from app.bot.keyboards_ecosystem import scan_followup_kb
+
+        if state is not None and amount:
+            await state.update_data(scan_amount=amount)
+        kb = scan_followup_kb(lang, amount=amount)
+    await loading.edit_text(text, reply_markup=kb)
 
 
 @router.message(F.voice)
@@ -167,6 +175,12 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or dashboard_kb(lang)
     await message.answer(f"{prefix}{answer}", reply_markup=kb)
+    if user.voice_mode:
+        audio = await synthesize_speech(answer)
+        if audio:
+            from aiogram.types import BufferedInputFile
+
+            await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
     if user.memory_enabled:
         await add_memory(
             session,
@@ -181,7 +195,7 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
 async def handle_photo(message: Message, bot: Bot, user: User, session: AsyncSession, state: FSMContext) -> None:
     current = await state.get_state()
     universal = current == ScanStates.waiting_photo.state
-    await _process_photo(message, bot, user, session, universal_scan=universal)
+    await _process_photo(message, bot, user, session, state, universal_scan=universal)
     if universal:
         await state.clear()
 

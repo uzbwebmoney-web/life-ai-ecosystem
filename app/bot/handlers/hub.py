@@ -161,7 +161,7 @@ async def open_submodule(callback: CallbackQuery, user: User, session: AsyncSess
 @router.callback_query(F.data == "hub:reminders")
 async def hub_notifications(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     lang = _lang(user)
-    items = await list_unified_notifications(session, user.id, lang)
+    items = await list_unified_notifications(session, user, lang)
     text = format_notifications_list(items, lang)
     await callback.message.edit_text(text, reply_markup=notifications_kb(lang))
     await callback.answer()
@@ -195,7 +195,7 @@ async def hub_search_query(message: Message, state: FSMContext, user: User, sess
     if not query:
         await message.answer(t(lang, "search_enter"))
         return
-    records = await unified_search(session, user.id, query)
+    records = await unified_search(session, user, query)
     lines = format_unified_search(records, lang, query)
     if records.has_any():
         context = build_search_ai_context(records)

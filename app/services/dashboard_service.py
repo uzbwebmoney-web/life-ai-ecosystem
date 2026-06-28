@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.i18n import t
 from app.models.entities import User
-from app.services.credit_loans import list_credit_loans
+from app.services.credit_loans import list_credit_loans, list_credit_loans_for_users, loan_remaining
 from app.services.ecosystem_service import EcosystemNotification, list_unified_notifications
 from app.services.household_service import effective_data_user_ids
 from app.services.weather_service import fetch_weather_summary
@@ -49,20 +49,7 @@ def _format_relative(when: datetime, now: datetime, lang: str) -> str:
 
 
 async def _collect_notifications(session: AsyncSession, user: User, lang: str) -> list[EcosystemNotification]:
-    user_ids = await effective_data_user_ids(session, user)
-    items: list[EcosystemNotification] = []
-    for uid in user_ids:
-        items.extend(await list_unified_notifications(session, uid, lang, horizon_days=14, limit=30))
-    items.sort()
-    seen: set[tuple[str, str]] = set()
-    unique: list[EcosystemNotification] = []
-    for item in items:
-        key = (item.icon, item.title)
-        if key in seen:
-            continue
-        seen.add(key)
-        unique.append(item)
-    return unique[:25]
+    return await list_unified_notifications(session, user, lang, horizon_days=14, limit=25)
 
 
 async def build_dashboard(session: AsyncSession, user: User, lang: str, *, display_name: str | None = None) -> DashboardData:
@@ -87,11 +74,14 @@ async def build_dashboard(session: AsyncSession, user: User, lang: str, *, displ
         elif today <= item_date <= today + timedelta(days=7):
             timeline_lines.append(f"• {item.sort_at.strftime('%d.%m')} {item.icon} {item.title}")
 
-    for loan in await list_credit_loans(session, user.id):
+    user_ids = await effective_data_user_ids(session, user)
+    for loan in await list_credit_loans_for_users(session, user_ids):
+        remaining = loan_remaining(loan)
+        suffix = f" ({t(lang, 'credits_remaining_short', remaining=int(remaining))})" if remaining > 0 else ""
         if loan.payment_day == now.day:
-            today_lines.append(f"💳 {t(lang, 'dash_credit_today', title=loan.title)}")
+            today_lines.append(f"💳 {t(lang, 'dash_credit_today', title=loan.title)}{suffix}")
         elif loan.payment_day == (now + timedelta(days=1)).day:
-            today_lines.append(f"💳 {t(lang, 'dash_credit_tomorrow', title=loan.title)}")
+            today_lines.append(f"💳 {t(lang, 'dash_credit_tomorrow', title=loan.title)}{suffix}")
 
     lines.append(f"📅 <b>{t(lang, 'dash_today')}</b>")
     if today_lines:
@@ -102,7 +92,7 @@ async def build_dashboard(session: AsyncSession, user: User, lang: str, *, displ
     if timeline_lines:
         lines.extend(["", f"🗓 <b>{t(lang, 'dash_timeline')}</b>", *timeline_lines[:6]])
 
-    weather = await fetch_weather_summary(lang=lang)
+    weather = await fetch_weather_summary(lang=lang, utc_offset_minutes=user.utc_offset_minutes or 300)
     if weather:
         lines.extend(["", f"🌦 {weather.split(chr(10))[0]}"])
 

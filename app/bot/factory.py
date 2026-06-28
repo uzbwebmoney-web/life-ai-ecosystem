@@ -42,6 +42,8 @@ from app.bot.handlers.family import router as family_router
 
 from app.bot.handlers.ecosystem import router as ecosystem_router
 
+from app.bot.handlers.notifications import router as notifications_router
+
 from app.bot.handlers.free_text import router as free_text_router
 
 from app.bot.handlers.hub import router as hub_router
@@ -99,6 +101,8 @@ def create_dispatcher(session_maker: async_sessionmaker) -> Dispatcher:
     dp.include_router(hub_router)
 
     dp.include_router(ecosystem_router)
+
+    dp.include_router(notifications_router)
 
     dp.include_router(family_router)
 

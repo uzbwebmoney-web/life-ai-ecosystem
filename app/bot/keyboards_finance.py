@@ -108,12 +108,9 @@ def finance_loans_list_kb(loans: list[CreditLoan], lang: str = "ru") -> InlineKe
 
 
 def finance_loan_item_kb(loan_id: int, lang: str = "ru") -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text=t(lang, "fin_loan_delete"), callback_data=f"fin:loan:del:{loan_id}")],
-            [InlineKeyboardButton(text=t(lang, "fin_back_loans"), callback_data="fin:loan:list")],
-        ]
-    )
+    from app.services.credit_loans import credit_loan_item_kb
+
+    return credit_loan_item_kb(loan_id, lang)
 
 
 def finance_analysis_kb(lang: str = "ru") -> InlineKeyboardMarkup:

@@ -5,7 +5,9 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.entities import AlertItem
+from app.core.i18n import t
+from app.models.entities import AlertItem, User
+from app.services.health_service import user_local_now
 
 ALERT_TYPES = ("subscription", "visa", "custom")
 
@@ -63,32 +65,34 @@ async def delete_alert_item(session: AsyncSession, user_id: int, item_id: int) -
     return True
 
 
-async def fetch_alert_items_due(session: AsyncSession) -> list[tuple[AlertItem, "User"]]:
-    from app.models.entities import User
-
-    now = datetime.utcnow()
-    today = now.date().isoformat()
+async def fetch_alert_items_due(session: AsyncSession, *, now: datetime | None = None) -> list[tuple[AlertItem, User]]:
+    now = now or datetime.utcnow()
     rows = (
         await session.execute(
             select(AlertItem, User)
             .join(User, User.id == AlertItem.user_id)
-            .where(
-                AlertItem.active.is_(True),
-                AlertItem.due_at <= now,
-                (AlertItem.last_notified_date.is_(None)) | (AlertItem.last_notified_date != today),
-            )
+            .where(AlertItem.active.is_(True))
             .order_by(AlertItem.due_at.asc())
-            .limit(50)
+            .limit(100)
         )
     ).all()
-    return [(item, user) for item, user in rows]
+    due: list[tuple[AlertItem, User]] = []
+    for item, user in rows:
+        local = user_local_now(user, now)
+        if item.due_at.date() > local.date():
+            continue
+        today = local.date().isoformat()
+        if item.last_notified_date == today:
+            continue
+        due.append((item, user))
+    return due
 
 
-async def mark_alert_notified(session: AsyncSession, item_id: int) -> None:
+async def mark_alert_notified(session: AsyncSession, item_id: int, *, day: str | None = None) -> None:
     item = (await session.execute(select(AlertItem).where(AlertItem.id == item_id))).scalar_one_or_none()
     if not item:
         return
-    item.last_notified_date = datetime.utcnow().date().isoformat()
+    item.last_notified_date = day or datetime.utcnow().date().isoformat()
     await session.commit()
 
 
@@ -99,3 +103,12 @@ def format_alert_line(item: AlertItem, lang: str) -> str:
         cur = item.currency or "UZS"
         extra = f" — {item.amount:,.0f} {cur}".replace(",", " ")
     return f"• {when} — <b>{item.title}</b>{extra}"
+
+
+def build_alert_reminder_text(item: AlertItem, lang: str) -> str:
+    when = item.due_at.strftime("%d.%m.%Y")
+    extra = ""
+    if item.amount is not None:
+        cur = item.currency or "UZS"
+        extra = f"\n💰 {item.amount:,.0f} {cur}".replace(",", " ")
+    return t(lang, "alert_reminder").format(title=item.title, when=when, extra=extra)

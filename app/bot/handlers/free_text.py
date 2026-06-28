@@ -3,7 +3,7 @@ from __future__ import annotations
 from aiogram import F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import BufferedInputFile, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards import back_menu_kb, dashboard_kb, module_kb, submodule_kb
@@ -16,6 +16,7 @@ from app.services.intent_router import detect_module, module_hint
 from app.services.life_data import add_memory
 from app.services.life_profile_service import extract_facts_from_text, parse_remember_text, upsert_fact
 from app.services.module_context import active_module_label
+from app.services.media_ai import synthesize_speech
 from app.services.proactive_service import proactive_kb, suggest_actions
 
 router = Router()
@@ -54,6 +55,11 @@ async def _answer_in_module(
         submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
     )
     await loading.edit_text(f"{header}\n\n{answer}", reply_markup=kb)
+
+    if user.voice_mode:
+        audio = await synthesize_speech(answer)
+        if audio:
+            await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
 
     if user.memory_enabled:
         await add_memory(

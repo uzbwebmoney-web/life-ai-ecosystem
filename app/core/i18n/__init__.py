@@ -173,6 +173,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "credits_line": (
             "• <b>{title}</b>\n"
             "  Сумма: {total}\n"
+            "  Остаток: <b>{remaining}</b>\n"
             "  Платёж/мес: {monthly}\n"
             "  День оплаты: <b>{day}</b>-е число"
         ),
@@ -180,9 +181,14 @@ _STRINGS: dict[str, dict[str, str]] = {
             "💳 <b>Напоминание о платеже</b>\n\n"
             "🏦 {title}\n"
             "💰 Платёж: <b>{monthly}</b>\n"
-            "📋 Сумма: {total}\n"
-            "📅 Сегодня <b>{day}-е число</b> — не забудьте оплатить."
+            "📋 Остаток: <b>{remaining}</b>\n"
+            "📅 Сегодня <b>{day}-е число</b> — не забудьте оплатить.\n\n"
+            "Нажмите «Записать платёж» — пересчитаю остаток."
         ),
+        "credits_btn_log_payment": "✅ Записать платёж",
+        "credits_payment_prompt": "💳 <b>{title}</b>\n\nСколько оплатили? (например {monthly})",
+        "credits_payment_saved": "✅ Записано: {paid}\nОстаток: <b>{remaining}</b>",
+        "credits_paid_off": "🎉 Кредит «{title}» полностью погашен!",
         "default_loan_title": "Кредит",
         "doc_saved": "📄 Документ «{name}» сохранён.\nДля PDF отправьте скрин или фото страницы.",
         "link_check": "🛡 <b>Проверка ссылки</b>",
@@ -938,6 +944,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "credits_line": (
             "• <b>{title}</b>\n"
             "  Summa: {total}\n"
+            "  Qoldiq: <b>{remaining}</b>\n"
             "  Oylik to'lov: {monthly}\n"
             "  To'lov kuni: oyning <b>{day}</b>-kuni"
         ),
@@ -945,9 +952,14 @@ _STRINGS: dict[str, dict[str, str]] = {
             "💳 <b>To'lov eslatmasi</b>\n\n"
             "🏦 {title}\n"
             "💰 To'lov: <b>{monthly}</b>\n"
-            "📋 Summa: {total}\n"
-            "📅 Bugun oyning <b>{day}</b>-kuni — to'lovni unutmang."
+            "📋 Qoldiq: <b>{remaining}</b>\n"
+            "📅 Bugun oyning <b>{day}</b>-kuni — to'lovni unutmang.\n\n"
+            "«To'lovni yozish» — qoldiqni qayta hisoblayman."
         ),
+        "credits_btn_log_payment": "✅ To'lovni yozish",
+        "credits_payment_prompt": "💳 <b>{title}</b>\n\nQancha to'ladingiz? (masalan {monthly})",
+        "credits_payment_saved": "✅ Yozildi: {paid}\nQoldiq: <b>{remaining}</b>",
+        "credits_paid_off": "🎉 «{title}» krediti to'liq yopildi!",
         "default_loan_title": "Kredit",
         "doc_saved": "📄 «{name}» hujjati saqlandi.\nPDF uchun sahifa rasmini yuboring.",
         "link_check": "🛡 <b>Havola tekshiruvi</b>",
@@ -1700,6 +1712,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "credits_line": (
             "• <b>{title}</b>\n"
             "  Total: {total}\n"
+            "  Remaining: <b>{remaining}</b>\n"
             "  Monthly: {monthly}\n"
             "  Payment day: <b>{day}</b> of each month"
         ),
@@ -1707,9 +1720,14 @@ _STRINGS: dict[str, dict[str, str]] = {
             "💳 <b>Payment reminder</b>\n\n"
             "🏦 {title}\n"
             "💰 Payment: <b>{monthly}</b>\n"
-            "📋 Total: {total}\n"
-            "📅 Today is the <b>{day}th</b> — don't forget to pay."
+            "📋 Remaining: <b>{remaining}</b>\n"
+            "📅 Today is the <b>{day}th</b> — don't forget to pay.\n\n"
+            "Tap «Log payment» to update the balance."
         ),
+        "credits_btn_log_payment": "✅ Log payment",
+        "credits_payment_prompt": "💳 <b>{title}</b>\n\nHow much did you pay? (e.g. {monthly})",
+        "credits_payment_saved": "✅ Logged: {paid}\nRemaining: <b>{remaining}</b>",
+        "credits_paid_off": "🎉 Loan «{title}» is fully paid off!",
         "default_loan_title": "Loan",
         "doc_saved": "📄 Document «{name}» saved.\nFor PDF, send a screenshot or photo of the page.",
         "link_check": "🛡 <b>Link check</b>",

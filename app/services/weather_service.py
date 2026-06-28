@@ -4,16 +4,26 @@ import logging
 
 import httpx
 
-logger = logging.getLogger(__name__)
-
-DEFAULT_LAT = 41.2995
-DEFAULT_LON = 69.2401
-
-
 from app.core.i18n import t
 
+logger = logging.getLogger(__name__)
 
-async def fetch_weather_summary(*, lang: str = "ru", lat: float = DEFAULT_LAT, lon: float = DEFAULT_LON) -> str:
+# Approximate city coords by UTC offset (minutes east of UTC)
+_OFFSET_COORDS: dict[int, tuple[float, float]] = {
+    180: (43.238, 76.945),   # Almaty UTC+6
+    300: (41.2995, 69.2401),  # Tashkent UTC+5
+    240: (41.311, 69.279),    # Samarkand UTC+4
+    0: (51.507, -0.128),      # London
+    -300: (40.713, -74.006),  # New York
+}
+
+
+def coords_for_offset(utc_offset_minutes: int) -> tuple[float, float]:
+    return _OFFSET_COORDS.get(utc_offset_minutes, _OFFSET_COORDS[300])
+
+
+async def fetch_weather_summary(*, lang: str = "ru", utc_offset_minutes: int = 300) -> str:
+    lat, lon = coords_for_offset(utc_offset_minutes)
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": lat,

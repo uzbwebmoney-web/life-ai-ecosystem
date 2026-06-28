@@ -30,6 +30,7 @@ class CreditStates(StatesGroup):
     waiting_total = State()
     waiting_monthly = State()
     waiting_day = State()
+    waiting_payment_amount = State()
 
 
 class HealthStates(StatesGroup):

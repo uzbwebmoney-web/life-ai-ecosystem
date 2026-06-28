@@ -44,11 +44,22 @@ def dashboard_kb(lang: str = "ru") -> InlineKeyboardMarkup:
         rows.append(pair)
     rows.append(
         [
+            InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications"),
+            InlineKeyboardButton(text=t(lang, "btn_calendar"), callback_data="hub:calendar"),
+        ]
+    )
+    rows.append(
+        [
             InlineKeyboardButton(text=t(lang, "btn_search"), callback_data="hub:search"),
             InlineKeyboardButton(text=t(lang, "btn_scan"), callback_data="hub:scan"),
         ]
     )
-    rows.append([InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings")])
+    rows.append(
+        [
+            InlineKeyboardButton(text=t(lang, "btn_dashboard"), callback_data="hub:dashboard"),
+            InlineKeyboardButton(text=t(lang, "btn_settings"), callback_data="hub:settings"),
+        ]
+    )
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 

@@ -76,6 +76,15 @@ EXTRA_RU: dict[str, str] = {
     "weather_today_range": "📈 Сегодня: {tmin}°…{tmax}°C",
     "weather_uv": "☀️ UV-индекс: {uv}",
     "profile_facts_header": "Известные факты о пользователе:",
+    "household_members_title": "Участники",
+    "scan_btn_expense": "💰 Записать расход",
+    "scan_amount_detected": "Сумма с чека: {amount} UZS",
+    "alert_reminder": "📋 <b>Напоминание</b>\n\n{title}\n📅 {when}{extra}",
+    "reminder_generic_title": "Напоминание",
+    "credits_remaining_short": "ост. {remaining}",
+    "ntf_add_subscription": "➕ Подписка",
+    "ntf_add_visa": "➕ Виза",
+    "ntf_manage_alerts": "📋 Подписки и визы",
 }
 
 EXTRA_UZ: dict[str, str] = {
@@ -181,6 +190,15 @@ EXTRA_UZ: dict[str, str] = {
     "weather_today_range": "📈 Bugun: {tmin}°…{tmax}°C",
     "weather_uv": "☀️ UV indeksi: {uv}",
     "profile_facts_header": "Foydalanuvchi haqida ma'lum narsalar:",
+    "household_members_title": "A'zolar",
+    "scan_btn_expense": "💰 Xarajat yozish",
+    "scan_amount_detected": "Chek summasi: {amount} UZS",
+    "alert_reminder": "📋 <b>Eslatma</b>\n\n{title}\n📅 {when}{extra}",
+    "reminder_generic_title": "Eslatma",
+    "credits_remaining_short": "qoldiq {remaining}",
+    "ntf_add_subscription": "➕ Obuna",
+    "ntf_add_visa": "➕ Viza",
+    "ntf_manage_alerts": "📋 Obuna va vizalar",
 }
 
 EXTRA_EN: dict[str, str] = {
@@ -292,4 +310,13 @@ EXTRA_EN: dict[str, str] = {
     "weather_today_range": "📈 Today: {tmin}°…{tmax}°C",
     "weather_uv": "☀️ UV index: {uv}",
     "profile_facts_header": "Known facts about the user:",
+    "household_members_title": "Members",
+    "scan_btn_expense": "💰 Log expense",
+    "scan_amount_detected": "Receipt amount: {amount} UZS",
+    "alert_reminder": "📋 <b>Reminder</b>\n\n{title}\n📅 {when}{extra}",
+    "reminder_generic_title": "Reminder",
+    "credits_remaining_short": "rem. {remaining}",
+    "ntf_add_subscription": "➕ Subscription",
+    "ntf_add_visa": "➕ Visa",
+    "ntf_manage_alerts": "📋 Subscriptions & visas",
 }

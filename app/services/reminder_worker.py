@@ -16,6 +16,7 @@ from app.services.car_service import (
 )
 from app.services.credit_loans import (
     build_credit_reminder_text,
+    credit_reminder_kb,
     fetch_credit_reminders_due,
     mark_credit_notified,
 )
@@ -29,8 +30,14 @@ from app.services.home_service import (
     fetch_home_utilities_due,
     mark_home_utility_notified,
 )
+from app.core.i18n import t
 from app.services.health_service import build_med_reminder_text, fetch_med_reminders_due, mark_med_notified, user_local_now
 from app.services.life_data import fetch_due_reminders, mark_reminder_sent
+from app.services.notifications_service import (
+    build_alert_reminder_text,
+    fetch_alert_items_due,
+    mark_alert_notified,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,12 +77,11 @@ class ReminderWorker:
             bill_due = await fetch_finance_bills_due(session)
             utility_due = await fetch_home_utilities_due(session)
             credit_due = await fetch_credit_reminders_due(session)
+            alert_due = await fetch_alert_items_due(session)
         for reminder, user in due:
             try:
                 prefix = "🩺" if reminder.module_id == "health" else "🔔"
-                label = "Напоминание" if user.language == "ru" else "Reminder"
-                if user.language == "uz":
-                    label = "Eslatma"
+                label = t(user.language, "reminder_generic_title")
                 await bot.send_message(
                     chat_id=int(user.telegram_id),
                     text=f"{prefix} <b>{label}</b>\n\n{reminder.title}",
@@ -141,11 +147,23 @@ class ReminderWorker:
                 await bot.send_message(
                     chat_id=int(user.telegram_id),
                     text=build_credit_reminder_text(loan, user.language),
+                    reply_markup=credit_reminder_kb(loan.id, user.language),
                 )
                 async with session_maker() as session:
                     await mark_credit_notified(session, loan.id, month=local.strftime("%Y-%m"))
             except Exception:
                 logger.exception("Failed to send credit reminder id=%s", loan.id)
+        for alert, user in alert_due:
+            try:
+                local = user_local_now(user)
+                await bot.send_message(
+                    chat_id=int(user.telegram_id),
+                    text=build_alert_reminder_text(alert, user.language),
+                )
+                async with session_maker() as session:
+                    await mark_alert_notified(session, alert.id, day=local.date().isoformat())
+            except Exception:
+                logger.exception("Failed to send alert reminder id=%s", alert.id)
 
 
 reminder_worker = ReminderWorker()

@@ -7,12 +7,15 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.i18n import t
-from app.models.entities import CalendarEvent, LifeRecord, MemoryEntry, Reminder
+from app.models.entities import CalendarEvent, LifeRecord, MemoryEntry, Reminder, User
 from app.services.car_service import list_car_compliance, list_car_maintenance
+from app.services.credit_loans import list_credit_loans_for_users, next_credit_payment_at
 from app.services.finance_service import list_finance_bills
-from app.services.health_service import list_health_medications
+from app.services.health_service import list_health_medications, user_local_now
 from app.services.home_service import list_home_utilities
+from app.services.household_service import effective_data_user_ids
 from app.services.life_data import list_calendar_events, list_upcoming_reminders, search_memory, search_records
+from app.services.notifications_service import list_alert_items
 
 
 @dataclass(order=True)
@@ -36,100 +39,110 @@ class UnifiedSearchResult:
 
 async def list_unified_notifications(
     session: AsyncSession,
-    user_id: int,
+    user_or_id: User | int,
     lang: str,
     *,
     horizon_days: int = 60,
     limit: int = 25,
 ) -> list[EcosystemNotification]:
-    now = datetime.utcnow()
+    if isinstance(user_or_id, User):
+        user = user_or_id
+        user_ids = await effective_data_user_ids(session, user)
+        local_now = user_local_now(user)
+    else:
+        user_ids = [user_or_id]
+        local_now = datetime.utcnow()
+    now = local_now
     horizon = now + timedelta(days=horizon_days)
     items: list[EcosystemNotification] = []
+    seen: set[str] = set()
 
-    for reminder in await list_upcoming_reminders(session, user_id, limit=30):
-        if reminder.due_at > horizon:
-            continue
-        source = t(lang, "eco_src_reminder")
-        if reminder.module_id == "organizer":
-            source = t(lang, "eco_src_organizer")
-        elif reminder.module_id == "health":
-            source = t(lang, "eco_src_health")
-        items.append(
-            EcosystemNotification(reminder.due_at, "🔔", reminder.title, source)
-        )
+    def add(item: EcosystemNotification) -> None:
+        key = f"{item.sort_at.isoformat()}:{item.title}:{item.source}"
+        if key in seen:
+            return
+        seen.add(key)
+        items.append(item)
 
-    for event in await list_calendar_events(session, user_id, limit=30):
-        from app.services.recurrence import next_occurrence
-
-        effective = next_occurrence(event.starts_at, now, event.recurrence or None)
-        if effective < now or effective > horizon:
-            continue
-        if event.event_type == "birthday":
-            icon, source = "🎂", t(lang, "eco_src_birthday")
-        elif event.event_type == "meeting":
-            icon, source = "🤝", t(lang, "eco_src_meeting")
-        else:
-            icon, source = "📅", t(lang, "eco_src_calendar")
-        items.append(EcosystemNotification(effective, icon, event.title, source))
-
-    for med in await list_health_medications(session, user_id):
-        for time_str in med.reminder_times.split(","):
-            time_str = time_str.strip()
-            if not time_str:
+    for uid in user_ids:
+        for reminder in await list_upcoming_reminders(session, uid, limit=30):
+            if reminder.due_at > horizon:
                 continue
-            try:
-                hour, minute = map(int, time_str.split(":"))
-            except ValueError:
+            source = t(lang, "eco_src_reminder")
+            if reminder.module_id == "organizer":
+                source = t(lang, "eco_src_organizer")
+            elif reminder.module_id == "health":
+                source = t(lang, "eco_src_health")
+            add(EcosystemNotification(reminder.due_at, "🔔", reminder.title, source))
+
+        for event in await list_calendar_events(session, uid, limit=30):
+            from app.services.recurrence import next_occurrence
+
+            effective = next_occurrence(event.starts_at, now, event.recurrence or None)
+            if effective < now or effective > horizon:
                 continue
-            due = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            if due < now:
-                due += timedelta(days=1)
-            items.append(
-                EcosystemNotification(
-                    due,
-                    "💊",
-                    f"{med.name} ({med.dosage or '—'})",
-                    t(lang, "eco_src_medicine"),
+            if event.event_type == "birthday":
+                icon, source = "🎂", t(lang, "eco_src_birthday")
+            elif event.event_type == "meeting":
+                icon, source = "🤝", t(lang, "eco_src_meeting")
+            else:
+                icon, source = "📅", t(lang, "eco_src_calendar")
+            add(EcosystemNotification(effective, icon, event.title, source))
+
+        for med in await list_health_medications(session, uid):
+            for time_str in med.reminder_times.split(","):
+                time_str = time_str.strip()
+                if not time_str:
+                    continue
+                try:
+                    hour, minute = map(int, time_str.split(":"))
+                except ValueError:
+                    continue
+                due = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+                if due < now:
+                    due += timedelta(days=1)
+                add(
+                    EcosystemNotification(
+                        due,
+                        "💊",
+                        f"{med.name} ({med.dosage or '—'})",
+                        t(lang, "eco_src_medicine"),
+                    )
                 )
-            )
 
-    for item in await list_car_maintenance(session, user_id):
-        if item.due_at < now or item.due_at > horizon:
-            continue
-        items.append(
-            EcosystemNotification(item.due_at, "🚗", item.title, t(lang, "eco_src_car_service"))
-        )
+        for item in await list_car_maintenance(session, uid):
+            if item.due_at < now or item.due_at > horizon:
+                continue
+            add(EcosystemNotification(item.due_at, "🚗", item.title, t(lang, "eco_src_car_service")))
 
-    for row in await list_car_compliance(session, user_id):
-        if row.expires_at < now or row.expires_at > horizon:
-            continue
-        label = row.title or row.compliance_type
-        if row.compliance_type == "insurance":
-            source = t(lang, "eco_src_insurance")
-        else:
-            source = t(lang, "eco_src_car_service")
-        items.append(
-            EcosystemNotification(
-                row.expires_at,
-                "🛡",
-                label,
-                source,
-            )
-        )
+        for row in await list_car_compliance(session, uid):
+            if row.expires_at < now or row.expires_at > horizon:
+                continue
+            label = row.title or row.compliance_type
+            source = t(lang, "eco_src_insurance") if row.compliance_type == "insurance" else t(lang, "eco_src_car_service")
+            add(EcosystemNotification(row.expires_at, "🛡", label, source))
 
-    for bill in await list_finance_bills(session, user_id):
-        if bill.due_at < now or bill.due_at > horizon:
-            continue
-        items.append(
-            EcosystemNotification(bill.due_at, "💰", bill.title, t(lang, "eco_src_payment"))
-        )
+        for bill in await list_finance_bills(session, uid):
+            if bill.due_at < now or bill.due_at > horizon:
+                continue
+            add(EcosystemNotification(bill.due_at, "💰", bill.title, t(lang, "eco_src_payment")))
 
-    for bill in await list_home_utilities(session, user_id, limit=20):
-        if bill.due_at < now or bill.due_at > horizon:
+        for bill in await list_home_utilities(session, uid, limit=20):
+            if bill.due_at < now or bill.due_at > horizon:
+                continue
+            add(EcosystemNotification(bill.due_at, "🏠", bill.title, t(lang, "eco_src_utilities")))
+
+        for alert in await list_alert_items(session, uid, limit=20):
+            if alert.due_at < now or alert.due_at > horizon:
+                continue
+            source = t(lang, "eco_src_subscription") if alert.alert_type == "subscription" else t(lang, "eco_src_visa")
+            add(EcosystemNotification(alert.due_at, "📋", alert.title, source))
+
+    for loan in await list_credit_loans_for_users(session, user_ids):
+        due = next_credit_payment_at(loan, now)
+        if due > horizon:
             continue
-        items.append(
-            EcosystemNotification(bill.due_at, "🏠", bill.title, t(lang, "eco_src_utilities"))
-        )
+        add(EcosystemNotification(due, "💳", loan.title, t(lang, "eco_src_credit")))
 
     items.sort()
     return items[:limit]
@@ -181,16 +194,33 @@ async def search_reminders(
 
 async def unified_search(
     session: AsyncSession,
-    user_id: int,
+    user: User,
     query: str,
     *,
     limit: int = 5,
 ) -> UnifiedSearchResult:
+    user_ids = await effective_data_user_ids(session, user)
+    records: list[LifeRecord] = []
+    memory: list[MemoryEntry] = []
+    events: list[CalendarEvent] = []
+    reminders: list[Reminder] = []
+    seen_r: set[int] = set()
+    for uid in user_ids:
+        for r in await search_records(session, uid, query, limit=limit):
+            if r.id not in seen_r:
+                seen_r.add(r.id)
+                records.append(r)
+        for m in await search_memory(session, uid, query, limit=limit):
+            memory.append(m)
+        for e in await search_calendar_events(session, uid, query, limit=limit):
+            events.append(e)
+        for rem in await search_reminders(session, uid, query, limit=limit):
+            reminders.append(rem)
     return UnifiedSearchResult(
-        records=await search_records(session, user_id, query, limit=limit),
-        memory=await search_memory(session, user_id, query, limit=limit),
-        events=await search_calendar_events(session, user_id, query, limit=limit),
-        reminders=await search_reminders(session, user_id, query, limit=limit),
+        records=records[:limit],
+        memory=memory[:limit],
+        events=events[:limit],
+        reminders=reminders[:limit],
     )
 
 

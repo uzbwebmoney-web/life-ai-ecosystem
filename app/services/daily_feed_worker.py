@@ -45,7 +45,7 @@ class DailyFeedWorker:
             users = (await session.execute(select(User).where(User.onboarding_done.is_(True)))).scalars().all()
         for user in users:
             now = user_local_now(user)
-            if now.hour != 8 or now.minute > 30:
+            if now.hour != 8:
                 continue
             day_key = now.strftime("%Y-%m-%d")
             if user.last_daily_feed_date == day_key:
