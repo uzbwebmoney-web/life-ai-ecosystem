@@ -109,3 +109,13 @@ class OrganizerStates(StatesGroup):
     waiting_event_datetime = State()
     waiting_remind_title = State()
     waiting_remind_datetime = State()
+
+
+class NotificationsStates(StatesGroup):
+    waiting_title = State()
+    waiting_due = State()
+    waiting_amount = State()
+
+
+class OnboardingStates(StatesGroup):
+    waiting_confirm = State()

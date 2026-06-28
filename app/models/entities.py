@@ -21,6 +21,7 @@ class User(Base):
     active_profile_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("family_profiles.id"), nullable=True)
     active_module_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     active_submodule_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    onboarding_done: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -60,6 +61,23 @@ class CalendarEvent(Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     event_type: Mapped[str] = mapped_column(String(32), default="meeting")
     notes: Mapped[str] = mapped_column(Text, default="")
+    recurrence: Mapped[str] = mapped_column(String(16), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class AlertItem(Base):
+    __tablename__ = "alert_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    profile_id: Mapped[int | None] = mapped_column(ForeignKey("family_profiles.id"), nullable=True)
+    alert_type: Mapped[str] = mapped_column(String(32), index=True)
+    title: Mapped[str] = mapped_column(String(255))
+    due_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    amount: Mapped[float | None] = mapped_column(Float, nullable=True)
+    currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_notified_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 

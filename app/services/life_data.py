@@ -117,6 +117,11 @@ async def toggle_voice_mode(session: AsyncSession, user: User) -> bool:
     return user.voice_mode
 
 
+async def complete_onboarding(session: AsyncSession, user: User) -> None:
+    user.onboarding_done = True
+    await session.commit()
+
+
 async def add_record(
     session: AsyncSession,
     *,
@@ -156,6 +161,7 @@ async def add_calendar_event(
     event_type: str = "meeting",
     notes: str = "",
     profile_id: int | None = None,
+    recurrence: str = "",
 ) -> CalendarEvent:
     event = CalendarEvent(
         user_id=user_id,
@@ -164,6 +170,7 @@ async def add_calendar_event(
         starts_at=starts_at,
         event_type=event_type,
         notes=notes,
+        recurrence=recurrence,
     )
     session.add(event)
     await session.commit()
@@ -172,16 +179,24 @@ async def add_calendar_event(
 
 
 async def list_calendar_events(session: AsyncSession, user_id: int, *, limit: int = 15) -> list[CalendarEvent]:
+    from app.services.recurrence import next_occurrence
+
     now = datetime.utcnow()
     rows = (
         await session.execute(
             select(CalendarEvent)
-            .where(CalendarEvent.user_id == user_id, CalendarEvent.starts_at >= now)
+            .where(CalendarEvent.user_id == user_id)
             .order_by(CalendarEvent.starts_at.asc())
-            .limit(limit)
+            .limit(limit * 3)
         )
     ).scalars().all()
-    return list(rows)
+    upcoming: list[tuple[datetime, CalendarEvent]] = []
+    for event in rows:
+        effective = next_occurrence(event.starts_at, now, event.recurrence or None)
+        if effective >= now:
+            upcoming.append((effective, event))
+    upcoming.sort(key=lambda pair: pair[0])
+    return [event for _, event in upcoming[:limit]]
 
 
 async def search_records(session: AsyncSession, user_id: int, query: str, *, limit: int = 10) -> list[LifeRecord]:

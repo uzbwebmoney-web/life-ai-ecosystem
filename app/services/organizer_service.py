@@ -143,6 +143,7 @@ async def add_org_event(
     notes: str = "",
     profile_id: int | None = None,
 ) -> CalendarEvent:
+    recurrence = "yearly" if event_type == "birthday" else ""
     return await add_calendar_event(
         session,
         user_id=user_id,
@@ -151,6 +152,7 @@ async def add_org_event(
         event_type=event_type,
         notes=notes,
         profile_id=profile_id,
+        recurrence=recurrence,
     )
 
 
@@ -161,6 +163,8 @@ async def list_events_by_type(
     *,
     limit: int = 15,
 ) -> list[CalendarEvent]:
+    from app.services.recurrence import next_occurrence
+
     now = datetime.utcnow()
     rows = (
         await session.execute(
@@ -168,13 +172,18 @@ async def list_events_by_type(
             .where(
                 CalendarEvent.user_id == user_id,
                 CalendarEvent.event_type == event_type,
-                CalendarEvent.starts_at >= now,
             )
             .order_by(CalendarEvent.starts_at.asc())
-            .limit(limit)
+            .limit(limit * 3)
         )
     ).scalars().all()
-    return list(rows)
+    upcoming: list[tuple[datetime, CalendarEvent]] = []
+    for event in rows:
+        effective = next_occurrence(event.starts_at, now, event.recurrence or None)
+        if effective >= now:
+            upcoming.append((effective, event))
+    upcoming.sort(key=lambda pair: pair[0])
+    return [event for _, event in upcoming[:limit]]
 
 
 async def list_all_events(session: AsyncSession, user_id: int, *, limit: int = 20) -> list[CalendarEvent]:
@@ -182,8 +191,12 @@ async def list_all_events(session: AsyncSession, user_id: int, *, limit: int = 2
 
 
 def format_event_line(event: CalendarEvent, lang: str = "ru") -> str:
+    from app.services.recurrence import next_occurrence
+
     icon = {"meeting": "🤝", "birthday": "🎂", "task": "📋"}.get(event.event_type, "📅")
-    return f"{icon} {event.starts_at.strftime('%d.%m.%Y %H:%M')} — <b>{event.title}</b>"
+    when = next_occurrence(event.starts_at, datetime.utcnow(), event.recurrence or None)
+    repeat = " 🔁" if event.recurrence == "yearly" else ""
+    return f"{icon} {when.strftime('%d.%m.%Y %H:%M')}{repeat} — <b>{event.title}</b>"
 
 
 async def add_org_reminder(

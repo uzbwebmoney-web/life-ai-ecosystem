@@ -145,6 +145,13 @@ def build_module_ai_hint(module_id: str, submodule_id: str | None = None, *, lan
                 extra = ASSISTANT_SUBMODULE_AI.get(submodule_id)
                 if extra:
                     parts.append(extra)
+            else:
+                from app.services.generic_ai_service import GENERIC_AI_MODULES, GENERIC_SUBMODULE_AI
+
+                if module_id in GENERIC_AI_MODULES:
+                    extra = GENERIC_SUBMODULE_AI.get(module_id, {}).get(submodule_id)
+                    if extra:
+                        parts.append(extra)
 
     disclaimer = _MODULE_DISCLAIMERS.get(module_id, {}).get(code)
     if disclaimer:

@@ -14,6 +14,7 @@ from app.services.finance_service import list_finance_bills
 from app.services.health_service import list_health_medications
 from app.services.home_service import list_home_utilities
 from app.services.life_data import list_calendar_events, list_upcoming_reminders, search_memory, search_records
+from app.services.notifications_service import list_alert_items
 
 
 @dataclass(order=True)
@@ -75,7 +76,10 @@ async def list_unified_notifications(
         )
 
     for event in await list_calendar_events(session, user_id, limit=30):
-        if event.starts_at < now or event.starts_at > horizon:
+        from app.services.recurrence import next_occurrence
+
+        effective = next_occurrence(event.starts_at, now, event.recurrence or None)
+        if effective < now or effective > horizon:
             continue
         if event.event_type == "birthday":
             icon, source = "🎂", t(lang, "eco_src_birthday")
@@ -83,7 +87,7 @@ async def list_unified_notifications(
             icon, source = "🤝", t(lang, "eco_src_meeting")
         else:
             icon, source = "📅", t(lang, "eco_src_calendar")
-        items.append(EcosystemNotification(event.starts_at, icon, event.title, source))
+        items.append(EcosystemNotification(effective, icon, event.title, source))
 
     for med in await list_health_medications(session, user_id):
         for time_str in med.reminder_times.split(","):
@@ -156,6 +160,12 @@ async def list_unified_notifications(
                 t(lang, "eco_src_credit"),
             )
         )
+
+    for alert in await list_alert_items(session, user_id, limit=20):
+        if alert.due_at < now or alert.due_at > horizon:
+            continue
+        source = t(lang, "eco_src_subscription") if alert.alert_type == "subscription" else t(lang, "eco_src_visa")
+        items.append(EcosystemNotification(alert.due_at, "📋", alert.title, source))
 
     items.sort()
     return items[:limit]

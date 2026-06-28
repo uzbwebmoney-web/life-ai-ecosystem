@@ -13,6 +13,10 @@ class Settings(BaseSettings):
         alias="DATABASE_URL",
     )
     default_language: str = Field(default="ru", alias="DEFAULT_LANGUAGE")
+    webhook_url: str = Field(default="", alias="WEBHOOK_URL")
+    webhook_path: str = Field(default="/webhook", alias="WEBHOOK_PATH")
+    webhook_host: str = Field(default="0.0.0.0", alias="WEBHOOK_HOST")
+    webhook_port: int = Field(default=8080, alias="WEBHOOK_PORT")
 
 
 settings = Settings()

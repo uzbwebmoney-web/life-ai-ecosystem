@@ -5,7 +5,7 @@ from datetime import datetime
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards import back_menu_kb
@@ -14,10 +14,21 @@ from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
 from app.models.entities import User
 from app.services.ai_service import ask_ai
+from app.services.export_service import build_user_export
 from app.services.intent_router import module_hint
 from app.services.life_data import add_memory, add_record, add_reminder, search_memory, set_active_module
+from app.services.media_ai import synthesize_speech
 
 router = Router()
+
+
+async def _maybe_send_voice(message: Message, user: User, text: str) -> None:
+    if not user.voice_mode:
+        return
+    audio = await synthesize_speech(text)
+    if not audio:
+        return
+    await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
 
 
 @router.callback_query(F.data.startswith("ai:"))
@@ -66,6 +77,7 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
     loading = await message.answer(t(lang, "ai_thinking"))
     answer = await ask_ai(user_message=text, module_hint=hint, memory_context=memory_ctx, language=lang)
     await loading.edit_text(f"🤖 {answer}")
+    await _maybe_send_voice(message, user, answer)
     if user.memory_enabled:
         await add_memory(
             session,
@@ -212,3 +224,46 @@ async def remind_datetime(message: Message, state: FSMContext, user: User, sessi
         reply_markup=back_menu_kb(lang),
     )
     await state.clear()
+
+
+@router.message(Command("export"))
+async def cmd_export(message: Message, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    payload = await build_user_export(session, user.id)
+    doc = BufferedInputFile(payload.encode("utf-8"), filename=f"life_ai_export_{user.telegram_id}.json")
+    await message.answer_document(doc, caption=t(lang, "export_done"))
+
+
+@router.message(Command("expense"))
+async def cmd_expense(message: Message, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    raw = (message.text or "").replace("/expense", "", 1).strip()
+    if "|" not in raw:
+        await message.answer(t(lang, "cmd_expense_format"))
+        return
+    title, amount_raw = [p.strip() for p in raw.split("|", 1)]
+    try:
+        amount = float(amount_raw.replace(",", ".").replace(" ", ""))
+    except ValueError:
+        await message.answer(t(lang, "record_amount_error"))
+        return
+    await add_record(
+        session,
+        user_id=user.id,
+        module_id="finance",
+        submodule_id="expenses",
+        title=title[:200],
+        body=title,
+        amount=amount,
+        currency="UZS",
+        profile_id=user.active_profile_id,
+    )
+    amount_str = f"{amount:,.0f}".replace(",", " ")
+    await message.answer(t(lang, "cmd_expense_saved", title=title, amount=amount_str), reply_markup=back_menu_kb(lang))
+
+
+@router.message(Command("oil"))
+async def cmd_oil(message: Message, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    await set_active_module(session, user, "car", submodule_id="maintenance")
+    await message.answer(t(lang, "cmd_oil_hint"), reply_markup=back_menu_kb(lang))

@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards_vault import vault_cancel_kb, vault_items_kb, vault_module_kb
+from app.bot.keyboards_vault import vault_cancel_kb, vault_delete_confirm_kb, vault_items_kb, vault_module_kb
 from app.bot.states import VaultStates
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
@@ -61,6 +61,7 @@ async def _show_items(
     sub_id: str,
     *,
     edit: bool = False,
+    page: int = 0,
 ) -> None:
     records = await list_vault_items(session, user.id, sub_id)
     title_key = vault_submodule_title_key(sub_id)
@@ -72,10 +73,14 @@ async def _show_items(
         lines.append(t(lang, "vlt_file_hint"))
         lines.append("")
     if records:
-        lines.extend(format_vault_line(r, sub_id) for r in records)
+        from app.bot.keyboards_vault import VAULT_PAGE_SIZE
+
+        start = page * VAULT_PAGE_SIZE
+        chunk = records[start : start + VAULT_PAGE_SIZE]
+        lines.extend(format_vault_line(r, sub_id) for r in chunk)
     else:
         lines.append(t(lang, "vlt_empty"))
-    await _send(target, "\n".join(lines), vault_items_kb(records, sub_id, lang), edit)
+    await _send(target, "\n".join(lines), vault_items_kb(records, sub_id, lang, page=page), edit)
 
 
 @router.callback_query(F.data.startswith("vlt:add:"))
@@ -144,7 +149,34 @@ async def vault_save(message: Message, state: FSMContext, user: User, session: A
     await state.clear()
 
 
+@router.callback_query(F.data.startswith("vlt:pg:"))
+async def vault_page(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    parts = (callback.data or "").split(":")
+    sub_id = parts[2]
+    page = int(parts[3])
+    await _show_items(callback.message, user, session, user.language, sub_id, edit=True, page=page)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "vlt:noop")
+async def vault_noop(callback: CallbackQuery) -> None:
+    await callback.answer()
+
+
 @router.callback_query(F.data.startswith("vlt:del:"))
+async def vault_delete_confirm(callback: CallbackQuery, user: User) -> None:
+    lang = user.language
+    parts = (callback.data or "").split(":")
+    sub_id = parts[2]
+    record_id = int(parts[3])
+    await callback.message.edit_text(
+        t(lang, "vlt_delete_confirm"),
+        reply_markup=vault_delete_confirm_kb(sub_id, record_id, lang),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("vlt:delok:"))
 async def vault_delete(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     lang = user.language
     parts = (callback.data or "").split(":")

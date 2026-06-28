@@ -4,6 +4,8 @@ from aiogram.enums import ParseMode
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.bot.handlers.vault import router as vault_router
+from app.bot.handlers.generic_ai import router as generic_ai_router
+from app.bot.handlers.notifications import router as notifications_router
 from app.bot.handlers.assistant import router as assistant_router, text_router as assistant_text_router
 from app.bot.handlers.organizer import router as organizer_router
 from app.bot.handlers.nutrition import router as nutrition_router
@@ -45,6 +47,8 @@ def create_dispatcher(session_maker: async_sessionmaker) -> Dispatcher:
     dp.include_router(organizer_router)
     dp.include_router(assistant_router)
     dp.include_router(vault_router)
+    dp.include_router(generic_ai_router)
+    dp.include_router(notifications_router)
     dp.include_router(credits_router)
     dp.include_router(hub_router)
     dp.include_router(family_router)

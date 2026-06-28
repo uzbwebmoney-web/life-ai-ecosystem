@@ -62,3 +62,15 @@ async def generate_image(prompt: str) -> bytes | None:
     )
     data = response.data[0].b64_json if response.data else None
     return base64.b64decode(data) if data else None
+
+
+async def synthesize_speech(text: str, *, voice: str = "alloy") -> bytes | None:
+    if not settings.openai_api_key.strip():
+        return None
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    response = await client.audio.speech.create(
+        model="tts-1",
+        voice=voice,
+        input=text[:500],
+    )
+    return response.content
