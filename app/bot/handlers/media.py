@@ -74,6 +74,7 @@ async def _process_photo(
     universal_scan: bool = False,
 ) -> None:
     lang = user.language
+    from app.core.credits import photo_analysis_credits
     from app.services.model_router import select_vision_model
     from app.services.subscription_service import (
         check_photo_analysis_quota,
@@ -99,7 +100,8 @@ async def _process_photo(
         if blocked:
             await message.answer(t(lang, blocked))
             return
-        photo_quota = await check_photo_analysis_quota(session, user, lang=lang)
+        photo_credits = photo_analysis_credits(multi=False)
+        photo_quota = await check_photo_analysis_quota(session, user, lang=lang, credits=photo_credits)
         if photo_quota:
             await message.answer(photo_quota)
             return
@@ -134,7 +136,7 @@ async def _process_photo(
         bot=message.bot,
     )
     if not universal_scan:
-        await consume_photo_analysis(session, user)
+        await consume_photo_analysis(session, user, credits=photo_credits)
     lowered = analysis.lower()
     combined = f"{caption} {analysis}".lower()
 

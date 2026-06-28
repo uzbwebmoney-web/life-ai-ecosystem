@@ -8,31 +8,22 @@ USD_TO_UZS = 12_017
 
 PlanId = Literal["free", "basic", "premium", "pro", "student"]
 PackageKind = Literal[
-    "ai_requests",
+    "ai_credits",
     "image_gen",
     "photo_analysis",
     "memory_facts",
     "storage_mb",
-    "advanced_ai",
-    "pro_ai",
 ]
 AdvancedModelMode = Literal["none", "limited", "full", "router"]
 ExportLevel = Literal["none", "pdf", "pdf_excel", "all"]
 
 LEGACY_PLAN_ALIASES: dict[str, PlanId] = {"family": "premium"}
 
-# Internal AI-request weights (not shown to users)
-AI_REQUEST_WEIGHT: dict[str, int] = {
-    "gpt-4o-mini": 1,
-    "gpt-5.4-mini": 5,
-    "gpt-5.5": 20,
-}
-
 
 @dataclass(frozen=True)
 class PlanLimits:
-    ai_daily: int | None
-    ai_monthly: int | None
+    ai_credits_monthly: int
+    max_output_tokens: int
     photo_analysis_monthly: int | None
     image_gen_monthly: int | None
     pdf_docx_monthly: int | None
@@ -43,8 +34,6 @@ class PlanLimits:
     ocr: bool
     doc_translate: bool
     advanced_model: AdvancedModelMode
-    advanced_model_monthly: int | None
-    pro_model_monthly: int | None
     priority: bool
     max_priority: bool
     household_members: int
@@ -85,13 +74,6 @@ def normalize_plan_id(plan_id: str) -> str:
     return LEGACY_PLAN_ALIASES.get(plan_id, plan_id)
 
 
-def ai_request_weight(model: str) -> int:
-    from app.core.ai_pricing import normalize_model_key
-
-    key = normalize_model_key(model)
-    return AI_REQUEST_WEIGHT.get(key, 1)
-
-
 def usd_to_uzs(usd: float) -> int:
     return int(round(usd * USD_TO_UZS / 1000) * 1000)
 
@@ -117,11 +99,11 @@ PLANS: dict[PlanId, PlanInfo] = {
         emoji="🆓",
         usd_monthly=None,
         limits=PlanLimits(
-            ai_daily=20,
-            ai_monthly=None,
-            photo_analysis_monthly=5,
+            ai_credits_monthly=300,
+            max_output_tokens=3000,
+            photo_analysis_monthly=3,
             image_gen_monthly=0,
-            pdf_docx_monthly=3,
+            pdf_docx_monthly=0,
             memory_facts=100,
             storage_mb=100,
             reminders=10,
@@ -129,13 +111,11 @@ PLANS: dict[PlanId, PlanInfo] = {
             ocr=False,
             doc_translate=False,
             advanced_model="none",
-            advanced_model_monthly=0,
-            pro_model_monthly=0,
             priority=False,
             max_priority=False,
             household_members=1,
             history_days=30,
-            export_level="pdf",
+            export_level="none",
             backup=False,
             workspaces=1,
             allowed_modules=None,
@@ -151,20 +131,18 @@ PLANS: dict[PlanId, PlanInfo] = {
         emoji="🎓",
         usd_monthly=2.99,
         limits=PlanLimits(
-            ai_daily=None,
-            ai_monthly=None,
+            ai_credits_monthly=1500,
+            max_output_tokens=4500,
             photo_analysis_monthly=50,
-            image_gen_monthly=5,
+            image_gen_monthly=10,
             pdf_docx_monthly=20,
-            memory_facts=500,
-            storage_mb=1024,
+            memory_facts=1000,
+            storage_mb=2048,
             reminders=20,
             voice=True,
             ocr=True,
             doc_translate=True,
             advanced_model="limited",
-            advanced_model_monthly=50,
-            pro_model_monthly=0,
             priority=False,
             max_priority=False,
             household_members=1,
@@ -172,7 +150,7 @@ PLANS: dict[PlanId, PlanInfo] = {
             export_level="pdf",
             backup=False,
             workspaces=1,
-            allowed_modules=frozenset({"education", "ai_assistant", "vault", "organizer"}),
+            allowed_modules=None,
             cars=1,
             health_profiles=1,
             family_profiles=1,
@@ -183,22 +161,20 @@ PLANS: dict[PlanId, PlanInfo] = {
     "basic": PlanInfo(
         id="basic",
         emoji="🥉",
-        usd_monthly=7.99,
+        usd_monthly=5.99,
         limits=PlanLimits(
-            ai_daily=None,
-            ai_monthly=None,
+            ai_credits_monthly=5000,
+            max_output_tokens=6500,
             photo_analysis_monthly=300,
-            image_gen_monthly=30,
+            image_gen_monthly=40,
             pdf_docx_monthly=100,
-            memory_facts=2000,
-            storage_mb=5120,
+            memory_facts=5000,
+            storage_mb=10240,
             reminders=50,
             voice=True,
             ocr=True,
             doc_translate=True,
             advanced_model="limited",
-            advanced_model_monthly=300,
-            pro_model_monthly=0,
             priority=False,
             max_priority=False,
             household_members=1,
@@ -217,22 +193,20 @@ PLANS: dict[PlanId, PlanInfo] = {
     "premium": PlanInfo(
         id="premium",
         emoji="🥈",
-        usd_monthly=14.99,
+        usd_monthly=11.99,
         limits=PlanLimits(
-            ai_daily=None,
-            ai_monthly=None,
+            ai_credits_monthly=15000,
+            max_output_tokens=10000,
             photo_analysis_monthly=1500,
-            image_gen_monthly=100,
+            image_gen_monthly=120,
             pdf_docx_monthly=500,
-            memory_facts=10_000,
-            storage_mb=20_480,
+            memory_facts=20000,
+            storage_mb=51200,
             reminders=None,
             voice=True,
             ocr=True,
             doc_translate=True,
             advanced_model="router",
-            advanced_model_monthly=1500,
-            pro_model_monthly=30,
             priority=True,
             max_priority=False,
             household_members=5,
@@ -251,22 +225,20 @@ PLANS: dict[PlanId, PlanInfo] = {
     "pro": PlanInfo(
         id="pro",
         emoji="🥇",
-        usd_monthly=29.99,
+        usd_monthly=19.99,
         limits=PlanLimits(
-            ai_daily=None,
-            ai_monthly=None,
+            ai_credits_monthly=40000,
+            max_output_tokens=16000,
             photo_analysis_monthly=5000,
-            image_gen_monthly=500,
+            image_gen_monthly=400,
             pdf_docx_monthly=2000,
-            memory_facts=50_000,
-            storage_mb=102_400,
+            memory_facts=100000,
+            storage_mb=204800,
             reminders=None,
             voice=True,
             ocr=True,
             doc_translate=True,
             advanced_model="router",
-            advanced_model_monthly=5000,
-            pro_model_monthly=300,
             priority=True,
             max_priority=True,
             household_members=10,
@@ -285,16 +257,17 @@ PLANS: dict[PlanId, PlanInfo] = {
 }
 
 ADDON_PACKAGES: tuple[AddonPackage, ...] = (
-    AddonPackage("p_img50", "image_gen", 50, 4.99, "plan_pkg_img50"),
-    AddonPackage("p_gpt54_500", "advanced_ai", 500, 4.99, "plan_pkg_gpt54_500"),
-    AddonPackage("p_gpt55_50", "pro_ai", 50, 9.99, "plan_pkg_gpt55_50"),
+    AddonPackage("p_credits_500", "ai_credits", 500, 0.99, "plan_pkg_credits_500"),
+    AddonPackage("p_credits_2000", "ai_credits", 2000, 2.99, "plan_pkg_credits_2000"),
+    AddonPackage("p_credits_5000", "ai_credits", 5000, 5.99, "plan_pkg_credits_5000"),
+    AddonPackage("p_credits_10000", "ai_credits", 10000, 9.99, "plan_pkg_credits_10000"),
     AddonPackage("p_cloud20", "storage_mb", 20_480, 2.99, "plan_pkg_cloud20"),
 )
 
 AI_PACKAGES = ADDON_PACKAGES
 
 TRIAL_DAYS = 3
-REFERRAL_AI_BONUS = 50
-WELCOME_AI_BONUS = 20
+REFERRAL_AI_BONUS = 100
+WELCOME_AI_BONUS = 50
 
 STUDENT_MODULE_IDS: frozenset[str] = frozenset({"education", "ai_assistant", "vault", "organizer"})

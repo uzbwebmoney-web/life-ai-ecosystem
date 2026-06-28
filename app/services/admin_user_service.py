@@ -15,9 +15,12 @@ from app.services.subscription_service import (
     _effective_storage_limit_mb,
     _photo_limit,
     _reset_usage_counters,
-    ai_remaining,
     count_memory_entries,
     count_reminders,
+    credits_bonus,
+    credits_left,
+    credits_total,
+    credits_used,
     effective_plan_id,
     estimate_storage_mb,
     format_usage_summary,
@@ -92,6 +95,32 @@ def _utc_offset_label(minutes: int | None) -> str:
     total = abs(value)
     hours, mins = divmod(total, 60)
     return f"UTC{sign}{hours:02d}:{mins:02d}"
+
+
+async def _user_openai_cost_30d(session: AsyncSession, user_id: int) -> float:
+    from app.core.ai_pricing import MODEL_PRICING, IMAGE_QUALITY_USD, normalize_model_key
+    from app.models.entities import AiUsageLog
+
+    since = datetime.utcnow() - timedelta(days=30)
+    rows = (
+        await session.execute(
+            select(AiUsageLog).where(
+                AiUsageLog.user_id == user_id,
+                AiUsageLog.created_at >= since,
+            )
+        )
+    ).scalars().all()
+    total = 0.0
+    for row in rows:
+        key = normalize_model_key(row.model or "")
+        if row.image_count:
+            q = row.image_quality or "medium"
+            total += IMAGE_QUALITY_USD.get(q, 0.042) * (row.image_count or 1)
+            continue
+        rates = MODEL_PRICING.get(key, MODEL_PRICING["gpt-4o-mini"])
+        total += (row.prompt_tokens or 0) / 1_000_000 * rates[0]
+        total += (row.completion_tokens or 0) / 1_000_000 * rates[1]
+    return total
 
 
 async def _ai_requests_30d(session: AsyncSession, user_id: int) -> int:
@@ -206,17 +235,23 @@ async def format_admin_user_card(session: AsyncSession, user: User, *, lang: str
         lines.append(t(lang, "admin_user_card_referral", code=user.referral_code))
     if user.referred_by_user_id:
         lines.append(t(lang, "admin_user_card_referred_by", user_id=user.referred_by_user_id))
-    daily_left, monthly_left, bonus = ai_remaining(user)
-    if bonus or daily_left is not None or monthly_left is not None:
-        lines.append(
-            t(
-                lang,
-                "admin_user_card_ai_left",
-                daily=daily_left if daily_left is not None else "∞",
-                monthly=monthly_left if monthly_left is not None else "∞",
-                bonus=bonus,
-            )
+    openai_cost = await _user_openai_cost_30d(session, user.id)
+    plan = plan_info(user)
+    revenue_est = (plan.usd_monthly or 0.0)
+    margin = revenue_est - openai_cost
+    lines.append(
+        t(
+            lang,
+            "admin_user_credits_profit",
+            openai_usd=openai_cost,
+            credits_used=credits_used(user),
+            margin=margin,
         )
+    )
+    lines.append(
+        f"💎 {credits_total(user)} / {credits_used(user)} / {credits_left(user)} "
+        f"(всего/исп./ост.) · bonus {credits_bonus(user)}"
+    )
     return "\n".join(lines)
 
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from aiogram import F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
@@ -18,9 +20,11 @@ from app.services.life_data import add_memory
 from app.services.life_profile_service import extract_facts_from_text, parse_remember_text, upsert_fact
 from app.services.module_context import active_module_label
 from app.services.media_ai import synthesize_speech
+from app.services.proactive_service import proactive_kb, suggest_actions
 from app.services.study_notes_service import prepare_study_notes_request
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 
 async def _answer_in_module(
@@ -44,49 +48,58 @@ async def _answer_in_module(
     loading = await message.answer(
         t(lang, "ai_module_thinking", emoji=mod.emoji, module=mod.title(lang))
     )
-    answer = await ask_ai(
-        user_message=ai_message,
-        module_hint=ai_hint,
-        memory_context=memory_ctx,
-        profile_context=profile_ctx,
-        language=lang,
-        session=session,
-        user=user,
-        bot=message.bot,
-        max_completion_tokens=token_limit,
-    )
-    header = active_module_label(module_id, submodule_id, lang=lang)
-    actions = suggest_actions(text, answer, lang)
-    kb = proactive_kb(actions, lang) or (
-        submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
-    )
-    await deliver_long_text(loading, f"{header}\n\n{answer}", reply_markup=kb)
-
-    from app.bot.handlers.study_export import after_study_ai_response
-
-    await after_study_ai_response(
-        message,
-        user,
-        session,
-        user_text=text,
-        answer=answer,
-        module_id=module_id,
-        submodule_id=submodule_id,
-    )
-
-    if user.voice_mode:
-        audio = await synthesize_speech(answer)
-        if audio:
-            await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
-
-    if user.memory_enabled:
-        await add_memory(
-            session,
-            user.id,
-            f"Q: {text[:200]}\nA: {answer[:400]}",
-            module_id=module_id,
-            profile_id=user.active_profile_id,
+    try:
+        if token_limit > 4000:
+            await loading.edit_text(
+                t(lang, "edu_long_notes_wait", emoji=mod.emoji, module=mod.title(lang))
+            )
+        answer = await ask_ai(
+            user_message=ai_message,
+            module_hint=ai_hint,
+            memory_context=memory_ctx,
+            profile_context=profile_ctx,
+            language=lang,
+            session=session,
+            user=user,
+            bot=message.bot,
+            max_completion_tokens=token_limit,
         )
+        header = active_module_label(module_id, submodule_id, lang=lang)
+        actions = suggest_actions(text, answer, lang)
+        kb = proactive_kb(actions, lang) or (
+            submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
+        )
+        await deliver_long_text(loading, f"{header}\n\n{answer}", reply_markup=kb)
+
+        from app.bot.handlers.study_export import after_study_ai_response
+
+        await after_study_ai_response(
+            message,
+            user,
+            session,
+            user_text=text,
+            answer=answer,
+            module_id=module_id,
+            submodule_id=submodule_id or ("notes" if module_id == "education" else None),
+        )
+
+        if user.voice_mode and len(answer) <= 2500:
+            audio = await synthesize_speech(answer)
+            if audio:
+                await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
+
+        if user.memory_enabled:
+            await add_memory(
+                session,
+                user.id,
+                f"Q: {text[:200]}\nA: {answer[:400]}",
+                module_id=module_id,
+                profile_id=user.active_profile_id,
+            )
+    except Exception:
+        logger.exception("Module AI reply failed module=%s sub=%s", module_id, submodule_id)
+        kb = submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
+        await deliver_long_text(loading, t(lang, "ai_request_failed"), reply_markup=kb)
 
 
 @router.message(StateFilter(None), F.text & ~F.text.startswith("/"))

@@ -17,6 +17,7 @@ from app.core.modules.catalog import MODULE_BY_ID
 from app.models.entities import User
 from app.services.assistant_service import assistant_submodule_description
 from app.services.life_data import set_active_module
+from app.core.credits import image_generation_credits
 from app.services.media_ai import generate_image
 from app.services.subscription_service import (
     check_image_gen_quota,
@@ -40,12 +41,13 @@ async def reply_with_generated_image(message: Message, user: User, session: Asyn
     if blocked:
         await message.answer(t(lang, blocked))
         return
-    quota_msg = await check_image_gen_quota(session, user, lang=lang)
+    quality = image_quality_for_user(user)
+    img_credits = image_generation_credits(quality)  # type: ignore[arg-type]
+    quota_msg = await check_image_gen_quota(session, user, lang=lang, credits=img_credits)
     if quota_msg:
         await message.answer(quota_msg)
         return
     wait_msg = await message.answer(t(lang, "ast_image_generating"))
-    quality = image_quality_for_user(user)
     try:
         result = await generate_image(text, quality=quality)
     except Exception:
@@ -54,7 +56,7 @@ async def reply_with_generated_image(message: Message, user: User, session: Asyn
         await wait_msg.edit_text(t(lang, "ast_image_failed"), reply_markup=kb)
         return
     image_bytes, model_used, api_response = result
-    await consume_image_generation(session, user)
+    await consume_image_generation(session, user, credits=img_credits)
     from app.services.ai_usage_service import record_image_usage
 
     await record_image_usage(

@@ -318,6 +318,32 @@ EXTRA_RU: dict[str, str] = {
     "edu_export_format_docx": "Word (DOCX)",
     "edu_export_format_txt": "Текст (TXT)",
     "edu_export_format_md": "Markdown",
+    "edu_long_notes_wait": "{emoji} Готовлю большой конспект по «{module}»… Это может занять 1–3 минуты.",
+    "ai_request_failed": "⚠️ Не удалось получить ответ AI. Попробуйте ещё раз или сократите запрос (например, 3–5 страниц).",
+    "quota_ai_credits": "⚠️ Недостаточно AI-кредитов. /subscription",
+    "quota_ai_credits_detail": (
+        "⚠️ Недостаточно AI-кредитов.\n\n"
+        "Стоимость запроса: {cost} AI-кредитов\n"
+        "У вас осталось: {left} AI-кредитов\n\n"
+        "Пополните баланс или перейдите на более высокий тариф: /subscription"
+    ),
+    "sub_credits_total": "💎 AI-кредитов в месяце: {total}",
+    "sub_credits_used": "📉 Использовано: {used}",
+    "sub_credits_left": "✅ Осталось: {left}",
+    "sub_credits_bonus": "🎁 Бонусные кредиты: {bonus}",
+    "sub_max_output": "📄 Макс. объём ответа: до {tokens} токенов (техн.)",
+    "plan_limit_credits_monthly": "{n} AI-кредитов в месяц",
+    "plan_limit_max_output": "Ответы до {n} токенов за часть",
+    "plan_models_free": "GPT-4o Mini",
+    "plan_models_student": "GPT-4o Mini, GPT-5.4 Mini",
+    "plan_models_basic": "GPT-4o Mini, GPT-5.4 Mini",
+    "plan_models_premium": "GPT-4o Mini, GPT-5.4 Mini, GPT-5.5",
+    "plan_models_pro": "GPT-4o Mini, GPT-5.4 Mini, GPT-5.5",
+    "plan_pkg_credits_500": "💎 +500 AI-кредитов",
+    "plan_pkg_credits_2000": "💎 +2000 AI-кредитов",
+    "plan_pkg_credits_5000": "💎 +5000 AI-кредитов",
+    "plan_pkg_credits_10000": "💎 +10000 AI-кредитов",
+    "admin_user_credits_profit": "💰 OpenAI ~${openai_usd:.2f} · кредиты {credits_used} · оценка маржи ~${margin:.2f}",
 }
 
 EXTRA_UZ: dict[str, str] = {
@@ -559,6 +585,32 @@ EXTRA_UZ: dict[str, str] = {
     "edu_export_format_docx": "Word (DOCX)",
     "edu_export_format_txt": "Matn (TXT)",
     "edu_export_format_md": "Markdown",
+    "edu_long_notes_wait": "{emoji} «{module}» bo'yicha katta konspekt tayyorlanmoqda… 1–3 daqiqa kuting.",
+    "ai_request_failed": "⚠️ AI javobini olish mumkin emas. Qayta urinib ko'ring yoki so'rovni qisqartiring (masalan, 3–5 bet).",
+    "quota_ai_credits": "⚠️ AI-kreditlar yetarli emas. /subscription",
+    "quota_ai_credits_detail": (
+        "⚠️ AI-kreditlar yetarli emas.\n\n"
+        "So'rov narxi: {cost} AI-kredit\n"
+        "Qolgan: {left} AI-kredit\n\n"
+        "Balansni to'ldiring yoki tarifni oshiring: /subscription"
+    ),
+    "sub_credits_total": "💎 Oylik AI-kreditlar: {total}",
+    "sub_credits_used": "📉 Sarflangan: {used}",
+    "sub_credits_left": "✅ Qolgan: {left}",
+    "sub_credits_bonus": "🎁 Bonus kreditlar: {bonus}",
+    "sub_max_output": "📄 Javob hajmi: qismiga {tokens} tokengacha",
+    "plan_limit_credits_monthly": "Oyiga {n} AI-kredit",
+    "plan_limit_max_output": "Qismiga {n} tokengacha javob",
+    "plan_models_free": "GPT-4o Mini",
+    "plan_models_student": "GPT-4o Mini, GPT-5.4 Mini",
+    "plan_models_basic": "GPT-4o Mini, GPT-5.4 Mini",
+    "plan_models_premium": "GPT-4o Mini, GPT-5.4 Mini, GPT-5.5",
+    "plan_models_pro": "GPT-4o Mini, GPT-5.4 Mini, GPT-5.5",
+    "plan_pkg_credits_500": "💎 +500 AI-kredit",
+    "plan_pkg_credits_2000": "💎 +2000 AI-kredit",
+    "plan_pkg_credits_5000": "💎 +5000 AI-kredit",
+    "plan_pkg_credits_10000": "💎 +10000 AI-kredit",
+    "admin_user_credits_profit": "💰 OpenAI ~${openai_usd:.2f} · kreditlar {credits_used} · marja ~${margin:.2f}",
 }
 
 EXTRA_EN: dict[str, str] = {
@@ -862,4 +914,30 @@ EXTRA_EN: dict[str, str] = {
     "edu_export_format_docx": "Word (DOCX)",
     "edu_export_format_txt": "Text (TXT)",
     "edu_export_format_md": "Markdown",
+    "edu_long_notes_wait": "{emoji} Preparing a large study guide on «{module}»… This may take 1–3 minutes.",
+    "ai_request_failed": "⚠️ Could not get an AI response. Try again or shorten the request (e.g. 3–5 pages).",
+    "quota_ai_credits": "⚠️ Not enough AI credits. /subscription",
+    "quota_ai_credits_detail": (
+        "⚠️ Not enough AI credits.\n\n"
+        "Request cost: {cost} AI credits\n"
+        "You have left: {left} AI credits\n\n"
+        "Top up or upgrade your plan: /subscription"
+    ),
+    "sub_credits_total": "💎 Monthly AI credits: {total}",
+    "sub_credits_used": "📉 Used: {used}",
+    "sub_credits_left": "✅ Left: {left}",
+    "sub_credits_bonus": "🎁 Bonus credits: {bonus}",
+    "sub_max_output": "📄 Max response chunk: up to {tokens} tokens (technical)",
+    "plan_limit_credits_monthly": "{n} AI credits per month",
+    "plan_limit_max_output": "Responses up to {n} tokens per part",
+    "plan_models_free": "GPT-4o Mini",
+    "plan_models_student": "GPT-4o Mini, GPT-5.4 Mini",
+    "plan_models_basic": "GPT-4o Mini, GPT-5.4 Mini",
+    "plan_models_premium": "GPT-4o Mini, GPT-5.4 Mini, GPT-5.5",
+    "plan_models_pro": "GPT-4o Mini, GPT-5.4 Mini, GPT-5.5",
+    "plan_pkg_credits_500": "💎 +500 AI credits",
+    "plan_pkg_credits_2000": "💎 +2000 AI credits",
+    "plan_pkg_credits_5000": "💎 +5000 AI credits",
+    "plan_pkg_credits_10000": "💎 +10000 AI credits",
+    "admin_user_credits_profit": "💰 OpenAI ~${openai_usd:.2f} · credits {credits_used} · est. margin ~${margin:.2f}",
 }

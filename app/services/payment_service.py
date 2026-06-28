@@ -79,7 +79,7 @@ async def activate_product_purchase(
     elif product_type == "package":
         pkg = next((p for p in ADDON_PACKAGES if p.id == product_id), None)
         if pkg:
-            if pkg.kind == "ai_requests":
+            if pkg.kind == "ai_credits":
                 user.ai_bonus_balance = (user.ai_bonus_balance or 0) + pkg.amount
             elif pkg.kind == "photo_analysis":
                 user.bonus_photo_analysis = (user.bonus_photo_analysis or 0) + pkg.amount
@@ -89,10 +89,6 @@ async def activate_product_purchase(
                 user.bonus_memory_facts = (user.bonus_memory_facts or 0) + pkg.amount
             elif pkg.kind == "storage_mb":
                 user.bonus_storage_mb = (user.bonus_storage_mb or 0) + pkg.amount
-            elif pkg.kind == "advanced_ai":
-                user.bonus_advanced_model = (user.bonus_advanced_model or 0) + pkg.amount
-            elif pkg.kind == "pro_ai":
-                user.bonus_pro_model = (user.bonus_pro_model or 0) + pkg.amount
     await session.commit()
     await session.refresh(user)
     return user

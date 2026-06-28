@@ -19,6 +19,7 @@ from app.services.export_service import build_user_export
 from app.services.intent_router import module_hint
 from app.services.life_data import add_memory, add_record, add_reminder, set_active_module
 from app.services.media_ai import synthesize_speech
+from app.services.proactive_service import proactive_kb, suggest_actions
 from app.services.study_notes_service import prepare_study_notes_request
 
 router = Router()

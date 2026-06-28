@@ -45,7 +45,7 @@ def parse_requested_pages(text: str) -> int | None:
         match = pattern.search(low)
         if match:
             pages = int(match.group(1))
-            if 1 <= pages <= 30:
+            if 1 <= pages <= 50:
                 return pages
     return None
 
@@ -65,7 +65,7 @@ def completion_limit_for_notes(user_message: str) -> int:
         return 1800
     pages = parse_requested_pages(user_message)
     if pages:
-        return min(max(pages * 900, 2500), 12_000)
+        return min(max(pages * 900, 2500), 45000)
     if wants_detailed_notes(user_message):
         return 6500
     return 4500
@@ -94,13 +94,22 @@ def study_notes_depth_instruction(user_message: str) -> str:
     )
 
 
+def _is_notes_request(module_id: str, submodule_id: str | None, user_message: str) -> bool:
+    if module_id != "education":
+        return False
+    if submodule_id == "notes":
+        return True
+    low = (user_message or "").lower()
+    return any(k in low for k in ("конспект", "konspekt", "lecture note", "study notes"))
+
+
 def prepare_study_notes_request(
     module_id: str,
     submodule_id: str | None,
     user_message: str,
     hint: str,
 ) -> tuple[str, str, int]:
-    if module_id != "education" or submodule_id != "notes":
+    if not _is_notes_request(module_id, submodule_id, user_message):
         return user_message, hint, 1200
     enriched_hint = f"{hint}\n\n{study_notes_depth_instruction(user_message)}"
     return user_message, enriched_hint, completion_limit_for_notes(user_message)
