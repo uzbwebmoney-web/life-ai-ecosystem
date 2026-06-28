@@ -385,6 +385,8 @@ MODULES: tuple[ModuleDef, ...] = (
 
             _sub("photo", "Анализ фото", "Foto tahlil", "Photo analysis"),
 
+            _sub("images", "Создание картинок", "Rasm yaratish", "Image generation"),
+
             _sub("writing", "Создание текстов", "Matn yaratish", "Text writing"),
 
             _sub("code", "Программирование", "Dasturlash", "Programming"),

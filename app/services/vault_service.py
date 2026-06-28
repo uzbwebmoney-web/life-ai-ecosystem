@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -113,6 +115,46 @@ async def list_vault_items(
         )
     ).scalars().all()
     return list(rows)
+
+
+async def get_vault_item(session: AsyncSession, user_id: int, record_id: int) -> LifeRecord | None:
+    return (
+        await session.execute(
+            select(LifeRecord).where(
+                LifeRecord.id == record_id,
+                LifeRecord.user_id == user_id,
+                LifeRecord.module_id == VAULT_MODULE,
+            )
+        )
+    ).scalar_one_or_none()
+
+
+def parse_stored_file(record: LifeRecord) -> tuple[str, str | None] | None:
+    match = re.search(r"file_id=([^\s\n]+)", record.body or "")
+    if not match:
+        return None
+    mime_match = re.search(r"mime=([^\s\n]+)", record.body or "")
+    return match.group(1), mime_match.group(1) if mime_match else None
+
+
+def vault_text_body(record: LifeRecord) -> str:
+    body = (record.body or "").strip()
+    if not body:
+        return ""
+    if "file_id=" not in body:
+        lines = body.splitlines()
+        tags = vault_search_tags(record.submodule_id)
+        if lines and lines[0].strip() == tags:
+            lines = lines[1:]
+        return "\n".join(lines).strip()
+    parts = body.split("\n\n", 1)
+    return parts[1].strip() if len(parts) > 1 else ""
+
+
+def is_image_file(mime: str | None) -> bool:
+    if mime:
+        return mime.startswith("image/")
+    return False
 
 
 async def delete_vault_item(session: AsyncSession, user_id: int, record_id: int) -> bool:

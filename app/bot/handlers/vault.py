@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,8 +17,12 @@ from app.services.vault_service import (
     add_vault_item,
     delete_vault_item,
     format_vault_line,
+    get_vault_item,
+    is_image_file,
     list_vault_items,
+    parse_stored_file,
     vault_submodule_title_key,
+    vault_text_body,
 )
 
 router = Router()
@@ -147,6 +151,53 @@ async def vault_save(message: Message, state: FSMContext, user: User, session: A
     await message.answer(t(lang, "vlt_saved"))
     await _show_items(message, user, session, lang, sub_id)
     await state.clear()
+
+
+@router.callback_query(F.data.startswith("vlt:open:"))
+async def vault_open(
+    callback: CallbackQuery,
+    bot: Bot,
+    user: User,
+    session: AsyncSession,
+) -> None:
+    lang = user.language
+    parts = (callback.data or "").split(":")
+    sub_id = parts[2]
+    record_id = int(parts[3])
+    record = await get_vault_item(session, user.id, record_id)
+    if not record:
+        await callback.answer(t(lang, "vlt_not_found"), show_alert=True)
+        return
+    stored = parse_stored_file(record)
+    kb = vault_items_kb(await list_vault_items(session, user.id, sub_id), sub_id, lang)
+    if stored:
+        file_id, mime = stored
+        caption = f"<b>{record.title}</b>"
+        analysis = vault_text_body(record)
+        if analysis and not analysis.startswith("file_id="):
+            caption += f"\n\n{analysis[:900]}"
+        try:
+            if mime and not is_image_file(mime):
+                await bot.send_document(chat_id=callback.message.chat.id, document=file_id, caption=caption)
+            else:
+                await bot.send_photo(chat_id=callback.message.chat.id, photo=file_id, caption=caption)
+        except Exception:
+            if mime and is_image_file(mime):
+                await callback.message.answer(t(lang, "vlt_file_expired"), reply_markup=kb)
+                await callback.answer()
+                return
+            try:
+                await bot.send_document(chat_id=callback.message.chat.id, document=file_id, caption=caption)
+            except Exception:
+                await callback.message.answer(t(lang, "vlt_file_expired"), reply_markup=kb)
+                await callback.answer()
+                return
+    else:
+        text_body = vault_text_body(record)
+        if not text_body:
+            text_body = "—"
+        await callback.message.answer(f"<b>{record.title}</b>\n\n{text_body}", reply_markup=kb)
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("vlt:pg:"))

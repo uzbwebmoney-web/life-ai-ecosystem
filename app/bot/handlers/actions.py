@@ -40,6 +40,15 @@ async def ai_from_module(callback: CallbackQuery, state: FSMContext, user: User,
     sub_id = parts[2] if len(parts) > 2 else ""
     if module_id in MODULE_BY_ID:
         await set_active_module(session, user, module_id, submodule_id=sub_id or None)
+    if sub_id == "images":
+        from app.bot.handlers.assistant import assistant_ai_kb
+
+        await callback.message.answer(
+            t(lang, "ast_send_image_prompt"),
+            reply_markup=assistant_ai_kb(module_id, sub_id, lang),
+        )
+        await callback.answer()
+        return
     mod = MODULE_BY_ID.get(module_id)
     hint = module_hint(module_id, sub_id or None, lang=lang)
     await state.update_data(ai_module_hint=hint, ai_module_id=module_id, ai_submodule_id=sub_id)
@@ -68,6 +77,13 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
     if not text:
         return
     data = await state.get_data()
+    sub_id = str(data.get("ai_submodule_id") or "")
+    if sub_id == "images":
+        from app.bot.handlers.assistant import reply_with_generated_image
+
+        await reply_with_generated_image(message, user, text)
+        await state.clear()
+        return
     hint = str(data.get("ai_module_hint") or "")
     module_id = str(data.get("ai_module_id") or "ai_assistant")
     profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)

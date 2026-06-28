@@ -85,6 +85,12 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
         await message.answer(t(lang, "remember_saved", text=remember[:200]), reply_markup=dashboard_kb(lang))
         return
 
+    if user.active_module_id == "ai_assistant" and user.active_submodule_id == "images":
+        from app.bot.handlers.assistant import reply_with_generated_image
+
+        await reply_with_generated_image(message, user, text)
+        return
+
     if user.active_module_id and user.active_module_id in MODULE_BY_ID:
         if user.active_module_id == "car" and len(text) > 5:
             await upsert_fact(session, user.id, category="car", fact_key="car_model", fact_value=text[:200])
