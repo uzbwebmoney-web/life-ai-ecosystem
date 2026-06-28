@@ -18,7 +18,7 @@ from app.services.life_data import add_memory
 from app.services.life_profile_service import extract_facts_from_text, parse_remember_text, upsert_fact
 from app.services.module_context import active_module_label
 from app.services.media_ai import synthesize_speech
-from app.services.proactive_service import proactive_kb, suggest_actions
+from app.services.study_notes_service import prepare_study_notes_request
 
 router = Router()
 
@@ -38,20 +38,22 @@ async def _answer_in_module(
         return
 
     hint = module_hint(module_id, submodule_id, lang=lang)
+    ai_message, ai_hint, token_limit = prepare_study_notes_request(module_id, submodule_id, text, hint)
     profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
 
     loading = await message.answer(
         t(lang, "ai_module_thinking", emoji=mod.emoji, module=mod.title(lang))
     )
     answer = await ask_ai(
-        user_message=text,
-        module_hint=hint,
+        user_message=ai_message,
+        module_hint=ai_hint,
         memory_context=memory_ctx,
         profile_context=profile_ctx,
         language=lang,
         session=session,
         user=user,
         bot=message.bot,
+        max_completion_tokens=token_limit,
     )
     header = active_module_label(module_id, submodule_id, lang=lang)
     actions = suggest_actions(text, answer, lang)

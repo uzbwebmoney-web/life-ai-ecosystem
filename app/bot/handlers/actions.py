@@ -19,7 +19,7 @@ from app.services.export_service import build_user_export
 from app.services.intent_router import module_hint
 from app.services.life_data import add_memory, add_record, add_reminder, set_active_module
 from app.services.media_ai import synthesize_speech
-from app.services.proactive_service import proactive_kb, suggest_actions
+from app.services.study_notes_service import prepare_study_notes_request
 
 router = Router()
 
@@ -93,17 +93,24 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
         if await try_format_only_export(message, user, session, text):
             await state.clear()
             return
+    ai_message, ai_hint, token_limit = prepare_study_notes_request(
+        module_id,
+        sub_id or None,
+        text,
+        hint,
+    )
     profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
     loading = await message.answer(t(lang, "ai_thinking"))
     answer = await ask_ai(
-        user_message=text,
-        module_hint=hint,
+        user_message=ai_message,
+        module_hint=ai_hint,
         memory_context=memory_ctx,
         profile_context=profile_ctx,
         language=lang,
         session=session,
         user=user,
         bot=message.bot,
+        max_completion_tokens=token_limit,
     )
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or back_menu_kb(lang)

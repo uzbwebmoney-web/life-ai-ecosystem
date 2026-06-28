@@ -17,6 +17,7 @@ async def ask_ai(
     session=None,
     user=None,
     bot=None,
+    max_completion_tokens: int = 1200,
 ) -> str:
     if user is not None and session is not None:
         from app.services.model_router import select_ai_model
@@ -69,7 +70,7 @@ async def ask_ai(
             {"role": "system", "content": system},
             {"role": "user", "content": user_message},
         ],
-        **chat_token_limit_kwargs(model, 1200),
+        **chat_token_limit_kwargs(model, max_completion_tokens),
     )
     raw = (response.choices[0].message.content or "").strip()
     if user is not None and session is not None:
