@@ -217,7 +217,7 @@ async def hub_settings(callback: CallbackQuery, user: User) -> None:
         f"{t(lang, 'settings_title')}\n\n"
         f"{t(lang, 'settings_memory', status=mem)}\n"
         f"{t(lang, 'settings_voice', status=voice)}\n"
-        f"{t(lang, 'settings_lang', lang=LANG_LABELS.get(lang, lang.upper()))}\n\n"
+        f"{t(lang, 'settings_lang', label=LANG_LABELS.get(lang, lang.upper()))}\n\n"
         f"{t(lang, 'settings_commands')}\n\n"
         f"{t(lang, 'settings_extra')}",
         reply_markup=settings_kb(user.memory_enabled, user.voice_mode, lang),
@@ -237,7 +237,7 @@ async def settings_set_language(callback: CallbackQuery, user: User, session: As
     code = (callback.data or "").split(":")[2]
     new_lang = await set_user_language(session, user, code)
     await callback.message.edit_text(
-        t(new_lang, "language_changed", lang=LANG_LABELS[new_lang]),
+        t(new_lang, "language_changed", label=LANG_LABELS[new_lang]),
         reply_markup=main_menu_kb(new_lang),
     )
     await callback.answer()

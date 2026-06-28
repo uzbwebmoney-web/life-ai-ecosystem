@@ -4,6 +4,7 @@ from app.core.config import settings
 
 
 from app.core.i18n import ai_reply_language, normalize_lang
+from app.services.text_format import format_ai_reply
 
 
 async def ask_ai(
@@ -28,6 +29,7 @@ async def ask_ai(
         "Ты — персональный AI-помощник экосистемы Life AI. "
         "Помогаешь человеку в повседневной жизни. "
         f"Отвечай на {reply_lang} языке, структурированно и практично. "
+        "Не используй markdown (**жирный**, *курсив*, ```код```) — только обычный текст и списки. "
         "Если задан контекст модуля — строго придерживайся его темы. "
         f"{module_hint}"
     )
@@ -44,4 +46,5 @@ async def ask_ai(
         ],
         **chat_token_limit_kwargs(settings.openai_model, 1200),
     )
-    return (response.choices[0].message.content or "").strip()
+    raw = (response.choices[0].message.content or "").strip()
+    return format_ai_reply(raw)

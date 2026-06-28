@@ -40,7 +40,9 @@ async def analyze_image_url(image_url: str, prompt: str) -> str:
         ],
         **chat_token_limit_kwargs(settings.openai_model, 1500),
     )
-    return (response.choices[0].message.content or "").strip()
+    from app.services.text_format import format_ai_reply
+
+    return format_ai_reply((response.choices[0].message.content or "").strip())
 
 
 async def get_telegram_image_url(bot: Bot, file_id: str) -> str:
