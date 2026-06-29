@@ -50,6 +50,12 @@ class User(Base):
     bonus_storage_mb: Mapped[int] = mapped_column(Integer, default=0)
     referral_code: Mapped[str | None] = mapped_column(String(16), nullable=True, unique=True)
     referred_by_user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    ui_mode: Mapped[str] = mapped_column(String(16), default="normal")
+    response_style: Mapped[str] = mapped_column(String(32), default="balanced")
+    knowledge_level: Mapped[str] = mapped_column(String(16), default="standard")
+    active_project_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_evening_feed_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    agent_mode: Mapped[str] = mapped_column(String(16), default="auto")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -90,6 +96,8 @@ class CalendarEvent(Base):
     event_type: Mapped[str] = mapped_column(String(32), default="meeting")
     notes: Mapped[str] = mapped_column(Text, default="")
     recurrence: Mapped[str] = mapped_column(String(16), default="")
+    household_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("households.id"), nullable=True, index=True)
+    shared: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -415,4 +423,45 @@ class ProcessedStarsPayment(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     product_type: Mapped[str] = mapped_column(String(16))
     product_id: Mapped[str] = mapped_column(String(32))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class WorkspaceDocument(Base):
+    __tablename__ = "workspace_documents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    household_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("households.id"), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(255))
+    filename: Mapped[str] = mapped_column(String(255), default="")
+    mime_type: Mapped[str] = mapped_column(String(128), default="")
+    telegram_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    extracted_text: Mapped[str] = mapped_column(Text, default="")
+    char_count: Mapped[int] = mapped_column(Integer, default=0)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class UserProject(Base):
+    __tablename__ = "user_projects"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    title: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column(Text, default="")
+    project_type: Mapped[str] = mapped_column(String(32), default="general")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class UserProjectMessage(Base):
+    __tablename__ = "user_project_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("user_projects.id"), index=True)
+    role: Mapped[str] = mapped_column(String(16))
+    content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

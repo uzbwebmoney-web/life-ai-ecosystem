@@ -890,11 +890,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Виза",
         "help_text": (
             "❓ <b>Как пользоваться «Моя жизнь»</b>\n\n"
-            "1️⃣ <b>Главная</b> — /menu или 🏠 «Главная»\n"
-            "2️⃣ <b>Выберите тему</b> — Здоровье, Финансы, Авто и др.\n"
-            "3️⃣ <b>Задайте вопрос</b> — просто напишите текст (кнопка не обязательна)\n"
-            "4️⃣ <b>Сохранить заметку</b> — кнопка ➕ в разделе\n"
-            "5️⃣ <b>Найти запись</b> — ⚙️ Настройки → 🔍 Поиск"
+            "1️⃣ <b>Главная</b> — кнопка 🏠 внизу или на экране\n"
+            "2️⃣ <b>Сегодня</b> — кнопка 📊 на главной\n"
+            "3️⃣ <b>Задайте вопрос</b> — просто напишите текст AI\n"
+            "4️⃣ <b>Сохранить</b> — 🧠 Память или ➕ в разделе\n"
+            "5️⃣ <b>Найти</b> — 🔍 Поиск (кнопка внизу или на главной)\n\n"
+            "Команды не нужны — всё через кнопки."
         ),
         "mod_hint_health": "Симптомы, анализы, лекарства, визиты к врачу и мед. документы.",
         "mod_example_health": "«что значит повышенный гемоглобин»",
@@ -1903,11 +1904,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Viza",
         "help_text": (
             "❓ <b>«Mening hayotim»dan qanday foydalanish</b>\n\n"
-            "1️⃣ <b>Bosh sahifa</b> — /menu yoki 🏠 «Bosh sahifa»\n"
-            "2️⃣ <b>Mavzuni tanlang</b> — Salomatlik, Moliya, Avto…\n"
-            "3️⃣ <b>Savol bering</b> — matn yozing (tugma shart emas)\n"
-            "4️⃣ <b>Eslatma saqlash</b> — ➕ tugmasi\n"
-            "5️⃣ <b>Topish</b> — ⚙️ Sozlamalar → 🔍 Qidiruv"
+            "1️⃣ <b>Bosh sahifa</b> — pastdagi 🏠 tugmasi\n"
+            "2️⃣ <b>Bugun</b> — 📊 tugmasi\n"
+            "3️⃣ <b>Savol</b> — shunchaki AI ga yozing\n"
+            "4️⃣ <b>Saqlash</b> — 🧠 Xotira yoki ➕\n"
+            "5️⃣ <b>Qidiruv</b> — 🔍 tugmasi\n\n"
+            "Buyruqlar kerak emas — hammasi tugmalar orqali."
         ),
         "mod_hint_health": "Alomatlar, tahlillar, dorilar, shifokor tashriflari.",
         "mod_example_health": "«gemoglobin yuqori bo'lsa nima degani»",
@@ -2902,11 +2904,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Visa",
         "help_text": (
             "❓ <b>How to use «My Life»</b>\n\n"
-            "1️⃣ <b>Home</b> — /menu or 🏠 «Home»\n"
-            "2️⃣ <b>Pick a topic</b> — Health, Finance, Car…\n"
-            "3️⃣ <b>Ask a question</b> — just type (no button needed)\n"
-            "4️⃣ <b>Save a note</b> — ➕ button\n"
-            "5️⃣ <b>Find records</b> — ⚙️ Settings → 🔍 Search"
+            "1️⃣ <b>Home</b> — 🏠 button at the bottom\n"
+            "2️⃣ <b>Today</b> — 📊 on the home screen\n"
+            "3️⃣ <b>Ask AI</b> — just type your question\n"
+            "4️⃣ <b>Save</b> — 🧠 Memory or ➕ in a module\n"
+            "5️⃣ <b>Search</b> — 🔍 button\n\n"
+            "No commands needed — everything is buttons."
         ),
         "mod_hint_health": "Symptoms, lab tests, medications, doctor visits.",
         "mod_example_health": "«what does high hemoglobin mean»",

@@ -18,16 +18,19 @@ from app.bot.states import OrganizerStates
 from app.core.i18n import t
 from app.models.entities import User
 from app.services.life_data import set_active_module
+from app.services.household_calendar_service import (
+    add_household_event,
+    format_household_event_line,
+    list_household_calendar_events,
+)
 from app.services.organizer_service import (
     add_note,
-    add_org_event,
     add_org_reminder,
     add_task,
     format_event_line,
     format_note_line,
     format_reminder_line,
     format_task_line,
-    list_all_events,
     list_events_by_type,
     list_notes,
     list_org_reminders,
@@ -35,8 +38,6 @@ from app.services.organizer_service import (
     parse_datetime,
     toggle_task,
 )
-
-router = Router()
 
 
 @router.callback_query(F.data == "mod:organizer")
@@ -93,12 +94,22 @@ async def _show_tasks(target, user: User, session: AsyncSession, lang: str, *, e
 
 
 async def _show_calendar(target, user: User, session: AsyncSession, lang: str, *, edit: bool = False) -> None:
-    events = await list_all_events(session, user.id)
-    lines = [t(lang, "org_calendar_title"), ""]
-    if events:
-        lines.extend(format_event_line(e, lang) for e in events)
+    if user.household_id:
+        pairs = await list_household_calendar_events(session, user)
+        lines = [t(lang, "family_calendar_title"), ""]
+        if pairs:
+            lines.extend(format_household_event_line(ev, author, lang) for ev, author in pairs)
+        else:
+            lines.append(t(lang, "org_empty"))
     else:
-        lines.append(t(lang, "org_empty"))
+        from app.services.organizer_service import list_all_events
+
+        events = await list_all_events(session, user.id)
+        lines = [t(lang, "org_calendar_title"), ""]
+        if events:
+            lines.extend(format_event_line(e, lang) for e in events)
+        else:
+            lines.append(t(lang, "org_empty"))
     await _send(target, "\n".join(lines), organizer_calendar_kb(lang), edit)
 
 
@@ -247,9 +258,9 @@ async def org_event_save(message: Message, state: FSMContext, user: User, sessio
         return
     data = await state.get_data()
     event_type = str(data.get("org_event_type") or "meeting")
-    await add_org_event(
+    await add_household_event(
         session,
-        user_id=user.id,
+        user,
         title=str(data.get("org_event_title") or t(lang, "org_event_default")),
         starts_at=starts,
         event_type=event_type,

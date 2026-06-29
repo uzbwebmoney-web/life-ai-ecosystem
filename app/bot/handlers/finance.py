@@ -565,12 +565,6 @@ async def fin_loan_delete(callback: CallbackQuery, user: User, session: AsyncSes
     await callback.answer(t(lang, "credits_removed"))
 
 
-@router.message(Command("credit"))
-async def cmd_credit(message: Message, user: User, session: AsyncSession) -> None:
-    await set_active_module(session, user, "finance", submodule_id="loans")
-    await _show_loans(message, user, session, user.language)
-
-
 @router.callback_query(F.data.startswith("fin:loan:pay:"))
 async def fin_loan_pay_start(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
     lang = user.language

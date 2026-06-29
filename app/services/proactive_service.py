@@ -7,25 +7,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.core.i18n import t
 
-_NO_PROACTIVE_MODULES = frozenset(
-    {
-        "education",
-        "vault",
-        "legal",
-        "health",
-        "finance",
-        "car",
-        "business",
-        "travel",
-        "home",
-        "shopping",
-        "nutrition",
-        "organizer",
-        "music",
-        "family",
-    }
-)
-
 _TRAVEL_PATTERNS = (
     re.compile(r"\b(?:sayohat|travel|trip|отпуск|поездк)\w*\b", re.I),
     re.compile(r"\b(?:turkey|istanbul|turkiya|стамбул)\b", re.I),
@@ -51,9 +32,6 @@ def suggest_actions(
     *,
     module_id: str | None = None,
 ) -> list[ProactiveAction]:
-    if module_id in _NO_PROACTIVE_MODULES:
-        return []
-
     text = f"{user_message}\n{ai_answer}".lower()
     actions: list[ProactiveAction] = []
 

@@ -6,12 +6,12 @@ from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.handlers.dashboard_view import edit_dashboard, send_dashboard
-from app.bot.keyboards import dashboard_kb, help_kb, onboarding_kb, start_language_kb
+from app.bot.keyboards import onboarding_kb, start_language_kb
+from app.bot.reply_menu import refresh_reply_menu
 from app.core.i18n import LANG_LABELS, t
 from app.core.plans import TRIAL_DAYS, WELCOME_AI_BONUS
 from app.models.entities import User
 from app.services.life_data import complete_onboarding, mark_welcome_pending, set_user_language
-from app.services.vault_lock_service import lock_vault_on_menu_exit
 
 router = Router()
 
@@ -43,25 +43,6 @@ async def cmd_start(message: Message, user: User, session: AsyncSession) -> None
     await message.answer(t(user.language, "start_pick_language"), reply_markup=start_language_kb())
 
 
-@router.message(Command("menu"))
-async def cmd_menu(message: Message, user: User, session: AsyncSession) -> None:
-    lock_vault_on_menu_exit(user)
-    await _show_modules_menu(message, user, session)
-
-
-@router.message(Command("help"))
-async def cmd_help(message: Message, user: User) -> None:
-    lang = user.language
-    await message.answer(t(lang, "help_text"), reply_markup=help_kb(lang))
-
-
-@router.message(Command("lang"))
-async def cmd_lang(message: Message, user: User) -> None:
-    from app.bot.keyboards import language_kb
-
-    await message.answer(t(user.language, "choose_language"), reply_markup=language_kb(user.language))
-
-
 @router.callback_query(lambda c: (c.data or "").startswith("start:lang:"))
 async def start_pick_language(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     code = (callback.data or "").split(":")[2]
@@ -79,4 +60,5 @@ async def start_begin(callback: CallbackQuery, user: User, session: AsyncSession
     await callback.message.edit_text(t(lang, "onb_done"))
     await callback.message.answer(t(lang, "sub_trial_welcome", days=TRIAL_DAYS, bonus=WELCOME_AI_BONUS))
     await edit_dashboard(callback, user, session)
+    await refresh_reply_menu(callback.message, lang)
     await callback.answer()

@@ -89,6 +89,15 @@ async def hub_household(callback: CallbackQuery, state: FSMContext, user: User, 
     await callback.answer()
 
 
+@router.callback_query(F.data == "hh:calendar")
+async def hub_household_calendar(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+    from app.bot.handlers.organizer import _show_calendar
+
+    lang = user.language
+    await _show_calendar(callback.message, user, session, lang, edit=True)
+    await callback.answer()
+
+
 @router.callback_query(F.data == "hh:code")
 async def hub_household_code(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     lang = user.language
@@ -114,15 +123,35 @@ async def hub_household_join_code(message: Message, state: FSMContext, user: Use
     await _apply_household_join(message, user, session, code)
 
 
-@router.message(Command("join"))
-async def cmd_join_household(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
+@router.callback_query(F.data == "uni:save")
+async def unified_save_memory(
+    callback: CallbackQuery,
+    state: FSMContext,
+    user: User,
+    session: AsyncSession,
+) -> None:
     lang = user.language
-    code = (message.text or "").replace("/join", "", 1).strip()
-    if not code:
-        await message.answer(t(lang, "household_join_usage"))
-        return
-    await state.clear()
-    await _apply_household_join(message, user, session, code)
+    data = await state.get_data()
+    q = data.get("last_unified_q")
+    a = data.get("last_unified_a")
+    if q and a:
+        from app.services.life_data import add_memory
+
+        await add_memory(
+            session,
+            user.id,
+            f"Q: {q[:300]}\nA: {a[:800]}",
+            module_id="ai_assistant",
+            profile_id=user.active_profile_id,
+        )
+        await callback.answer(t(lang, "uni_saved_ok"))
+    else:
+        await callback.answer(t(lang, "agent_plan_expired"), show_alert=True)
+
+
+@router.callback_query(F.data == "uni:dismiss")
+async def unified_dismiss_save(callback: CallbackQuery) -> None:
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("act:"))
@@ -134,7 +163,11 @@ async def proactive_action(
 ) -> None:
     lang = user.language
     action = (callback.data or "").split(":")[1]
+    data = await state.get_data()
+    keep = {k: data[k] for k in ("last_unified_q", "last_unified_a") if k in data}
     await state.clear()
+    if keep:
+        await state.update_data(**keep)
 
     if action == "car_profile":
         await set_active_module(session, user, "car")
@@ -170,6 +203,21 @@ async def proactive_action(
         await set_active_module(session, user, "ai_assistant")
         await state.set_state(MemoryStates.waiting_save)
         await callback.message.answer(t(lang, "memory_cmd"), reply_markup=back_menu_kb(lang))
+    elif action == "symptom_diary":
+        await set_active_module(session, user, "health", submodule_id="symptoms")
+        await callback.message.answer(t(lang, "health_sub_symptoms"), reply_markup=dashboard_kb(lang))
+    elif action == "doctor_visit":
+        await set_active_module(session, user, "organizer", submodule_id="calendar")
+        await callback.message.answer(t(lang, "org_event_title_prompt"), reply_markup=dashboard_kb(lang))
+    elif action == "save_warranty":
+        await set_active_module(session, user, "vault", submodule_id="warranty")
+        await callback.message.answer(t(lang, "vlt_warranty_title"), reply_markup=dashboard_kb(lang))
+    elif action == "add_inventory":
+        await set_active_module(session, user, "home", submodule_id="inventory")
+        await callback.message.answer(t(lang, "home_inventory_title_prompt"), reply_markup=dashboard_kb(lang))
+    elif action == "travel_budget":
+        await set_active_module(session, user, "travel", submodule_id="budget")
+        await callback.message.answer(t(lang, "trv_sub_budget"), reply_markup=dashboard_kb(lang))
     else:
         await callback.answer()
         return

@@ -6,7 +6,7 @@ import re
 import time
 from typing import Literal
 
-ExportFormat = Literal["pdf", "docx", "txt", "md"]
+ExportFormat = Literal["pdf", "docx", "txt", "md", "pptx"]
 
 _LAST_DOCS: dict[int, tuple[float, dict[str, str]]] = {}
 _DOC_TTL_SECONDS = 3600
@@ -33,6 +33,7 @@ _DOCX_HINTS = (
 )
 _TXT_HINTS = ("txt", "текстовый файл", "text file", "plain text")
 _MD_HINTS = ("markdown", "md", "маркдаун")
+_PPTX_HINTS = ("pptx", "powerpoint", "презентац", "presentation", "slides")
 
 _DISCLAIMER_MARKERS = (
     "PDF-файл я напрямую",
@@ -56,6 +57,8 @@ def detect_export_format(text: str) -> ExportFormat | None:
         return "docx"
     if any(h in low for h in _MD_HINTS):
         return "md"
+    if any(h in low for h in _PPTX_HINTS) or re.search(r"\bpptx\b", low):
+        return "pptx"
     if any(h in low for h in _TXT_HINTS):
         return "txt"
     return None
@@ -209,6 +212,13 @@ def build_document_bytes(title: str, body: str, fmt: ExportFormat) -> tuple[byte
         buffer = io.BytesIO()
         doc.save(buffer)
         return buffer.getvalue(), f"{safe_title}.docx"
+
+    if fmt == "pptx":
+        from app.services.table_export_service import build_presentation_bytes, slides_from_text
+
+        slides = slides_from_text(clean_body, default_title=title)
+        data, filename = build_presentation_bytes(title, slides, fmt="pptx")
+        return data, filename
 
     from fpdf import FPDF
 

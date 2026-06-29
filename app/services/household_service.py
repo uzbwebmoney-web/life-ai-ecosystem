@@ -60,10 +60,20 @@ async def join_household(session: AsyncSession, user: User, code: str) -> tuple[
     return True, "ok"
 
 
-async def effective_data_user_ids(session: AsyncSession, user: User) -> list[int]:
-    ids = {user.id}
+async def get_household_members(session: AsyncSession, household_id: int) -> list[HouseholdMember]:
+    rows = (
+        await session.execute(select(HouseholdMember).where(HouseholdMember.household_id == household_id))
+    ).scalars().all()
+    return list(rows)
+
+
+async def get_household_member_user_ids(session: AsyncSession, user: User) -> list[int]:
     if not user.household_id:
         return [user.id]
+    members = await get_household_members(session, user.household_id)
+    ids = {user.id}
+    for member in members:
+        ids.add(member.user_id)
     household = (
         await session.execute(select(Household).where(Household.id == user.household_id))
     ).scalar_one_or_none()
@@ -72,8 +82,5 @@ async def effective_data_user_ids(session: AsyncSession, user: User) -> list[int
     return list(ids)
 
 
-async def get_household_members(session: AsyncSession, household_id: int) -> list[HouseholdMember]:
-    rows = (
-        await session.execute(select(HouseholdMember).where(HouseholdMember.household_id == household_id))
-    ).scalars().all()
-    return list(rows)
+async def effective_data_user_ids(session: AsyncSession, user: User) -> list[int]:
+    return await get_household_member_user_ids(session, user)

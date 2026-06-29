@@ -85,11 +85,27 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
         "vault_unlocked_until": "DATETIME",
 
+        "ui_mode": "VARCHAR(16) DEFAULT 'normal'",
+
+        "response_style": "VARCHAR(32) DEFAULT 'balanced'",
+
+        "knowledge_level": "VARCHAR(16) DEFAULT 'standard'",
+
+        "active_project_id": "INTEGER",
+
+        "last_evening_feed_date": "VARCHAR(10)",
+
+        "agent_mode": "VARCHAR(16) DEFAULT 'auto'",
+
     },
 
     "calendar_events": {
 
         "recurrence": "VARCHAR(16) DEFAULT ''",
+
+        "household_id": "INTEGER",
+
+        "shared": "BOOLEAN DEFAULT 0",
 
     },
 

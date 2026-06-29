@@ -73,13 +73,6 @@ async def _show_admin_menu(
         await target.answer(intro, reply_markup=kb)
 
 
-@router.message(Command("admin"))
-async def cmd_admin(message: Message, user: User, session: AsyncSession) -> None:
-    if not is_admin(user):
-        return
-    await _show_admin_menu(message, user.language, session)
-
-
 @router.callback_query(F.data == "adm:menu")
 async def admin_menu(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     if not is_admin(user):

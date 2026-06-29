@@ -39,18 +39,21 @@ _WEB_SEARCH_INSTRUCTIONS: dict[str, str] = {
         "затем отвечай по сути. Используй найденные данные о контактах, ценах, адресах, правилах, "
         "законах, расписаниях, Telegram-каналах и официальных сайтах. "
         "В ответе обязательно указывай полные ссылки (https://…, t.me/…). "
+        "Не используй markdown-ссылки вида [текст](url) — только голые URL или «название: https://…». "
         "Не давай только названия без ссылок, если ссылки найдены."
     ),
     "uz": (
         "Har bir so'rovda veb-qidiruv yoqilgan. Avval internetdan aktual ma'lumot qidiring, "
         "keyin javob bering. Kontaktlar, narxlar, manzillar, qoidalar, Telegram va rasmiy saytlar "
         "uchun topilgan ma'lumotlardan foydalaning. "
-        "Javobda to'liq havolalarni (https://…, t.me/…) yozing."
+        "Javobda to'liq havolalarni (https://…, t.me/…) yozing. "
+        "Markdown [matn](url) ishlatmang — faqat to'g'ridan-to'g'ri URL."
     ),
     "en": (
         "Web search is enabled for every request. Search the web first for fresh data, then answer. "
         "Use found contacts, prices, addresses, rules, Telegram channels, and official sites. "
-        "Always include full links (https://…, t.me/…) in the answer."
+        "Always include full links (https://…, t.me/…) in the answer. "
+        "Never use markdown links [text](url) — plain URLs only."
     ),
 }
 
@@ -169,8 +172,18 @@ def append_links_footer(answer: str, links: list[str], *, language: str = "ru") 
     lang = normalize_lang(language)
     title = {"ru": "🔗 Ссылки", "uz": "🔗 Havolalar", "en": "🔗 Links"}.get(lang, "🔗 Ссылки")
     limit = settings.web_search_max_links_footer
-    lines = "\n".join(f"• {link}" for link in extra[:limit])
+    lines = "\n".join(f"• {_link_label(link)}\n  {link}" for link in extra[:limit])
     return f"{answer.rstrip()}\n\n{title}:\n{lines}"
+
+
+def _link_label(url: str) -> str:
+    try:
+        from urllib.parse import urlparse
+
+        host = urlparse(url).netloc.replace("www.", "")
+        return host or url[:60]
+    except Exception:
+        return url[:60]
 
 
 def merge_system_with_web_context(

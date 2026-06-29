@@ -63,7 +63,7 @@ def test_merge_system_with_web_context():
 
 def test_format_ai_reply_html_makes_links_clickable():
     html = format_ai_reply_html("Qarang: https://t.me/test")
-    assert '<a href="https://t.me/test">https://t.me/test</a>' in html
+    assert '<a href="https://t.me/test">t.me</a>' in html
 
 
 def test_format_ai_reply_html_bare_tme():

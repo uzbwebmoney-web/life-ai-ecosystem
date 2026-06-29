@@ -149,6 +149,14 @@ class SupportStates(StatesGroup):
     chat_active = State()
 
 
+class AgentStates(StatesGroup):
+    waiting_confirm = State()
+
+
+class ProjectStates(StatesGroup):
+    waiting_title = State()
+
+
 class OnboardingStates(StatesGroup):
     waiting_confirm = State()
 

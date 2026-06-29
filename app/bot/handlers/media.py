@@ -148,6 +148,51 @@ async def _process_photo(
     await consume_photo_analysis(session, user, credits=photo_credits)
     lowered = analysis.lower()
     combined = f"{caption} {analysis}".lower()
+    amount = parse_amount_from_text(analysis) or parse_amount_from_text(caption)
+
+    from app.services.agent.intent import should_route_to_agent
+    from app.bot.handlers.agent import handle_agent_message
+
+    agent_text = caption or "сохрани чек и запиши расход"
+    if should_route_to_agent(agent_text, has_photo=True) or any(
+        x in combined for x in ("чек", "receipt", "chek", "сохран", "save", "купил", "bought", "гарант", "warranty")
+    ):
+        photo_ctx = {
+            "analysis": analysis,
+            "amount": amount,
+            "title": caption[:120] if caption else analysis[:80],
+            "file_id": file_id,
+            "folder": "receipts",
+            "category": "home" if any(x in combined for x in ("холодильник", "fridge", "uy")) else "shopping",
+            "warranty": any(x in combined for x in ("гарант", "warranty", "kafolat")),
+            "inventory": any(x in combined for x in ("холодильник", "fridge", "техник", "inventory")),
+        }
+        if state is not None and await handle_agent_message(
+            loading,
+            user,
+            session,
+            state,
+            agent_text,
+            photo_context=photo_ctx,
+        ):
+            return
+        if state is None:
+            from app.services.agent.orchestrator import run_agent
+
+            result = await run_agent(
+                session,
+                user,
+                agent_text,
+                bot=message.bot,
+                lang=lang,
+                photo_context=photo_ctx,
+                auto_confirm=True,
+            )
+            from app.bot.ai_reply_ui import deliver_ai_reply
+            from app.bot.keyboards import back_menu_kb
+
+            await deliver_ai_reply(loading, result.text, lang=lang, reply_markup=back_menu_kb(lang))
+            return
 
     if universal_scan:
         module_id, sub_id, folder = classify_scan(analysis, caption)
@@ -169,7 +214,6 @@ async def _process_photo(
         ):
             module_id, sub_id, folder = "health", "documents", "analyses"
 
-    amount = parse_amount_from_text(analysis)
     extra = ""
     if any(x in combined for x in ("холодильник", "fridge", "recipe", "retsept", "ovqat")):
         profile_ctx, memory_ctx = await build_ai_memory_context(session, user, caption or "food")
@@ -209,6 +253,13 @@ async def _process_photo(
     )
     folder_label = archive_label(folder, lang)
     text = f"{t(lang, 'scan_saved', folder=folder_label) if universal_scan else t(lang, 'photo_done')}\n{folder_label}\n\n{analysis}{extra}"
+    if universal_scan:
+        from app.services.unified_ai.file_router import classify_upload, format_related_modules_hint
+
+        classification = classify_upload(analysis, caption=caption or "")
+        hint = format_related_modules_hint(classification, lang)
+        if hint:
+            text += f"\n\n{hint}"
     if amount:
         text += f"\n\n💰 {amount:,.0f} UZS"
     kb = record_saved_kb(lang)
@@ -300,6 +351,7 @@ async def handle_photo(message: Message, bot: Bot, user: User, session: AsyncSes
 @router.message(F.document)
 async def handle_document(
     message: Message,
+    bot: Bot,
     user: User,
     session: AsyncSession,
     state: FSMContext,
@@ -349,8 +401,21 @@ async def handle_document(
         profile_id=user.active_profile_id,
         meta_json=meta_json,
     )
+    shared = bool(user.household_id)
+    from app.bot.handlers.workspace import index_telegram_document
+
+    indexed = await index_telegram_document(message, bot, user, session, shared=shared, notify=False)
     if assistant_docs:
-        await message.answer(t(lang, "ast_doc_saved", name=name), reply_markup=back_menu_kb(lang))
+        extra = ""
+        if indexed:
+            extra = f"\n\n{t(lang, 'workspace_indexed_short', chars=indexed.char_count)}"
+        await message.answer(t(lang, "ast_doc_saved", name=name) + extra, reply_markup=back_menu_kb(lang))
+        return
+    if indexed:
+        await message.answer(
+            t(lang, "doc_saved_indexed", name=name, chars=indexed.char_count),
+            reply_markup=record_saved_kb(lang),
+        )
         return
     await message.answer(t(lang, "doc_saved", name=name), reply_markup=record_saved_kb(lang))
 

@@ -7,7 +7,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.i18n import t
-from app.models.entities import CalendarEvent, LifeRecord, MemoryEntry, Reminder, User
+from app.models.entities import CalendarEvent, LifeRecord, MemoryEntry, Reminder, User, WorkspaceDocument
 from app.services.car_service import list_car_compliance, list_car_maintenance
 from app.services.credit_loans import list_credit_loans_for_users, next_credit_payment_at
 from app.services.finance_service import list_finance_bills
@@ -33,10 +33,11 @@ class UnifiedSearchResult:
     memory: list[MemoryEntry] = field(default_factory=list)
     events: list[CalendarEvent] = field(default_factory=list)
     reminders: list[Reminder] = field(default_factory=list)
+    workspace: list[tuple[WorkspaceDocument, str]] = field(default_factory=list)
     vault_hidden_count: int = 0
 
     def has_any(self) -> bool:
-        return bool(self.records or self.memory or self.events or self.reminders)
+        return bool(self.records or self.memory or self.events or self.reminders or self.workspace)
 
 
 async def list_unified_notifications(
@@ -219,6 +220,10 @@ async def unified_search(
             events.append(e)
         for rem in await search_reminders(session, uid, query, limit=limit):
             reminders.append(rem)
+    from app.services.workspace_rag_service import search_workspace
+
+    workspace_hits = await search_workspace(session, user, query, limit=limit)
+    workspace = [(doc, snippet) for doc, snippet, _ in workspace_hits]
     trimmed = records[:limit]
     visible, hidden = filter_vault_records_for_search(user, trimmed)
     return UnifiedSearchResult(
@@ -226,6 +231,7 @@ async def unified_search(
         memory=memory[:limit],
         events=events[:limit],
         reminders=reminders[:limit],
+        workspace=workspace[:limit],
         vault_hidden_count=hidden,
     )
 
@@ -267,6 +273,12 @@ def format_unified_search(results: UnifiedSearchResult, lang: str, query: str) -
         lines.append(f"\n<b>{t(lang, 'search_memory')}</b>")
         for entry in results.memory[:5]:
             lines.append(f"• {entry.content[:120]}")
+    if results.workspace:
+        lines.append(f"\n<b>{t(lang, 'search_workspace')}</b>")
+        from app.services.workspace_rag_service import format_workspace_hit
+
+        for doc, snippet in results.workspace[:5]:
+            lines.append(format_workspace_hit(doc, snippet, lang))
     if results.vault_hidden_count:
         lines.append(f"\n<i>{t(lang, 'search_vault_hidden')}</i>")
     if not results.has_any():
@@ -284,6 +296,8 @@ def build_search_ai_context(results: UnifiedSearchResult) -> str:
         parts.append(f"[reminder] {reminder.due_at} {reminder.title}")
     for entry in results.memory[:3]:
         parts.append(f"[memory] {entry.content[:200]}")
+    for doc, snippet in results.workspace[:4]:
+        parts.append(f"[workspace] {doc.title}: {snippet[:400]}")
     return "\n".join(parts)
 
 

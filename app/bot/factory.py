@@ -8,6 +8,16 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 
 
+from app.bot.handlers.commands_fallback import router as commands_fallback_router
+from app.bot.handlers.hub_quick import router as hub_quick_router
+from app.bot.handlers.reply_nav import router as reply_nav_router
+from app.bot.handlers.agent import router as agent_router
+from app.bot.handlers.projects import router as projects_router
+from app.bot.handlers.today import router as today_router
+from app.bot.handlers.modes import router as modes_router
+
+from app.bot.handlers.workspace import router as workspace_router
+
 from app.bot.handlers.vault import router as vault_router
 
 from app.bot.handlers.generic_ai import router as generic_ai_router
@@ -118,6 +128,18 @@ def create_dispatcher(session_maker: async_sessionmaker) -> Dispatcher:
 
     dp.include_router(hub_router)
 
+    dp.include_router(hub_quick_router)
+
+    dp.include_router(agent_router)
+
+    dp.include_router(projects_router)
+
+    dp.include_router(today_router)
+
+    dp.include_router(modes_router)
+
+    dp.include_router(workspace_router)
+
     dp.include_router(support_router)
 
     dp.include_router(ecosystem_router)
@@ -131,6 +153,10 @@ def create_dispatcher(session_maker: async_sessionmaker) -> Dispatcher:
     dp.include_router(assistant_text_router)
 
     dp.include_router(media_router)
+
+    dp.include_router(commands_fallback_router)
+
+    dp.include_router(reply_nav_router)
 
     dp.include_router(free_text_router)  # last: free-text intent router
 

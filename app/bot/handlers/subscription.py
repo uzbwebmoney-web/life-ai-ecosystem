@@ -51,24 +51,6 @@ router = Router()
 
 
 
-@router.message(Command("subscription", "premium", "tariff"))
-
-async def cmd_subscription(message: Message, user: User, session: AsyncSession) -> None:
-
-    await ensure_user_subscription_fields(session, user)
-
-    lang = user.language
-
-    await message.answer(
-
-        t(lang, "sub_menu_intro", days=TRIAL_DAYS),
-
-        reply_markup=subscription_kb(lang),
-
-    )
-
-
-
 
 
 @router.callback_query(F.data == "sub:menu")

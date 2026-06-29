@@ -19,6 +19,7 @@ from app.bot.keyboards import (
     settings_kb,
     submodule_kb,
 )
+from app.bot.reply_menu import refresh_reply_menu, thinking_reply_markup
 from app.bot.keyboards_subscription import insufficient_credits_kb, quota_upgrade_kb
 from app.bot.keyboards_vault import vault_lock_cancel_kb, vault_lock_settings_kb
 from app.bot.keyboards_ecosystem import ecosystem_features_kb, notifications_kb
@@ -75,6 +76,7 @@ async def hub_menu(callback: CallbackQuery, user: User, session: AsyncSession, s
     lock_vault_on_menu_exit(user)
     await clear_active_module(session, user)
     await edit_dashboard(callback, user, session)
+    await refresh_reply_menu(callback.message, user.language)
     await callback.answer()
 
 
@@ -234,7 +236,7 @@ async def hub_search_query(message: Message, state: FSMContext, user: User, sess
     lines = format_unified_search(records, lang, query)
     if records.has_any():
         context = build_search_ai_context(records)
-        loading = await message.answer(t(lang, "ai_thinking"))
+        loading = await message.answer(t(lang, "ai_thinking"), reply_markup=thinking_reply_markup(lang))
         hint = t(lang, "eco_search_ai_hint")
         answer = await ask_ai(
             user_message=query,

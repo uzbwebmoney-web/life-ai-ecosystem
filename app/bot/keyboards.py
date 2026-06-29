@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 from app.core.i18n import LANG_LABELS, SUPPORTED_LANGUAGES, t
 from app.core.modules.catalog import CATEGORIES, MODULES, MODULE_BY_ID, ModuleDef
@@ -32,6 +32,22 @@ def _module_btn(mod: ModuleDef, lang: str) -> InlineKeyboardButton:
 
 def dashboard_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     rows: list[list[InlineKeyboardButton]] = [
+        [
+            InlineKeyboardButton(text=t(lang, "btn_today"), callback_data="hub:today"),
+            InlineKeyboardButton(text=t(lang, "btn_projects"), callback_data="hub:projects"),
+        ],
+        [
+            InlineKeyboardButton(text=t(lang, "btn_workspace"), callback_data="hub:workspace"),
+            InlineKeyboardButton(text=t(lang, "btn_subscription_short"), callback_data="sub:menu"),
+        ],
+        [
+            InlineKeyboardButton(text=t(lang, "btn_save_memory_short"), callback_data="hub:memory"),
+            InlineKeyboardButton(text=t(lang, "btn_remind"), callback_data="hub:remind"),
+        ],
+        [
+            InlineKeyboardButton(text=t(lang, "btn_export"), callback_data="hub:export"),
+            InlineKeyboardButton(text=t(lang, "btn_help"), callback_data="hub:help"),
+        ],
         [InlineKeyboardButton(text=t(lang, "btn_sos"), callback_data="hub:sos")],
     ]
     pair: list[InlineKeyboardButton] = []
@@ -96,6 +112,7 @@ def household_kb(lang: str, invite_code: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=t(lang, "household_copy_code", code=invite_code), callback_data="hh:code")],
+            [InlineKeyboardButton(text=t(lang, "btn_family_calendar"), callback_data="hh:calendar")],
             [InlineKeyboardButton(text=t(lang, "btn_household_join"), callback_data="hh:join")],
             [InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")],
         ]
@@ -158,6 +175,7 @@ def settings_kb(
             InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications"),
         ],
         [InlineKeyboardButton(text=t(lang, "btn_language"), callback_data="hub:language")],
+        [InlineKeyboardButton(text=t(lang, "btn_agent_modes"), callback_data="hub:modes")],
         [InlineKeyboardButton(text=t(lang, "btn_contact_admin"), callback_data="sup:open")],
         [InlineKeyboardButton(text=t(lang, "btn_family_profiles"), callback_data="hub:family")],
         [InlineKeyboardButton(text=t(lang, "btn_household"), callback_data="hub:household")],
@@ -297,6 +315,33 @@ def record_saved_kb(lang: str = "ru") -> InlineKeyboardMarkup:
 def help_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "btn_today"), callback_data="hub:today")],
             [InlineKeyboardButton(text=t(lang, "btn_open_menu"), callback_data="hub:menu")],
         ]
     )
+
+
+def projects_kb(projects, active_id: int | None, lang: str = "ru") -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = []
+    for p in projects[:8]:
+        mark = "📌 " if p.id == active_id else ""
+        rows.append(
+            [InlineKeyboardButton(text=f"{mark}{p.title[:36]}", callback_data=f"project:set:{p.id}")]
+        )
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_project_new"), callback_data="project:new")])
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def main_reply_kb(lang: str = "ru") -> ReplyKeyboardMarkup:
+    from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=t(lang, "rk_menu"))]],
+        resize_keyboard=True,
+        is_persistent=True,
+    )
+
+
+def reply_keyboard_labels(lang: str) -> frozenset[str]:
+    return frozenset({t(lang, "rk_menu")})

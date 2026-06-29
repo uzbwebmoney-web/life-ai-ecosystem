@@ -9,6 +9,7 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.ai_reply_ui import deliver_ai_reply
+from app.bot.reply_menu import thinking_reply_markup
 from app.bot.message_ui import deliver_long_text
 from app.bot.keyboards_education import module_reply_kb, study_spec_kb
 from app.bot.states import EducationStates
@@ -19,11 +20,12 @@ from app.core.i18n import t
 from app.models.entities import User
 from app.services.ai_context import build_ai_memory_context
 from app.services.ai_service import ask_ai
-from app.services.intent_router import detect_module, module_hint
+from app.services.intent_router import module_hint
 from app.services.life_data import add_memory
-from app.services.life_profile_service import extract_facts_from_text, parse_remember_text, upsert_fact
+from app.services.life_profile_service import extract_facts_from_text, parse_remember_text
 from app.services.module_context import active_module_label
 from app.services.proactive_service import proactive_kb, suggest_actions
+from app.services.personalization_service import personalization_system_note
 from app.services.study_notes_service import (
     needs_study_document_clarification,
     prepare_study_notes_request,
@@ -84,10 +86,12 @@ async def _answer_in_module(
 
     hint = module_hint(module_id, submodule_id, lang=lang)
     ai_message, ai_hint, token_limit = prepare_study_notes_request(module_id, submodule_id, text, hint)
+    ai_hint = f"{ai_hint}\n{personalization_system_note(user)}"
     profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
 
     loading = await message.answer(
-        t(lang, "ai_module_thinking", emoji=mod.emoji, module=mod.title(lang))
+        t(lang, "ai_module_thinking", emoji=mod.emoji, module=mod.title(lang)),
+        reply_markup=thinking_reply_markup(lang),
     )
     try:
         if token_limit > 4000:
@@ -175,73 +179,32 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
         await reply_with_generated_image(message, user, session, text)
         return
 
-    if user.active_module_id and user.active_module_id in MODULE_BY_ID:
-        from app.services.subscription_service import check_module_access
+    if user.active_module_id == "education":
+        from app.bot.handlers.study_export import try_format_only_export
 
-        blocked = await check_module_access(session, user, user.active_module_id, lang=lang)
-        if blocked:
-            from app.bot.quota_ui import answer_quota_block
-
-            await answer_quota_block(message, blocked, lang=lang)
+        if await try_format_only_export(message, user, session, text):
             return
-        if user.active_module_id == "education":
-            from app.bot.handlers.study_export import try_format_only_export
-
-            if await try_format_only_export(message, user, session, text):
-                return
-            if needs_study_document_clarification(
-                user.active_module_id,
-                user.active_submodule_id,
-                text,
-            ):
-                await state.set_state(EducationStates.waiting_study_spec)
-                await state.update_data(
-                    study_topic=text,
-                    study_module_id=user.active_module_id,
-                    study_submodule_id=user.active_submodule_id,
-                )
-                await message.answer(t(lang, "edu_ask_format_pages"), reply_markup=study_spec_kb(lang))
-                return
-        if user.active_module_id == "car" and len(text) > 5:
-            await upsert_fact(session, user.id, category="car", fact_key="car_model", fact_value=text[:200])
-        await _answer_in_module(
-            message,
-            user=user,
-            session=session,
-            state=state,
-            text=text,
-            module_id=user.active_module_id,
-            submodule_id=user.active_submodule_id,
-            bot=message.bot,
-        )
-        return
-
-    module_id = detect_module(text)
-    if module_id and module_id in MODULE_BY_ID:
-        from app.services.subscription_service import check_module_access
-
-        blocked = await check_module_access(session, user, module_id, lang=lang)
-        if blocked:
-            from app.bot.quota_ui import answer_quota_block
-
-            await answer_quota_block(message, blocked, lang=lang)
+        if needs_study_document_clarification(
+            user.active_module_id,
+            user.active_submodule_id,
+            text,
+        ):
+            await state.set_state(EducationStates.waiting_study_spec)
+            await state.update_data(
+                study_topic=text,
+                study_module_id=user.active_module_id,
+                study_submodule_id=user.active_submodule_id,
+            )
+            await message.answer(t(lang, "edu_ask_format_pages"), reply_markup=study_spec_kb(lang))
             return
-        await _answer_in_module(message, user=user, session=session, state=state, text=text, module_id=module_id)
-        return
 
-    profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
-    loading = await message.answer(t(lang, "ai_thinking"))
-    answer = await ask_ai(
-        user_message=text,
-        memory_context=memory_ctx,
-        profile_context=profile_ctx,
-        language=lang,
-        session=session,
-        user=user,
+    from app.services.unified_ai.workflow import process_unified_message
+
+    await process_unified_message(
+        message,
         bot=message.bot,
+        user=user,
+        session=session,
+        state=state,
+        text=text,
     )
-    actions = suggest_actions(text, answer, lang)
-    kb = proactive_kb(actions, lang) or back_menu_kb(lang)
-    is_quota = await deliver_ai_reply(loading, answer, lang=lang, prefix="🤖 ", reply_markup=kb)
-    if not is_quota and user.memory_enabled:
-        await add_memory(session, user.id, f"Q: {text[:200]}\nA: {answer[:400]}", module_id="ai_assistant")

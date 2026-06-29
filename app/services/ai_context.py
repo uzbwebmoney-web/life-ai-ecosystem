@@ -20,4 +20,10 @@ async def build_ai_memory_context(
         entries = await search_memory(session, user.id, query, limit=limit)
         if entries:
             memory_ctx = "\n".join(e.content for e in entries)
+    if query.strip():
+        from app.services.workspace_rag_service import build_workspace_rag_context
+
+        ws = await build_workspace_rag_context(session, user, query, limit=3)
+        if ws:
+            memory_ctx = f"{memory_ctx}\n\n{ws}".strip() if memory_ctx else ws
     return profile_ctx, memory_ctx

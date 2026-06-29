@@ -13,7 +13,7 @@ def test_travel_still_detected():
     assert any(a.action_id == "travel_plan" for a in actions)
 
 
-def test_education_module_skips_proactive():
+def test_education_module_still_gets_travel_suggestions():
     text = "Keyingi oy Istanbulga sayohat"
     actions = suggest_actions(text, "", lang="ru", module_id="education")
-    assert actions == []
+    assert any(a.action_id == "travel_plan" for a in actions)

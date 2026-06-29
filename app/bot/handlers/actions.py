@@ -7,6 +7,7 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.ai_reply_ui import deliver_ai_reply
+from app.bot.reply_menu import thinking_reply_markup
 from app.bot.message_ui import deliver_long_text
 from app.bot.voice_reply import maybe_send_voice_reply
 from app.bot.keyboards import ai_chat_insufficient_kb, ai_chat_kb, back_menu_kb, record_saved_kb
@@ -72,17 +73,6 @@ async def ai_from_module(callback: CallbackQuery, state: FSMContext, user: User,
     await callback.answer()
 
 
-@router.message(Command("ask"))
-async def cmd_ask(message: Message, state: FSMContext, user: User) -> None:
-    lang = user.language
-    await state.update_data(ai_module_hint="", ai_module_id="ai_assistant", ai_chat_history=[])
-    await state.set_state(AiChatStates.waiting_question)
-    await message.answer(
-        f"{t(lang, 'ai_assistant_title')}\n\n{t(lang, 'ai_assistant_ask')}",
-        reply_markup=ai_chat_kb(lang),
-    )
-
-
 @router.message(AiChatStates.waiting_question)
 async def ai_question(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
     lang = user.language
@@ -124,7 +114,7 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
         hint,
     )
     profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
-    loading = await message.answer(t(lang, "ai_thinking"))
+    loading = await message.answer(t(lang, "ai_thinking"), reply_markup=thinking_reply_markup(lang))
     answer = await ask_ai(
         user_message=ai_message,
         module_hint=ai_hint,
@@ -257,12 +247,6 @@ async def _save_record(
     await state.clear()
 
 
-@router.message(Command("memory"))
-async def cmd_memory(message: Message, state: FSMContext, user: User) -> None:
-    await state.set_state(MemoryStates.waiting_save)
-    await message.answer(t(user.language, "memory_cmd"))
-
-
 @router.message(MemoryStates.waiting_save)
 async def memory_save(message: Message, state: FSMContext, user: User, session: AsyncSession) -> None:
     lang = user.language
@@ -272,12 +256,6 @@ async def memory_save(message: Message, state: FSMContext, user: User, session: 
     await add_memory(session, user.id, text, profile_id=user.active_profile_id)
     await message.answer(t(lang, "memory_saved"), reply_markup=back_menu_kb(lang))
     await state.clear()
-
-
-@router.message(Command("remind"))
-async def cmd_remind(message: Message, state: FSMContext, user: User) -> None:
-    await state.set_state(ReminderStates.waiting_title)
-    await message.answer(t(user.language, "remind_format"))
 
 
 @router.message(ReminderStates.waiting_title)
@@ -321,59 +299,3 @@ async def remind_datetime(message: Message, state: FSMContext, user: User, sessi
     )
     await state.clear()
 
-
-@router.message(Command("export"))
-async def cmd_export(message: Message, user: User, session: AsyncSession) -> None:
-    lang = user.language
-    from app.bot.quota_ui import answer_quota_block
-    from app.services.subscription_service import check_export_allowed
-    from app.services.vault_lock_service import is_vault_protected, is_vault_unlocked
-
-    blocked = check_export_allowed(user, lang=lang)
-    if blocked:
-        await answer_quota_block(message, blocked, lang=lang)
-        return
-    include_vault = True
-    if is_vault_protected(user) and not is_vault_unlocked(user):
-        include_vault = False
-    payload = await build_user_export(session, user.id, include_vault=include_vault)
-    doc = BufferedInputFile(payload.encode("utf-8"), filename=f"life_ai_export_{user.telegram_id}.json")
-    caption = t(lang, "export_done")
-    if not include_vault:
-        caption = f"{caption}\n\n{t(lang, 'export_vault_excluded')}"
-    await message.answer_document(doc, caption=caption)
-
-
-@router.message(Command("expense"))
-async def cmd_expense(message: Message, user: User, session: AsyncSession) -> None:
-    lang = user.language
-    raw = (message.text or "").replace("/expense", "", 1).strip()
-    if "|" not in raw:
-        await message.answer(t(lang, "cmd_expense_format"))
-        return
-    title, amount_raw = [p.strip() for p in raw.split("|", 1)]
-    try:
-        amount = float(amount_raw.replace(",", ".").replace(" ", ""))
-    except ValueError:
-        await message.answer(t(lang, "record_amount_error"))
-        return
-    await add_record(
-        session,
-        user_id=user.id,
-        module_id="finance",
-        submodule_id="expenses",
-        title=title[:200],
-        body=title,
-        amount=amount,
-        currency="UZS",
-        profile_id=user.active_profile_id,
-    )
-    amount_str = f"{amount:,.0f}".replace(",", " ")
-    await message.answer(t(lang, "cmd_expense_saved", title=title, amount=amount_str), reply_markup=back_menu_kb(lang))
-
-
-@router.message(Command("oil"))
-async def cmd_oil(message: Message, user: User, session: AsyncSession) -> None:
-    lang = user.language
-    await set_active_module(session, user, "car", submodule_id="maintenance")
-    await message.answer(t(lang, "cmd_oil_hint"), reply_markup=back_menu_kb(lang))
