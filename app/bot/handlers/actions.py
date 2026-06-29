@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.ai_reply_ui import deliver_ai_reply
 from app.bot.message_ui import deliver_long_text
 from app.bot.keyboards import back_menu_kb, record_saved_kb
 from app.bot.states import AiChatStates, MemoryStates, RecordStates, ReminderStates
@@ -21,12 +22,15 @@ from app.services.life_data import add_memory, add_record, add_reminder, set_act
 from app.services.media_ai import synthesize_speech
 from app.services.proactive_service import proactive_kb, suggest_actions
 from app.services.study_notes_service import prepare_study_notes_request
+from app.services.subscription_service import parse_insufficient_credits_reply
 
 router = Router()
 
 
 async def _maybe_send_voice(message: Message, user: User, text: str) -> None:
     if not user.voice_mode:
+        return
+    if parse_insufficient_credits_reply(text)[0]:
         return
     audio = await synthesize_speech(text)
     if not audio:
@@ -115,20 +119,21 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
     )
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or back_menu_kb(lang)
-    await deliver_long_text(loading, f"🤖 {answer}", reply_markup=kb)
+    is_quota = await deliver_ai_reply(loading, answer, lang=lang, prefix="🤖 ", reply_markup=kb)
     from app.bot.handlers.study_export import after_study_ai_response
 
-    await after_study_ai_response(
-        message,
-        user,
-        session,
-        user_text=text,
-        answer=answer,
-        module_id=module_id,
-        submodule_id=sub_id or None,
-    )
+    if not is_quota:
+        await after_study_ai_response(
+            message,
+            user,
+            session,
+            user_text=text,
+            answer=answer,
+            module_id=module_id,
+            submodule_id=sub_id or None,
+        )
     await _maybe_send_voice(message, user, answer)
-    if user.memory_enabled:
+    if not is_quota and user.memory_enabled:
         await add_memory(
             session,
             user.id,

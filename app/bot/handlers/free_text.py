@@ -8,6 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.ai_reply_ui import deliver_ai_reply
 from app.bot.message_ui import deliver_long_text
 from app.bot.keyboards import back_menu_kb, dashboard_kb, module_kb, submodule_kb
 from app.core.modules.catalog import MODULE_BY_ID
@@ -69,26 +70,33 @@ async def _answer_in_module(
         kb = proactive_kb(actions, lang) or (
             submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
         )
-        await deliver_long_text(loading, f"{header}\n\n{answer}", reply_markup=kb)
+        is_quota = await deliver_ai_reply(
+            loading,
+            answer,
+            lang=lang,
+            prefix=f"{header}\n\n" if header else "",
+            reply_markup=kb,
+        )
 
         from app.bot.handlers.study_export import after_study_ai_response
 
-        await after_study_ai_response(
-            message,
-            user,
-            session,
-            user_text=text,
-            answer=answer,
-            module_id=module_id,
-            submodule_id=submodule_id or ("notes" if module_id == "education" else None),
-        )
+        if not is_quota:
+            await after_study_ai_response(
+                message,
+                user,
+                session,
+                user_text=text,
+                answer=answer,
+                module_id=module_id,
+                submodule_id=submodule_id or ("notes" if module_id == "education" else None),
+            )
 
-        if user.voice_mode and len(answer) <= 2500:
+        if not is_quota and user.voice_mode and len(answer) <= 2500:
             audio = await synthesize_speech(answer)
             if audio:
                 await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
 
-        if user.memory_enabled:
+        if not is_quota and user.memory_enabled:
             await add_memory(
                 session,
                 user.id,
@@ -163,6 +171,6 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
     )
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or back_menu_kb(lang)
-    await deliver_long_text(loading, f"🤖 {answer}", reply_markup=kb)
-    if user.memory_enabled:
+    is_quota = await deliver_ai_reply(loading, answer, lang=lang, prefix="🤖 ", reply_markup=kb)
+    if not is_quota and user.memory_enabled:
         await add_memory(session, user.id, f"Q: {text[:200]}\nA: {answer[:400]}", module_id="ai_assistant")

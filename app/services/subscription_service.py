@@ -312,17 +312,62 @@ def can_use_ai(user: User) -> str | None:
 
 def format_insufficient_credits(user: User, *, cost: int, lang: str) -> str:
 
-    return t(
+    from app.core.config import settings
 
-        lang,
+    lines = [
+        INSUFFICIENT_CREDITS_PREFIX
+        + t(
+            lang,
+            "quota_ai_credits_detail",
+            cost=cost,
+            left=credits_left(user),
+        ),
+        "",
+        t(lang, "quota_ai_credits_plans_title"),
+    ]
+    for plan_id in ("student", "basic", "premium", "pro"):
+        plan = PLANS[plan_id]
+        if plan.usd_monthly:
+            price = format_uzs(usd_to_uzs(plan.usd_monthly))
+        else:
+            price = t(lang, "plan_price_free")
+        lines.append(
+            t(
+                lang,
+                "quota_ai_credits_plan_line",
+                emoji=plan.emoji,
+                name=t(lang, plan.name_key),
+                credits=plan.limits.ai_credits_monthly,
+                price=price,
+            )
+        )
+    lines.extend(["", t(lang, "quota_ai_credits_packages_title")])
+    for pkg in ADDON_PACKAGES:
+        if pkg.kind != "ai_credits":
+            continue
+        lines.append(
+            t(
+                lang,
+                "sub_addon_line",
+                name=t(lang, pkg.name_key),
+                price=format_uzs(usd_to_uzs(pkg.usd_price)),
+            )
+        )
+    lines.extend(["", t(lang, "quota_ai_credits_pay_title")])
+    lines.append(t(lang, "quota_ai_credits_pay_line", method=t(lang, "pay_method_stars")))
+    if settings.payment_card_number.strip():
+        lines.append(t(lang, "quota_ai_credits_pay_line", method=t(lang, "pay_method_card")))
+    lines.extend(["", t(lang, "quota_ai_credits_cta")])
+    return "\n".join(lines)
 
-        "quota_ai_credits_detail",
 
-        cost=cost,
+INSUFFICIENT_CREDITS_PREFIX = "\x00quota_credits\x00"
 
-        left=credits_left(user),
 
-    )
+def parse_insufficient_credits_reply(text: str) -> tuple[bool, str]:
+    if text.startswith(INSUFFICIENT_CREDITS_PREFIX):
+        return True, text[len(INSUFFICIENT_CREDITS_PREFIX) :]
+    return False, text
 
 
 

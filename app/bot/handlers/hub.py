@@ -19,6 +19,7 @@ from app.bot.keyboards import (
     settings_kb,
     submodule_kb,
 )
+from app.bot.keyboards_subscription import insufficient_credits_kb
 from app.bot.keyboards_vault import vault_lock_cancel_kb, vault_lock_settings_kb
 from app.bot.keyboards_ecosystem import ecosystem_features_kb, notifications_kb
 from app.bot.states import MemoryStates, VaultLockStates
@@ -28,6 +29,7 @@ from app.core.modules.catalog import CATEGORIES, MODULE_BY_ID
 from app.core.modules.ui_texts import module_example_text, module_hint_text
 from app.models.entities import User
 from app.services.ai_service import ask_ai
+from app.services.subscription_service import parse_insufficient_credits_reply
 from app.services.ecosystem_service import (
     build_search_ai_context,
     format_notifications_list,
@@ -236,8 +238,16 @@ async def hub_search_query(message: Message, state: FSMContext, user: User, sess
             user=user,
             bot=message.bot,
         )
-        lines.append(f"\n🤖 <b>{t(lang, 'eco_search_ai_title')}</b>\n{answer}")
+        is_quota, body = parse_insufficient_credits_reply(answer)
+        if is_quota:
+            lines.append(f"\n{body}")
+        else:
+            lines.append(f"\n🤖 <b>{t(lang, 'eco_search_ai_title')}</b>\n{body}")
         await loading.delete()
+        kb = insufficient_credits_kb(lang) if is_quota else back_menu_kb(lang)
+        await message.answer("\n".join(lines), reply_markup=kb)
+        await state.clear()
+        return
     await message.answer("\n".join(lines), reply_markup=back_menu_kb(lang))
     await state.clear()
 

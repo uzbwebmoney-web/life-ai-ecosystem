@@ -99,3 +99,28 @@ def test_student_all_modules():
 def test_uzs_and_stars():
     assert usd_to_uzs(2.99) > 0
     assert usd_to_stars(2.99) >= 50
+
+
+def test_format_insufficient_credits_lists_plans_and_payment():
+    from app.services.subscription_service import (
+        INSUFFICIENT_CREDITS_PREFIX,
+        format_insufficient_credits,
+        parse_insufficient_credits_reply,
+    )
+
+    user = User(id=1, telegram_id=1, plan_id="free", ai_used_month=300)
+    text = format_insufficient_credits(user, cost=3, lang="ru")
+    assert text.startswith(INSUFFICIENT_CREDITS_PREFIX)
+    assert "Недостаточно AI-кредитов" in text
+    assert "Тарифы" in text
+    assert "Способы оплаты" in text
+    assert "Student" in text or "Студент" in text or PLANS["student"].emoji in text
+
+    is_quota, body = parse_insufficient_credits_reply(text)
+    assert is_quota is True
+    assert INSUFFICIENT_CREDITS_PREFIX not in body
+    assert "Недостаточно AI-кредитов" in body
+
+    is_normal, normal = parse_insufficient_credits_reply("Hello")
+    assert is_normal is False
+    assert normal == "Hello"

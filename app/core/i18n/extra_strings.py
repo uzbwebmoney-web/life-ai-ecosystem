@@ -338,11 +338,18 @@ EXTRA_RU: dict[str, str] = {
     "ai_request_failed": "⚠️ Не удалось получить ответ AI. Попробуйте ещё раз или сократите запрос (например, 3–5 страниц).",
     "quota_ai_credits": "⚠️ Недостаточно AI-кредитов. /subscription",
     "quota_ai_credits_detail": (
-        "⚠️ Недостаточно AI-кредитов.\n\n"
-        "Стоимость запроса: {cost} AI-кредитов\n"
-        "У вас осталось: {left} AI-кредитов\n\n"
-        "Пополните баланс или перейдите на более высокий тариф: /subscription"
+        "⚠️ <b>Недостаточно AI-кредитов</b>\n\n"
+        "Стоимость запроса: <b>{cost}</b> AI-кредитов\n"
+        "У вас осталось: <b>{left}</b> AI-кредитов"
     ),
+    "quota_ai_credits_plans_title": "💳 <b>Тарифы</b>",
+    "quota_ai_credits_plan_line": "{emoji} {name} — <b>{credits}</b> кред./мес · {price}",
+    "quota_ai_credits_packages_title": "📦 <b>Пакеты кредитов</b> (разово, не сгорают)",
+    "quota_ai_credits_pay_title": "💰 <b>Способы оплаты</b>",
+    "quota_ai_credits_pay_line": "• {method}",
+    "quota_ai_credits_cta": "Выберите тариф или пакет кнопками ниже 👇",
+    "quota_ai_credits_btn_plans": "💳 Тарифы",
+    "quota_ai_credits_btn_packages": "📦 Пакеты кредитов",
     "sub_credits_total": "💎 AI-кредитов в месяце: {total}",
     "sub_credits_used": "📉 Использовано: {used}",
     "sub_credits_left": "✅ Осталось: {left}",
@@ -605,11 +612,18 @@ EXTRA_UZ: dict[str, str] = {
     "ai_request_failed": "⚠️ AI javobini olish mumkin emas. Qayta urinib ko'ring yoki so'rovni qisqartiring (masalan, 3–5 bet).",
     "quota_ai_credits": "⚠️ AI-kreditlar yetarli emas. /subscription",
     "quota_ai_credits_detail": (
-        "⚠️ AI-kreditlar yetarli emas.\n\n"
-        "So'rov narxi: {cost} AI-kredit\n"
-        "Qolgan: {left} AI-kredit\n\n"
-        "Balansni to'ldiring yoki tarifni oshiring: /subscription"
+        "⚠️ <b>AI-kreditlar yetarli emas</b>\n\n"
+        "So'rov narxi: <b>{cost}</b> AI-kredit\n"
+        "Qolgan: <b>{left}</b> AI-kredit"
     ),
+    "quota_ai_credits_plans_title": "💳 <b>Tariflar</b>",
+    "quota_ai_credits_plan_line": "{emoji} {name} — <b>{credits}</b> kredit/oy · {price}",
+    "quota_ai_credits_packages_title": "📦 <b>Kredit paketlari</b> (bir martalik)",
+    "quota_ai_credits_pay_title": "💰 <b>To'lov usullari</b>",
+    "quota_ai_credits_pay_line": "• {method}",
+    "quota_ai_credits_cta": "Quyidagi tugmalardan tarif yoki paketni tanlang 👇",
+    "quota_ai_credits_btn_plans": "💳 Tariflar",
+    "quota_ai_credits_btn_packages": "📦 Kredit paketlari",
     "quota_image_gen_monthly": (
         "⚠️ Bu oy uchun rasm yaratish limiti tugadi ({used} / {limit}).\n\n"
         "Tarifingizda rasm yaratish bor, lekin oyiga cheklangan. "
@@ -952,11 +966,18 @@ EXTRA_EN: dict[str, str] = {
     "ai_request_failed": "⚠️ Could not get an AI response. Try again or shorten the request (e.g. 3–5 pages).",
     "quota_ai_credits": "⚠️ Not enough AI credits. /subscription",
     "quota_ai_credits_detail": (
-        "⚠️ Not enough AI credits.\n\n"
-        "Request cost: {cost} AI credits\n"
-        "You have left: {left} AI credits\n\n"
-        "Top up or upgrade your plan: /subscription"
+        "⚠️ <b>Not enough AI credits</b>\n\n"
+        "Request cost: <b>{cost}</b> AI credits\n"
+        "You have left: <b>{left}</b> AI credits"
     ),
+    "quota_ai_credits_plans_title": "💳 <b>Plans</b>",
+    "quota_ai_credits_plan_line": "{emoji} {name} — <b>{credits}</b> credits/mo · {price}",
+    "quota_ai_credits_packages_title": "📦 <b>Credit packs</b> (one-time, no expiry)",
+    "quota_ai_credits_pay_title": "💰 <b>Payment methods</b>",
+    "quota_ai_credits_pay_line": "• {method}",
+    "quota_ai_credits_cta": "Choose a plan or pack with the buttons below 👇",
+    "quota_ai_credits_btn_plans": "💳 Plans",
+    "quota_ai_credits_btn_packages": "📦 Credit packs",
     "quota_image_gen_monthly": (
         "⚠️ Image generation limit reached for this month ({used} of {limit}).\n\n"
         "Your plan includes image generation, but the number of images per month is limited. "

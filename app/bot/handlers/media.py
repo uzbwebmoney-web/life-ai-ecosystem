@@ -7,7 +7,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.ai_reply_ui import deliver_ai_reply
 from app.bot.keyboards import back_menu_kb, dashboard_kb, record_saved_kb
+from app.bot.keyboards_subscription import insufficient_credits_kb
 from app.bot.message_ui import deliver_long_text
 from app.bot.states import ScanStates
 from app.core.i18n import ai_reply_language, t
@@ -21,6 +23,7 @@ from app.services.media_ai import analyze_image_url, get_telegram_image_url, syn
 from app.services.module_context import active_module_label
 from app.services.proactive_service import proactive_kb, suggest_actions
 from app.services.scanner_service import archive_label, archive_meta, classify_scan, parse_amount_from_text, universal_scan_prompt
+from app.services.subscription_service import parse_insufficient_credits_reply
 from app.services.vault_service import (
     VAULT_FILE_SUBMODULES,
     vault_file_meta,
@@ -174,7 +177,8 @@ async def _process_photo(
             user=user,
             bot=message.bot,
         )
-        extra = f"\n\n🍽 {recipes}"
+        is_quota, recipe_body = parse_insufficient_credits_reply(recipes)
+        extra = f"\n\n{recipe_body}" if is_quota else f"\n\n🍽 {recipe_body}"
 
     search_prefix = f"{vault_search_tags(sub_id)}\n" if module_id == "vault" else ""
     title = caption[:200] or (
@@ -244,17 +248,16 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
         bot=message.bot,
     )
     header = active_module_label(user.active_module_id, user.active_submodule_id, lang=lang)
-    prefix = f"{header}\n\n" if header else "🤖 "
     actions = suggest_actions(text, answer, lang)
     kb = proactive_kb(actions, lang) or dashboard_kb(lang)
-    await message.answer(f"{prefix}{answer}", reply_markup=kb)
-    if user.voice_mode:
-        audio = await synthesize_speech(answer)
-        if audio:
-            from aiogram.types import BufferedInputFile
-
-            await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
-    if user.memory_enabled:
+    is_quota = await deliver_ai_reply(
+        message,
+        answer,
+        lang=lang,
+        prefix=f"{header}\n\n" if header else "🤖 ",
+        reply_markup=kb,
+    )
+    if not is_quota and user.memory_enabled:
         await add_memory(
             session,
             user.id,
@@ -343,7 +346,11 @@ async def handle_link(message: Message, user: User, session: AsyncSession) -> No
         user=user,
         bot=message.bot,
     )
+    is_quota, body = parse_insufficient_credits_reply(ai)
+    if is_quota:
+        await message.answer(body, reply_markup=insufficient_credits_kb(lang))
+        return
     await message.answer(
-        f"{t(lang, 'link_check')}\n\n{risk_emoji} {t(lang, 'link_risk', risk=check['risk'])}\n{check['summary']}\n\n🤖 {ai}",
+        f"{t(lang, 'link_check')}\n\n{risk_emoji} {t(lang, 'link_risk', risk=check['risk'])}\n{check['summary']}\n\n🤖 {body}",
         reply_markup=back_menu_kb(lang),
     )
