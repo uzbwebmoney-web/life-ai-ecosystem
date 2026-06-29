@@ -11,6 +11,31 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+# OpenAI Whisper API language codes (uz is NOT supported — use prompt + auto-detect).
+_WHISPER_API_LANGUAGES = frozenset(
+    {
+        "ru",
+        "en",
+        "de",
+        "fr",
+        "es",
+        "it",
+        "pt",
+        "tr",
+        "kk",
+        "az",
+    }
+)
+
+
+def whisper_api_language(lang: str | None) -> str | None:
+    if not lang:
+        return None
+    code = lang.strip().lower()
+    if code == "uz":
+        return None
+    return code if code in _WHISPER_API_LANGUAGES else None
+
 
 @dataclass(frozen=True)
 class WhisperLyricsResult:
@@ -117,9 +142,24 @@ async def transcribe_lyrics_detailed(
     kwargs: dict = {"model": "whisper-1", "file": buffer, "response_format": "verbose_json"}
     if prompt:
         kwargs["prompt"] = prompt[:200]
-    if lang in {"ru", "en", "uz"}:
-        kwargs["language"] = lang
-    result = await client.audio.transcriptions.create(**kwargs)
+    api_lang = whisper_api_language(lang)
+    if api_lang:
+        kwargs["language"] = api_lang
+    try:
+        result = await client.audio.transcriptions.create(**kwargs)
+    except BadRequestError as exc:
+        if api_lang and "language" in kwargs:
+            logger.warning("Whisper language=%s rejected, retrying auto-detect: %s", api_lang, exc)
+            buffer.seek(0)
+            kwargs.pop("language", None)
+            try:
+                result = await client.audio.transcriptions.create(**kwargs)
+            except BadRequestError:
+                logger.exception("Whisper transcription failed")
+                return WhisperLyricsResult(text="")
+        else:
+            logger.warning("Whisper transcription failed: %s", exc)
+            return WhisperLyricsResult(text="")
     text = (result.text or "").strip()
     detected = getattr(result, "language", None) or None
     segments = getattr(result, "segments", None) or []
@@ -156,8 +196,9 @@ async def transcribe_audio_buffer(
     kwargs: dict = {"model": "whisper-1", "file": buffer}
     if prompt:
         kwargs["prompt"] = prompt[:200]
-    if lang in {"ru", "en", "uz"}:
-        kwargs["language"] = lang
+    api_lang = whisper_api_language(lang)
+    if api_lang:
+        kwargs["language"] = api_lang
     result = await client.audio.transcriptions.create(**kwargs)
     return (result.text or "").strip()
 

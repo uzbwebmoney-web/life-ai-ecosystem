@@ -84,6 +84,15 @@ def test_validate_lyrics_rejects_whisper_loop_hallucination():
 def test_normalize_song_language_from_whisper_uz():
     assert normalize_song_language("uz", "Alvon alvon gullaring") == "uz"
     assert normalize_song_language("tr", "elvan gullaring") == "uz"
+    assert normalize_song_language(None, "text", hint="uz") == "uz"
+
+
+def test_whisper_api_language_skips_uz():
+    from app.services.media_ai import whisper_api_language
+
+    assert whisper_api_language("uz") is None
+    assert whisper_api_language("ru") == "ru"
+    assert whisper_api_language("en") == "en"
 
 
 def test_detect_song_language_uzbek_markers():

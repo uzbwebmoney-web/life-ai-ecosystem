@@ -169,13 +169,15 @@ def detect_song_language_from_text(text: str) -> str | None:
     return None
 
 
-def normalize_song_language(detected: str | None, text: str) -> str:
-    code = (detected or "").strip().lower()
-    if code in _WHISPER_LANG_MAP:
-        return _WHISPER_LANG_MAP[code]
+def normalize_song_language(detected: str | None, text: str, *, hint: str | None = None) -> str:
     from_text = detect_song_language_from_text(text)
     if from_text:
         return from_text
+    code = (detected or "").strip().lower()
+    if hint == "uz":
+        return "uz"
+    if code in _WHISPER_LANG_MAP:
+        return _WHISPER_LANG_MAP[code]
     return "en"
 
 
@@ -359,10 +361,14 @@ async def transcribe_song_lyrics(bot: Bot, file_id: str, filename: str) -> SongL
 
     for prompt, whisper_lang in _whisper_attempts():
         buffer.seek(0)
-        metrics = await transcribe_lyrics_detailed(buffer, prompt=prompt, lang=whisper_lang)
+        try:
+            metrics = await transcribe_lyrics_detailed(buffer, prompt=prompt, lang=whisper_lang)
+        except Exception:
+            logger.exception("Whisper attempt failed (lang=%s)", whisper_lang)
+            continue
         if not metrics.text:
             continue
-        song_lang = normalize_song_language(metrics.detected_language, metrics.text)
+        song_lang = normalize_song_language(metrics.detected_language, metrics.text, hint=whisper_lang)
         cleaned = clean_whisper_lyrics(metrics.text)
         validated = validate_lyrics_transcription(cleaned, song_lang=song_lang, metrics=metrics)
         if not validated:
