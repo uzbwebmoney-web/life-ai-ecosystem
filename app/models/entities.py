@@ -36,6 +36,8 @@ class User(Base):
     ai_usage_day: Mapped[str | None] = mapped_column(String(10), nullable=True)
     ai_usage_month: Mapped[str | None] = mapped_column(String(7), nullable=True)
     photo_used_month: Mapped[int] = mapped_column(Integer, default=0)
+    music_used_month: Mapped[int] = mapped_column(Integer, default=0)
+    music_separate_used_month: Mapped[int] = mapped_column(Integer, default=0)
     image_gen_used_month: Mapped[int] = mapped_column(Integer, default=0)
     pdf_used_month: Mapped[int] = mapped_column(Integer, default=0)
     advanced_model_used_month: Mapped[int] = mapped_column(Integer, default=0)

@@ -120,6 +120,10 @@ def _reset_usage_counters(user: User) -> None:
 
         user.photo_used_month = 0
 
+        user.music_used_month = 0
+
+        user.music_separate_used_month = 0
+
         user.image_gen_used_month = 0
 
         user.pdf_used_month = 0
@@ -216,6 +220,20 @@ def _photo_limit(user: User) -> int | None:
 
 
 
+
+
+def _music_limit(user: User) -> int | None:
+    limits = plan_info(user).limits.music_monthly
+    if limits is None:
+        return None
+    return limits
+
+
+def _music_separate_limit(user: User) -> int | None:
+    limits = plan_info(user).limits.music_separate_monthly
+    if limits is None:
+        return None
+    return limits
 
 
 def _image_gen_limit(user: User) -> int:
@@ -667,6 +685,16 @@ def feature_allowed(user: User, feature: str) -> str | None:
 
         return "quota_voice"
 
+    if feature == "music":
+        music_limit = _music_limit(user)
+        if music_limit == 0:
+            return "quota_music"
+
+    if feature == "music_separate":
+        sep_limit = _music_separate_limit(user)
+        if sep_limit == 0:
+            return "quota_music_separate"
+
     if feature == "photo_ai":
 
         photo_limit = _photo_limit(user)
@@ -700,6 +728,47 @@ def feature_allowed(user: User, feature: str) -> str | None:
         return "quota_vault_lock"
 
     return None
+
+
+
+
+
+async def check_music_quota(
+    session: AsyncSession,
+    user: User,
+    *,
+    lang: str,
+    separate: bool = False,
+) -> str | None:
+    await ensure_user_subscription_fields(session, user)
+    blocked = feature_allowed(user, "music")
+    if blocked:
+        return t(lang, blocked)
+    if separate:
+        sep_blocked = feature_allowed(user, "music_separate")
+        if sep_blocked:
+            return t(lang, sep_blocked)
+    _reset_usage_counters(user)
+    limit = _music_limit(user)
+    if limit is not None:
+        used = user.music_used_month or 0
+        if used >= limit:
+            return t(lang, "quota_music_monthly", used=used, limit=limit)
+    if separate:
+        sep_limit = _music_separate_limit(user)
+        if sep_limit is not None:
+            sep_used = user.music_separate_used_month or 0
+            if sep_used >= sep_limit:
+                return t(lang, "quota_music_separate_monthly", used=sep_used, limit=sep_limit)
+    return None
+
+
+async def consume_music_operation(session: AsyncSession, user: User, *, separate: bool = False) -> None:
+    _reset_usage_counters(user)
+    user.music_used_month = (user.music_used_month or 0) + 1
+    if separate:
+        user.music_separate_used_month = (user.music_separate_used_month or 0) + 1
+    await session.commit()
 
 
 
@@ -1062,6 +1131,16 @@ def format_usage_summary(user: User, *, lang: str) -> str:
 
         lines.append(t(lang, "sub_photo_monthly", used=user.photo_used_month or 0, limit=photo_limit))
 
+    music_limit = _music_limit(user)
+    if music_limit is not None and music_limit > 0:
+        lines.append(t(lang, "sub_music_monthly", used=user.music_used_month or 0, limit=music_limit))
+
+    music_sep_limit = _music_separate_limit(user)
+    if music_sep_limit is not None and music_sep_limit > 0:
+        lines.append(
+            t(lang, "sub_music_separate_monthly", used=user.music_separate_used_month or 0, limit=music_sep_limit)
+        )
+
     img_limit = _image_gen_limit(user)
 
     if img_limit > 0:
@@ -1156,6 +1235,20 @@ def format_plan_card(plan_id: PlanId, *, lang: str) -> str:
 
     )
 
+    music_line = _limit_label(
+        limits.music_monthly,
+        lang=lang,
+        unlimited_key="plan_limit_music_unlimited",
+        template_key="plan_limit_music_monthly",
+    )
+
+    music_sep_line = _limit_label(
+        limits.music_separate_monthly,
+        lang=lang,
+        unlimited_key="plan_limit_music_sep_unlimited",
+        template_key="plan_limit_music_sep_monthly",
+    )
+
     pdf_line = (
 
         t(lang, "plan_limit_pdf", n=limits.pdf_docx_monthly or 0)
@@ -1207,6 +1300,10 @@ def format_plan_card(plan_id: PlanId, *, lang: str) -> str:
         f"• {t(lang, 'plan_feature_voice')}: {'✅' if limits.voice else '❌'}",
 
         f"• {t(lang, 'plan_feature_photo')}: {photo_line}",
+
+        f"• {t(lang, 'plan_feature_music')}: {music_line}",
+
+        f"• {t(lang, 'plan_feature_music_separate')}: {music_sep_line}",
 
         f"• {pdf_line}",
 

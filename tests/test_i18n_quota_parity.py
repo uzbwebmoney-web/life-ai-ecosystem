@@ -4,6 +4,9 @@ from app.core.i18n import t
 def test_uz_quota_strings_resolve():
     keys = [
         "quota_voice",
+        "quota_music",
+        "quota_music_separate",
+        "quota_music_monthly",
         "quota_vault_lock",
         "quota_photo_ai",
         "quota_ocr",

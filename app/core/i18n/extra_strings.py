@@ -234,13 +234,13 @@ EXTRA_RU: dict[str, str] = {
     "plan_price_free": "Бесплатно",
     "plan_price_monthly": "<b>{price}</b> / мес (~${usd})",
     "plan_free_name": "Free",
-    "plan_free_desc": "GPT-4o Mini, сейф для документов, лимиты на AI и фото.",
+    "plan_free_desc": "GPT-4o Mini, сейф, 3 музыкальных операции/мес (текст песни).",
     "plan_basic_name": "Basic",
-    "plan_basic_desc": "GPT-5.4 Mini, голос, защищённый сейф с паролем, 40 картинок/мес.",
+    "plan_basic_desc": "GPT-5.4 Mini, голос, музыка 50 оп./мес и 10 разделений вокала, 40 картинок/мес.",
     "plan_premium_name": "Premium",
-    "plan_premium_desc": "GPT-5.5, семья до 5, защищённый сейф, 120 картинок/мес.",
+    "plan_premium_desc": "GPT-5.5, семья до 5, музыка 200 оп./мес и 40 разделений, 120 картинок/мес.",
     "plan_pro_name": "Pro",
-    "plan_pro_desc": "Максимум AI, семья до 10, защищённый сейф, 400 картинок/мес.",
+    "plan_pro_desc": "Максимум AI, семья до 10, музыка без лимита, 400 картинок/мес.",
     "plan_student_name": "Student",
     "plan_student_desc": "Учёба, GPT-5.4 Mini, защищённый сейф с паролем, 10 картинок/мес.",
     "plan_family_name": "Семейная",
@@ -275,6 +275,10 @@ EXTRA_RU: dict[str, str] = {
     "plan_model_router_short": "GPT-5.5 / GPT-5.4 mini / GPT-4o mini",
     "plan_limit_photo_unlimited": "Анализ фото: безлимит",
     "plan_limit_photo_monthly": "Анализ фото: {n}/мес",
+    "plan_limit_music_unlimited": "Музыка: безлимит",
+    "plan_limit_music_monthly": "Музыка: {n}/мес",
+    "plan_limit_music_sep_unlimited": "Разделение вокала: безлимит",
+    "plan_limit_music_sep_monthly": "Разделение вокала: {n}/мес",
     "plan_limit_ai_unlimited": "AI: безлимит*",
     "plan_limit_memory": "Память: {n} записей",
     "plan_limit_memory_unlimited": "Память: безлимит",
@@ -285,6 +289,8 @@ EXTRA_RU: dict[str, str] = {
     "plan_feature_memory": "AI-память",
     "sub_ai_model": "Модель: {model}",
     "sub_photo_monthly": "Анализ фото: {used} / {limit}",
+    "sub_music_monthly": "🎵 Музыка: {used} / {limit}",
+    "sub_music_separate_monthly": "🎤 Разделение вокала: {used} / {limit}",
     "sub_image_gen_monthly": "Генерация изображений: {used} / {limit}",
     "sub_pdf_monthly": "PDF/DOCX: {used} / {limit}",
     "sub_packages_ai_title": "🤖 AI-запросы:",
@@ -337,12 +343,23 @@ EXTRA_RU: dict[str, str] = {
     "plan_limit_vault_lock": "🔐 Защищённый сейф: пароль на хранилище",
     "plan_all_modules": "Все модули доступны",
     "plan_feature_voice": "Голосовые сообщения",
+    "plan_feature_music": "Музыка (текст, анализ, перевод)",
+    "plan_feature_music_separate": "Разделение вокала / минус",
     "plan_feature_photo": "AI-анализ фото",
     "plan_feature_priority": "Приоритетная скорость",
     "plan_feature_premium_model": "Приоритетная AI-модель",
     "quota_ai_daily": "⚠️ Дневной лимит AI исчерпан. /subscription",
     "quota_ai_monthly": "⚠️ Месячный лимит AI исчерпан. /subscription",
     "quota_voice": "🎤 Голос — от Basic. /subscription",
+    "quota_music": (
+        "🎵 <b>Музыка — от тарифа Basic</b>\n\n"
+        "На Free — 3 операции в месяц (текст песни). "
+        "Разделение вокала и минус — от Basic.\n\n"
+        "/subscription"
+    ),
+    "quota_music_separate": "🎤 Разделение вокала — от Basic. /subscription",
+    "quota_music_monthly": "⚠️ Лимит музыки {used}/{limit}. /subscription",
+    "quota_music_separate_monthly": "⚠️ Лимит разделения вокала {used}/{limit}. /subscription",
     "quota_vault_lock": (
         "🔐 <b>Защищённый сейф — от тарифа Student</b>\n\n"
         "В «Личное хранилище» можно сохранять паспорт, полисы, чеки и другие документы. "
@@ -555,6 +572,15 @@ EXTRA_UZ: dict[str, str] = {
     "sub_btn_back": "↩️ Orqaga",
     "quota_ai_daily": "⚠️ Kunlik AI limiti tugadi. /subscription",
     "quota_voice": "🎤 Ovoz Basic dan. /subscription",
+    "quota_music": (
+        "🎵 <b>Musiqa — Basic tarifidan</b>\n\n"
+        "Free — oyiga 3 amal (qo'shiq matni). "
+        "Vokal ajratish — Basic dan.\n\n"
+        "/subscription"
+    ),
+    "quota_music_separate": "🎤 Vokal ajratish — Basic dan. /subscription",
+    "quota_music_monthly": "⚠️ Musiqa limiti {used}/{limit}. /subscription",
+    "quota_music_separate_monthly": "⚠️ Vokal ajratish limiti {used}/{limit}. /subscription",
     "quota_vault_lock": (
         "🔐 <b>Himoyalangan seyf — Student tarifidan</b>\n\n"
         "«Shaxsiy ombor»da pasport, polislar, cheklar va boshqa hujjatlarni saqlashingiz mumkin. "
@@ -582,6 +608,8 @@ EXTRA_UZ: dict[str, str] = {
     "sub_vault_lock_on": "🔐 Himoyalangan seyf: parol bilan",
     "sub_vault_lock_off": "🔐 Seyf: parolsiz (himoya Student dan)",
     "sub_photo_monthly": "Foto tahlili: {used} / {limit}",
+    "sub_music_monthly": "🎵 Musiqa: {used} / {limit}",
+    "sub_music_separate_monthly": "🎤 Vokal ajratish: {used} / {limit}",
     "sub_pdf_monthly": "PDF/DOCX: {used} / {limit}",
     "sub_image_gen_monthly": "Rasm yaratish: {used} / {limit}",
     "sub_gpt54_monthly": "GPT-5.4 Mini: {used} / {limit}",
@@ -590,6 +618,12 @@ EXTRA_UZ: dict[str, str] = {
     "pay_already_processed": "✅ Bu to'lov allaqachon qayta ishlangan.",
     "plan_limit_vault_basic": "Shaxsiy ombor: hujjat yuklash",
     "plan_limit_vault_lock": "🔐 Himoyalangan seyf: parol bilan",
+    "plan_limit_music_unlimited": "Musiqa: cheksiz",
+    "plan_limit_music_monthly": "Musiqa: {n}/oy",
+    "plan_limit_music_sep_unlimited": "Vokal ajratish: cheksiz",
+    "plan_limit_music_sep_monthly": "Vokal ajratish: {n}/oy",
+    "plan_feature_music": "Musiqa (matn, tahlil, tarjima)",
+    "plan_feature_music_separate": "Vokal / minus ajratish",
     "plan_price_free": "Bepul",
     "plan_basic_name": "Basic",
     "plan_premium_name": "Premium",
@@ -1005,13 +1039,13 @@ EXTRA_EN: dict[str, str] = {
     "plan_price_free": "Free",
     "plan_price_monthly": "<b>{price}</b> / mo (~${usd})",
     "plan_free_name": "Free",
-    "plan_free_desc": "GPT-4o Mini, document vault, AI and photo limits.",
+    "plan_free_desc": "GPT-4o Mini, vault, 3 music ops/mo (lyrics).",
     "plan_basic_name": "Basic",
-    "plan_basic_desc": "GPT-5.4 Mini, voice, password-protected vault, 40 images/mo.",
+    "plan_basic_desc": "GPT-5.4 Mini, voice, music 50 ops/mo and 10 vocal splits, 40 images/mo.",
     "plan_premium_name": "Premium",
-    "plan_premium_desc": "GPT-5.5, family up to 5, protected vault, 120 images/mo.",
+    "plan_premium_desc": "GPT-5.5, family up to 5, music 200 ops/mo and 40 splits, 120 images/mo.",
     "plan_pro_name": "Pro",
-    "plan_pro_desc": "Max AI, family up to 10, protected vault, 400 images/mo.",
+    "plan_pro_desc": "Max AI, family up to 10, unlimited music, 400 images/mo.",
     "plan_family_name": "Family",
     "plan_family_desc": "Up to 5 people.",
     "plan_pkg_100": "100 AI requests",
@@ -1027,12 +1061,23 @@ EXTRA_EN: dict[str, str] = {
     "plan_limit_vault_lock": "🔐 Protected vault: password lock",
     "plan_all_modules": "All modules available",
     "plan_feature_voice": "Voice messages",
+    "plan_feature_music": "Music (lyrics, analysis, translation)",
+    "plan_feature_music_separate": "Vocal / instrumental split",
     "plan_feature_photo": "AI photo analysis",
     "plan_feature_priority": "Priority speed",
     "plan_feature_premium_model": "Premium AI model",
     "quota_ai_daily": "⚠️ Daily AI limit reached. /subscription",
     "quota_ai_monthly": "⚠️ Monthly AI limit reached. /subscription",
     "quota_voice": "🎤 Voice from Basic plan. /subscription",
+    "quota_music": (
+        "🎵 <b>Music — from Basic plan</b>\n\n"
+        "Free — 3 operations/month (song lyrics). "
+        "Vocal separation — from Basic.\n\n"
+        "/subscription"
+    ),
+    "quota_music_separate": "🎤 Vocal separation — from Basic. /subscription",
+    "quota_music_monthly": "⚠️ Music limit {used}/{limit}. /subscription",
+    "quota_music_separate_monthly": "⚠️ Vocal separation limit {used}/{limit}. /subscription",
     "quota_vault_lock": (
         "🔐 <b>Protected vault — from Student plan</b>\n\n"
         "Save passport scans, policies, receipts and other documents in Personal vault. "
@@ -1056,6 +1101,8 @@ EXTRA_EN: dict[str, str] = {
     "sub_vault_lock_on": "🔐 Protected vault: password lock",
     "sub_vault_lock_off": "🔐 Vault: no password (protection from Student)",
     "sub_photo_monthly": "Photo analysis: {used} / {limit}",
+    "sub_music_monthly": "🎵 Music: {used} / {limit}",
+    "sub_music_separate_monthly": "🎤 Vocal separation: {used} / {limit}",
     "sub_pdf_monthly": "PDF/DOCX: {used} / {limit}",
     "sub_image_gen_monthly": "Image generation: {used} / {limit}",
     "sub_gpt54_monthly": "GPT-5.4 Mini: {used} / {limit}",
@@ -1064,6 +1111,10 @@ EXTRA_EN: dict[str, str] = {
     "pay_already_processed": "✅ This payment was already processed.",
     "plan_limit_vault_basic": "Personal vault: upload documents",
     "plan_limit_vault_lock": "🔐 Protected vault: password lock",
+    "plan_limit_music_unlimited": "Music: unlimited",
+    "plan_limit_music_monthly": "Music: {n}/mo",
+    "plan_limit_music_sep_unlimited": "Vocal separation: unlimited",
+    "plan_limit_music_sep_monthly": "Vocal separation: {n}/mo",
     "quota_reminders": "⚠️ Reminder limit {used}/{limit}. /subscription",
     "quota_memory": "⚠️ Memory limit {used}/{limit}. /subscription",
     "quota_storage": "⚠️ Storage full {used}/{limit} MB. /subscription",

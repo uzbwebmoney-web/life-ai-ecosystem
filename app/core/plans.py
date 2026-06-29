@@ -32,6 +32,8 @@ class PlanLimits:
     vault_lock: bool
     reminders: int | None
     voice: bool
+    music_monthly: int | None
+    music_separate_monthly: int | None
     ocr: bool
     doc_translate: bool
     advanced_model: AdvancedModelMode
@@ -113,6 +115,8 @@ PLANS: dict[PlanId, PlanInfo] = {
             vault_lock=False,
             reminders=10,
             voice=False,
+            music_monthly=3,
+            music_separate_monthly=0,
             ocr=False,
             doc_translate=False,
             advanced_model="none",
@@ -146,6 +150,8 @@ PLANS: dict[PlanId, PlanInfo] = {
             vault_lock=True,
             reminders=20,
             voice=True,
+            music_monthly=0,
+            music_separate_monthly=0,
             ocr=True,
             doc_translate=True,
             advanced_model="limited",
@@ -179,6 +185,8 @@ PLANS: dict[PlanId, PlanInfo] = {
             vault_lock=True,
             reminders=50,
             voice=True,
+            music_monthly=50,
+            music_separate_monthly=10,
             ocr=True,
             doc_translate=True,
             advanced_model="limited",
@@ -212,6 +220,8 @@ PLANS: dict[PlanId, PlanInfo] = {
             vault_lock=True,
             reminders=None,
             voice=True,
+            music_monthly=200,
+            music_separate_monthly=40,
             ocr=True,
             doc_translate=True,
             advanced_model="router",
@@ -245,6 +255,8 @@ PLANS: dict[PlanId, PlanInfo] = {
             vault_lock=True,
             reminders=None,
             voice=True,
+            music_monthly=None,
+            music_separate_monthly=None,
             ocr=True,
             doc_translate=True,
             advanced_model="router",

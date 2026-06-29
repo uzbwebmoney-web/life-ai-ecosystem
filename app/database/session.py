@@ -60,6 +60,10 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
         "photo_used_month": "INTEGER DEFAULT 0",
 
+        "music_used_month": "INTEGER DEFAULT 0",
+
+        "music_separate_used_month": "INTEGER DEFAULT 0",
+
         "image_gen_used_month": "INTEGER DEFAULT 0",
 
         "pdf_used_month": "INTEGER DEFAULT 0",

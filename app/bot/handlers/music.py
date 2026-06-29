@@ -27,19 +27,29 @@ from app.services.music_service import (
     separate_audio,
     transcribe_song_lyrics,
 )
-from app.services.subscription_service import feature_allowed, parse_insufficient_credits_reply
+from app.services.subscription_service import (
+    check_music_quota,
+    consume_music_operation,
+    parse_insufficient_credits_reply,
+)
 
 logger = logging.getLogger(__name__)
 
 router = Router()
 
 
-async def _music_quota_blocked(message: Message, user: User) -> bool:
-    blocked = feature_allowed(user, "voice")
+async def _music_quota_blocked(
+    message: Message,
+    user: User,
+    session: AsyncSession,
+    *,
+    separate: bool = False,
+) -> bool:
+    blocked = await check_music_quota(session, user, lang=user.language, separate=separate)
     if blocked:
-        from app.bot.quota_ui import answer_quota_key
+        from app.bot.quota_ui import answer_quota_block
 
-        await answer_quota_key(message, blocked, lang=user.language)
+        await answer_quota_block(message, blocked, lang=user.language)
         return True
     return False
 
@@ -47,6 +57,15 @@ async def _music_quota_blocked(message: Message, user: User) -> bool:
 @router.callback_query(F.data == "mod:music")
 async def music_module(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     lang = user.language
+    from app.services.subscription_service import check_module_access
+
+    blocked = await check_module_access(session, user, "music", lang=lang)
+    if blocked:
+        from app.bot.quota_ui import answer_quota_block
+
+        await answer_quota_block(callback.message, blocked, lang=lang)
+        await callback.answer()
+        return
     await set_active_module(session, user, "music")
     mod = MODULE_BY_ID["music"]
     text = f"{mod.emoji} <b>{mod.title(lang)}</b>\n\n{t(lang, 'mus_module_intro')}"
@@ -136,6 +155,8 @@ async def music_quick_action(
         await callback.answer(t(lang, "mus_no_lyrics"), show_alert=True)
         return
     await callback.answer()
+    if await _music_quota_blocked(callback.message, user, session):
+        return
     await _run_text_action(callback.message, bot, user, session, action, lyrics, lang)
 
 
@@ -188,6 +209,8 @@ async def _run_text_action(
     action: str,
     lyrics: str,
     lang: str,
+    *,
+    consume: bool = True,
 ) -> None:
     if action == "analyze":
         prompt = build_analyze_prompt(lyrics, lang)
@@ -214,6 +237,8 @@ async def _run_text_action(
 
         await loading.edit_text(body, reply_markup=insufficient_credits_kb(lang))
         return
+    if consume:
+        await consume_music_operation(session, user, separate=False)
     header = {"analyze": "mus_analyze_result", "translate": "mus_translate_result", "chords": "mus_chords_result"}.get(
         action, "mus_result"
     )
@@ -228,7 +253,7 @@ async def music_lyrics_text(
     session: AsyncSession,
     state: FSMContext,
 ) -> None:
-    if await _music_quota_blocked(message, user):
+    if await _music_quota_blocked(message, user, session):
         return
     data = await state.get_data()
     action = data.get("mus_action", "analyze")
@@ -249,7 +274,7 @@ async def music_waiting_audio(
     session: AsyncSession,
     state: FSMContext,
 ) -> None:
-    if await _music_quota_blocked(message, user):
+    if await _music_quota_blocked(message, user, session):
         return
     audio = audio_from_message(message)
     if not audio:
@@ -265,7 +290,10 @@ async def music_waiting_audio(
 
     try:
         if action == "separate":
+            if await _music_quota_blocked(message, user, session, separate=True):
+                return
             await _handle_separate(message, loading, bot, file_id, filename, mode, lang)
+            await consume_music_operation(session, user, separate=True)
             await state.clear()
             return
 
@@ -273,6 +301,8 @@ async def music_waiting_audio(
         if not lyrics:
             await loading.edit_text(t(lang, "mus_transcribe_failed"))
             return
+
+        await consume_music_operation(session, user, separate=False)
 
         title = ""
         if message.audio and message.audio.title:
@@ -288,7 +318,7 @@ async def music_waiting_audio(
             return
 
         await loading.delete()
-        await _run_text_action(message, bot, user, session, action, lyrics, lang)
+        await _run_text_action(message, bot, user, session, action, lyrics, lang, consume=False)
         await state.set_state(None)
     except Exception:
         logger.exception("Music audio processing failed")

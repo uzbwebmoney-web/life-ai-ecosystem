@@ -99,6 +99,23 @@ def test_schedule_vault_expiry_alert():
     asyncio.run(_run())
 
 
+def test_feature_allowed_music_free_has_teaser():
+    user = User(id=1, telegram_id=1, plan_id="free")
+    assert feature_allowed(user, "music") is None
+    assert feature_allowed(user, "music_separate") == "quota_music_separate"
+
+
+def test_feature_allowed_music_student_blocked():
+    user = User(id=1, telegram_id=1, plan_id="student")
+    assert feature_allowed(user, "music") == "quota_music"
+
+
+def test_feature_allowed_music_basic():
+    user = User(id=1, telegram_id=1, plan_id="basic")
+    assert feature_allowed(user, "music") is None
+    assert feature_allowed(user, "music_separate") is None
+
+
 def test_feature_allowed_ocr_free():
     user = User(id=1, telegram_id=1, plan_id="free")
     assert feature_allowed(user, "ocr") == "quota_ocr"
