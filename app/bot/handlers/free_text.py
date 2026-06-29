@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import logging
 
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile, Message
+from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.ai_reply_ui import deliver_ai_reply
 from app.bot.message_ui import deliver_long_text
-from app.bot.keyboards import back_menu_kb, dashboard_kb, module_kb, submodule_kb
+from app.bot.keyboards_education import module_reply_kb, study_spec_kb
+from app.bot.states import EducationStates
+from app.bot.voice_reply import maybe_send_voice_reply
+from app.bot.keyboards import back_menu_kb, dashboard_kb
 from app.core.modules.catalog import MODULE_BY_ID
 from app.core.i18n import t
 from app.models.entities import User
@@ -20,9 +23,11 @@ from app.services.intent_router import detect_module, module_hint
 from app.services.life_data import add_memory
 from app.services.life_profile_service import extract_facts_from_text, parse_remember_text, upsert_fact
 from app.services.module_context import active_module_label
-from app.services.media_ai import synthesize_speech
 from app.services.proactive_service import proactive_kb, suggest_actions
-from app.services.study_notes_service import prepare_study_notes_request
+from app.services.study_notes_service import (
+    needs_study_document_clarification,
+    prepare_study_notes_request,
+)
 from app.services.ai_chat_history import (
     append_turn,
     module_history_key,
@@ -34,6 +39,29 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 
+async def answer_in_module(
+    message: Message,
+    *,
+    bot: Bot,
+    user: User,
+    session: AsyncSession,
+    state: FSMContext,
+    text: str,
+    module_id: str,
+    submodule_id: str | None = None,
+) -> None:
+    await _answer_in_module(
+        message,
+        user=user,
+        session=session,
+        state=state,
+        text=text,
+        module_id=module_id,
+        submodule_id=submodule_id,
+        bot=bot,
+    )
+
+
 async def _answer_in_module(
     message: Message,
     *,
@@ -43,6 +71,7 @@ async def _answer_in_module(
     text: str,
     module_id: str,
     submodule_id: str | None = None,
+    bot: Bot | None = None,
 ) -> None:
     lang = user.language
     mod = MODULE_BY_ID.get(module_id)
@@ -73,17 +102,15 @@ async def _answer_in_module(
             language=lang,
             session=session,
             user=user,
-            bot=message.bot,
+            bot=bot or message.bot,
             max_completion_tokens=token_limit,
             module_id=module_id,
             submodule_id=submodule_id,
             chat_history=chat_history,
         )
         header = active_module_label(module_id, submodule_id, lang=lang)
-        actions = suggest_actions(text, answer, lang)
-        kb = proactive_kb(actions, lang) or (
-            submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
-        )
+        actions = suggest_actions(text, answer, lang, module_id=module_id)
+        kb = proactive_kb(actions, lang) or module_reply_kb(module_id, submodule_id, lang)
         is_quota = await deliver_ai_reply(
             loading,
             answer,
@@ -105,10 +132,7 @@ async def _answer_in_module(
                 submodule_id=submodule_id or ("notes" if module_id == "education" else None),
             )
 
-        if not is_quota and user.voice_mode and len(answer) <= 2500:
-            audio = await synthesize_speech(answer)
-            if audio:
-                await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
+        await maybe_send_voice_reply(message, user, answer)
 
         if not is_quota and user.memory_enabled:
             await add_memory(
@@ -122,7 +146,7 @@ async def _answer_in_module(
             await state.update_data(**{hist_key: serialize_history(append_turn(chat_history, text, answer))})
     except Exception:
         logger.exception("Module AI reply failed module=%s sub=%s", module_id, submodule_id)
-        kb = submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
+        kb = module_reply_kb(module_id, submodule_id, lang) if submodule_id or module_id else back_menu_kb(lang)
         await deliver_long_text(loading, t(lang, "ai_request_failed"), reply_markup=kb)
 
 
@@ -165,6 +189,19 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
 
             if await try_format_only_export(message, user, session, text):
                 return
+            if needs_study_document_clarification(
+                user.active_module_id,
+                user.active_submodule_id,
+                text,
+            ):
+                await state.set_state(EducationStates.waiting_study_spec)
+                await state.update_data(
+                    study_topic=text,
+                    study_module_id=user.active_module_id,
+                    study_submodule_id=user.active_submodule_id,
+                )
+                await message.answer(t(lang, "edu_ask_format_pages"), reply_markup=study_spec_kb(lang))
+                return
         if user.active_module_id == "car" and len(text) > 5:
             await upsert_fact(session, user.id, category="car", fact_key="car_model", fact_value=text[:200])
         await _answer_in_module(
@@ -175,6 +212,7 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
             text=text,
             module_id=user.active_module_id,
             submodule_id=user.active_submodule_id,
+            bot=message.bot,
         )
         return
 

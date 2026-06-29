@@ -142,6 +142,11 @@ class AdminStates(StatesGroup):
     waiting_user_search = State()
     waiting_bonus_amount = State()
     waiting_credits_adjust = State()
+    waiting_support_reply = State()
+
+
+class SupportStates(StatesGroup):
+    chat_active = State()
 
 
 class OnboardingStates(StatesGroup):
@@ -155,3 +160,7 @@ class HouseholdStates(StatesGroup):
 class MusicStates(StatesGroup):
     waiting_audio = State()
     waiting_lyrics_text = State()
+
+
+class EducationStates(StatesGroup):
+    waiting_study_spec = State()

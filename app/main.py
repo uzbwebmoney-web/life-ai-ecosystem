@@ -21,7 +21,7 @@ async def main() -> None:
     reminder_worker.start(bot, SessionLocal)
     daily_feed_worker.start(bot, SessionLocal)
 
-    logging.info("Life AI — dashboard, memory, scan, SOS, daily feed")
+    logging.info("My Life — dashboard, memory, scan, SOS, daily feed")
     try:
         if settings.webhook_url.strip():
             app = web.Application()

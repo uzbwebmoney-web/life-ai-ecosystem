@@ -11,7 +11,7 @@ LANG_LABELS: dict[str, str] = {
 _STRINGS: dict[str, dict[str, str]] = {
     "ru": {
         "welcome": (
-            "🧠 <b>Life AI Ecosystem</b>\n\n"
+            "🧠 <b>Моя жизнь</b>\n\n"
             "Помощник по жизни: здоровье, авто, финансы, право, дом и другое.\n\n"
             "<b>Как пользоваться:</b>\n"
             "1. Выберите тему (например ⚖️ Юридическая помощь или 🏥 Здоровье)\n"
@@ -20,10 +20,10 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 Память AI · 🔍 Поиск · 📊 Панель · 🔔 Напоминания"
         ),
         "choose_language": "🌐 Выберите язык интерфейса:",
-        "start_pick_language": "👋 <b>Добро пожаловать в Life AI!</b>\n\n🌐 Выберите язык:",
+        "start_pick_language": "👋 <b>Добро пожаловать в «Моя жизнь»!</b>\n\n🌐 Выберите язык:",
         "language_changed": "✅ Язык изменён на {label}",
         "main_menu": (
-            "🧠 <b>Life AI</b>\n\n"
+            "🧠 <b>Моя жизнь</b>\n\n"
             "Выберите, чем заняться.\n\n"
             "💡 Можно <b>просто написать вопрос</b> — кнопка не обязательна."
         ),
@@ -41,6 +41,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_settings": "⚙️ Настройки",
         "btn_admin_panel": "🛠 Админ-панель",
         "btn_language": "🌐 Язык",
+        "btn_contact_admin": "💬 Связь с админом",
         "btn_back_menu": "🏠 Главная",
         "btn_back_categories": "⬅️ Категории",
         "btn_back_module": "⬅️ Назад",
@@ -888,7 +889,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_subscription": "Подписка",
         "eco_src_visa": "Виза",
         "help_text": (
-            "❓ <b>Как пользоваться Life AI</b>\n\n"
+            "❓ <b>Как пользоваться «Моя жизнь»</b>\n\n"
             "1️⃣ <b>Главная</b> — /menu или 🏠 «Главная»\n"
             "2️⃣ <b>Выберите тему</b> — Здоровье, Финансы, Авто и др.\n"
             "3️⃣ <b>Задайте вопрос</b> — просто напишите текст (кнопка не обязательна)\n"
@@ -989,7 +990,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_sub_chords": "Подбор тональности и аккордов.",
         "mus_sub_collection": "Список сохранённых треков и текстов.",
         "onb_welcome": (
-            "👋 <b>Добро пожаловать в Life AI!</b>\n\n"
+            "👋 <b>Добро пожаловать в «Моя жизнь»!</b>\n\n"
             "<b>Как пользоваться:</b>\n"
             "1️⃣ Выберите тему (Здоровье, Финансы, Авто…)\n"
             "2️⃣ Напишите вопрос текстом — AI ответит по теме\n"
@@ -1023,7 +1024,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     },
     "uz": {
         "welcome": (
-            "🧠 <b>Life AI Ecosystem</b>\n\n"
+            "🧠 <b>Mening hayotim</b>\n\n"
             "Hayotingizda shaxsiy yordamchi: salomatlik, avto, moliya, huquq va boshqalar.\n\n"
             "<b>Qanday foydalanish:</b>\n"
             "1. Mavzuni tanlang (masalan ⚖️ Yuridik yordam yoki 🏥 Salomatlik)\n"
@@ -1032,10 +1033,10 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 AI xotira · 🔍 Qidiruv · 📊 Panel · 🔔 Eslatmalar"
         ),
         "choose_language": "🌐 Interfeys tilini tanlang:",
-        "start_pick_language": "👋 <b>Life AI ga xush kelibsiz!</b>\n\n🌐 Tilni tanlang:",
+        "start_pick_language": "👋 <b>«Mening hayotim»ga xush kelibsiz!</b>\n\n🌐 Tilni tanlang:",
         "language_changed": "✅ Til o'zgartirildi: {label}",
         "main_menu": (
-            "🧠 <b>Life AI</b>\n\n"
+            "🧠 <b>Mening hayotim</b>\n\n"
             "Nima qilishni tanlang.\n\n"
             "💡 <b>Savol yozing</b> — tugma shart emas."
         ),
@@ -1053,6 +1054,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_settings": "⚙️ Sozlamalar",
         "btn_admin_panel": "🛠 Admin panel",
         "btn_language": "🌐 Til",
+        "btn_contact_admin": "💬 Admin bilan bog'lanish",
         "btn_back_menu": "🏠 Bosh sahifa",
         "btn_back_categories": "⬅️ Kategoriyalar",
         "btn_back_module": "⬅️ Orqaga",
@@ -1900,7 +1902,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Viza",
         "eco_src_visa": "Viza",
         "help_text": (
-            "❓ <b>Life AI dan qanday foydalanish</b>\n\n"
+            "❓ <b>«Mening hayotim»dan qanday foydalanish</b>\n\n"
             "1️⃣ <b>Bosh sahifa</b> — /menu yoki 🏠 «Bosh sahifa»\n"
             "2️⃣ <b>Mavzuni tanlang</b> — Salomatlik, Moliya, Avto…\n"
             "3️⃣ <b>Savol bering</b> — matn yozing (tugma shart emas)\n"
@@ -2000,7 +2002,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_sub_chords": "Tonallik va akkordlar.",
         "mus_sub_collection": "Saqlangan treklar ro'yxati.",
         "onb_welcome": (
-            "👋 <b>Life AI ga xush kelibsiz!</b>\n\n"
+            "👋 <b>«Mening hayotim»ga xush kelibsiz!</b>\n\n"
             "<b>Qanday foydalanish:</b>\n"
             "1️⃣ Mavzuni tanlang (Salomatlik, Moliya, Avto…)\n"
             "2️⃣ Savol yozing — AI javob beradi\n"
@@ -2021,7 +2023,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     },
     "en": {
         "welcome": (
-            "🧠 <b>Life AI Ecosystem</b>\n\n"
+            "🧠 <b>My Life</b>\n\n"
             "Your personal life assistant — health, car, finance, legal, and more.\n\n"
             "<b>How to use:</b>\n"
             "1. Pick a topic (e.g. ⚖️ Legal help or 🏥 Health)\n"
@@ -2030,10 +2032,10 @@ _STRINGS: dict[str, dict[str, str]] = {
             "🧠 AI memory · 🔍 Search · 📊 Dashboard · 🔔 Reminders"
         ),
         "choose_language": "🌐 Choose interface language:",
-        "start_pick_language": "👋 <b>Welcome to Life AI!</b>\n\n🌐 Choose your language:",
+        "start_pick_language": "👋 <b>Welcome to «My Life»!</b>\n\n🌐 Choose your language:",
         "language_changed": "✅ Language changed to {label}",
         "main_menu": (
-            "🧠 <b>Life AI</b>\n\n"
+            "🧠 <b>My Life</b>\n\n"
             "What would you like to do?\n\n"
             "💡 <b>Type your question</b> — no button required."
         ),
@@ -2051,6 +2053,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "btn_settings": "⚙️ Settings",
         "btn_admin_panel": "🛠 Admin panel",
         "btn_language": "🌐 Language",
+        "btn_contact_admin": "💬 Contact admin",
         "btn_back_menu": "🏠 Home",
         "btn_back_categories": "⬅️ Categories",
         "btn_back_module": "⬅️ Back",
@@ -2898,7 +2901,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "eco_src_visa": "Visa",
         "eco_src_visa": "Visa",
         "help_text": (
-            "❓ <b>How to use Life AI</b>\n\n"
+            "❓ <b>How to use «My Life»</b>\n\n"
             "1️⃣ <b>Home</b> — /menu or 🏠 «Home»\n"
             "2️⃣ <b>Pick a topic</b> — Health, Finance, Car…\n"
             "3️⃣ <b>Ask a question</b> — just type (no button needed)\n"
@@ -2998,7 +3001,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_sub_chords": "Key and chord suggestions.",
         "mus_sub_collection": "Saved tracks list.",
         "onb_welcome": (
-            "👋 <b>Welcome to Life AI!</b>\n\n"
+            "👋 <b>Welcome to «My Life»!</b>\n\n"
             "<b>How to use:</b>\n"
             "1️⃣ Pick a topic (Health, Finance, Car…)\n"
             "2️⃣ Type a question — AI answers on topic\n"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.core.branding import module_ai_system_identity
 from app.core.i18n import normalize_lang
 from app.core.modules.catalog import MODULE_BY_ID
 
@@ -70,7 +71,7 @@ def build_module_ai_hint(module_id: str, submodule_id: str | None = None, *, lan
     code = normalize_lang(lang)
     module_title = mod.title(code)
     parts = [
-        f"Ты — AI-помощник модуля «{module_title}» в экосистеме Life AI.",
+        module_ai_system_identity(module_title, code),
         "Отвечай ТОЛЬКО в рамках этой темы. Не переключайся на другие модули без явной просьбы.",
         f"Специализация: {mod.ai_hint_ru}",
     ]

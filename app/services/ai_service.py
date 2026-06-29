@@ -6,6 +6,8 @@ import logging
 
 
 
+from app.core.branding import ai_assistant_system_identity
+
 from app.core.config import settings
 
 from app.core.credits import apply_chunk_estimate, estimate_request_credits
@@ -160,7 +162,7 @@ async def ask_ai(
 
 
 
-    timeout = 300.0 if max_completion_tokens > 4000 else 120.0
+    timeout = 600.0 if max_completion_tokens > 8000 else 300.0 if max_completion_tokens > 4000 else 120.0
 
     client = AsyncOpenAI(api_key=settings.openai_api_key, timeout=timeout)
 
@@ -170,7 +172,7 @@ async def ask_ai(
 
     system = (
 
-        "Ты — персональный AI-помощник экосистемы Life AI. "
+        ai_assistant_system_identity(language)
 
         "Помогаешь человеку в повседневной жизни. "
 
@@ -270,31 +272,47 @@ async def ask_ai(
 
             )
 
-            response = await client.chat.completions.create(
-
-                model=model,
-
-                messages=_chat_messages(user_content),
-
-                **chat_token_limit_kwargs(model, chunk_tokens),
-
-            )
-
-            raw = (response.choices[0].message.content or "").strip()
+            response = None
+            raw = ""
+            attempt_tokens = chunk_tokens
+            for attempt in range(2):
+                try:
+                    response = await client.chat.completions.create(
+                        model=model,
+                        messages=_chat_messages(user_content),
+                        **chat_token_limit_kwargs(model, attempt_tokens),
+                    )
+                    raw = (response.choices[0].message.content or "").strip()
+                    if raw:
+                        break
+                    attempt_tokens = max(1500, int(attempt_tokens * 0.75))
+                except Exception as exc:
+                    logger.warning(
+                        "OpenAI chat attempt %s failed part=%s/%s: %s",
+                        attempt + 1,
+                        part_idx + 1,
+                        parts,
+                        exc,
+                    )
+                    if attempt == 0:
+                        attempt_tokens = max(1500, int(attempt_tokens * 0.85))
+                        continue
+                    if answers:
+                        logger.exception("OpenAI chat failed after partial output")
+                        return "\n\n".join(answers) + f"\n\n{t(language, 'ai_request_partial')}"
+                    logger.exception("OpenAI chat failed: %s", exc)
+                    return t(language, "ai_request_failed")
 
             if not raw:
-
+                if answers:
+                    return "\n\n".join(answers) + f"\n\n{t(language, 'ai_request_partial')}"
                 return t(language, "ai_request_failed")
 
             answers.append(format_ai_reply(raw))
 
-
-
-            if user is not None and session is not None:
+            if user is not None and session is not None and response is not None:
 
                 from app.services.ai_usage_service import record_ai_usage
-
-
 
                 await record_ai_usage(session, user.id, model, response, source=usage_source)
 
@@ -303,8 +321,6 @@ async def ask_ai(
                     from app.services.admin_notify_service import notify_admins_ai_request
 
                     from app.services.ai_usage_service import extract_usage
-
-
 
                     prompt_tokens, completion_tokens = extract_usage(response)
 
@@ -327,6 +343,10 @@ async def ask_ai(
                     )
 
     except Exception as exc:
+
+        if answers:
+            logger.exception("OpenAI chat failed after partial output: %s", exc)
+            return "\n\n".join(answers) + f"\n\n{t(language, 'ai_request_partial')}"
 
         logger.exception("OpenAI chat failed: %s", exc)
 

@@ -18,6 +18,27 @@ from app.services.study_document_service import (
 from app.services.subscription_service import check_pdf_export_quota, consume_pdf_export
 
 
+async def export_last_study_document(
+    message: Message,
+    user: User,
+    session: AsyncSession,
+    *,
+    fmt: ExportFormat,
+) -> None:
+    cached = get_last_study_document(user.id)
+    if not cached:
+        await message.answer(t(user.language, "edu_export_no_previous"))
+        return
+    await _send_study_document(
+        message,
+        user,
+        session,
+        title=cached["title"],
+        body=cached["body"],
+        fmt=fmt,
+    )
+
+
 async def try_format_only_export(message: Message, user: User, session: AsyncSession, text: str) -> bool:
     fmt = detect_export_format(text)
     if not fmt or not is_format_only_request(text):

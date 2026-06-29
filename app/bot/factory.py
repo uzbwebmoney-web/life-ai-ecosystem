@@ -60,6 +60,8 @@ from app.bot.handlers.payment import router as payment_router
 
 from app.bot.handlers.subscription import router as subscription_router
 
+from app.bot.handlers.support import router as support_router
+
 from app.bot.middlewares.db_user import DbUserMiddleware
 
 from app.core.config import settings
@@ -115,6 +117,8 @@ def create_dispatcher(session_maker: async_sessionmaker) -> Dispatcher:
     dp.include_router(generic_ai_router)
 
     dp.include_router(hub_router)
+
+    dp.include_router(support_router)
 
     dp.include_router(ecosystem_router)
 

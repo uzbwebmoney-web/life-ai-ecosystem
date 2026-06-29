@@ -19,23 +19,17 @@ from app.services.date_parse import parse_datetime_flexible
 from app.services.export_service import build_user_export
 from app.services.intent_router import module_hint
 from app.services.life_data import add_memory, add_record, add_reminder, set_active_module
-from app.services.media_ai import synthesize_speech
 from app.services.proactive_service import suggest_actions
-from app.services.study_notes_service import prepare_study_notes_request
+from app.services.study_notes_service import needs_study_document_clarification, prepare_study_notes_request
 from app.services.ai_chat_history import append_turn, module_history_key, normalize_history, serialize_history
 
 router = Router()
 
 
 async def _maybe_send_voice(message: Message, user: User, text: str) -> None:
-    if not user.voice_mode:
-        return
-    if parse_insufficient_credits_reply(text)[0]:
-        return
-    audio = await synthesize_speech(text)
-    if not audio:
-        return
-    await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
+    from app.bot.voice_reply import maybe_send_voice_reply
+
+    await maybe_send_voice_reply(message, user, text)
 
 
 @router.callback_query(F.data == "ai:end")
@@ -113,9 +107,20 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
     module_id = str(data.get("ai_module_id") or "ai_assistant")
     if module_id == "education":
         from app.bot.handlers.study_export import try_format_only_export
+        from app.bot.keyboards_education import study_spec_kb
+        from app.bot.states import EducationStates
 
         if await try_format_only_export(message, user, session, text):
             await state.clear()
+            return
+        if needs_study_document_clarification(module_id, sub_id or None, text):
+            await state.set_state(EducationStates.waiting_study_spec)
+            await state.update_data(
+                study_topic=text,
+                study_module_id=module_id,
+                study_submodule_id=sub_id or None,
+            )
+            await message.answer(t(lang, "edu_ask_format_pages"), reply_markup=study_spec_kb(lang))
             return
     ai_message, ai_hint, token_limit = prepare_study_notes_request(
         module_id,
@@ -139,8 +144,14 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
         submodule_id=sub_id or None,
         chat_history=chat_history,
     )
-    actions = suggest_actions(text, answer, lang)
-    kb = ai_chat_kb(lang, actions)
+    actions = suggest_actions(text, answer, lang, module_id=module_id)
+    from app.bot.keyboards_education import module_reply_kb
+
+    kb = (
+        module_reply_kb(module_id, sub_id or None, lang)
+        if module_id == "education"
+        else ai_chat_kb(lang, actions)
+    )
     is_quota = await deliver_ai_reply(
         loading,
         answer,

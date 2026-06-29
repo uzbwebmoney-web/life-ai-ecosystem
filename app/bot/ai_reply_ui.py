@@ -26,6 +26,9 @@ async def deliver_ai_reply(
             body = f"{body}\n\n{t(lang, 'ai_chat_quota_blocked')}"
         await deliver_long_text(anchor, body, reply_markup=kb)
         return True
-    text = f"{prefix}{body}" if prefix else body
+    from app.services.text_format import escape_telegram_html
+
+    safe_body = escape_telegram_html(body)
+    text = f"{prefix}{safe_body}" if prefix else safe_body
     await deliver_long_text(anchor, text, reply_markup=reply_markup)
     return False

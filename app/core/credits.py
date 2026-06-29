@@ -144,14 +144,9 @@ def study_notes_base_credits(user_message: str) -> int:
 
 
 def study_notes_output_tokens(user_message: str) -> int:
-    if _wants_brief(user_message):
-        return 1500
-    pages = _parse_pages(user_message)
-    if pages:
-        return min(pages * 900, 45000)
-    if _wants_detailed(user_message):
-        return 6500
-    return 4500
+    from app.services.study_notes_service import completion_limit_for_notes
+
+    return completion_limit_for_notes(user_message)
 
 
 def detect_task_kind(
@@ -172,7 +167,10 @@ def detect_task_kind(
     if source == "pdf":
         return "pdf_analysis"
 
-    if mod == "education" and (sub == "notes" or any(k in low for k in ("конспект", "konspekt", "study notes"))):
+    if mod == "education" and (
+        sub == "notes"
+        or any(k in low for k in ("конспект", "konspekt", "реферат", "referat", "study notes", "maqola"))
+    ):
         return "study_notes"
     if sub == "translate" or (mod == "ai_assistant" and sub == "translate"):
         return "translation"

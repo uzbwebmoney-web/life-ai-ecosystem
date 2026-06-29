@@ -23,6 +23,7 @@ def test_action_credits_table():
 def test_study_notes_credits():
     assert study_notes_credits("кратко на 1 страницу") == 1
     assert study_notes_credits("конспект по физике") == 6
+    assert study_notes_credits("katta batafsil referat") == 10
     assert study_notes_credits("конспект на 10 страниц") == 15
     assert study_notes_credits("конспект на 50 страниц") == 70
 

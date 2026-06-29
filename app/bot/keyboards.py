@@ -158,6 +158,7 @@ def settings_kb(
             InlineKeyboardButton(text=t(lang, "btn_notifications"), callback_data="hub:notifications"),
         ],
         [InlineKeyboardButton(text=t(lang, "btn_language"), callback_data="hub:language")],
+        [InlineKeyboardButton(text=t(lang, "btn_contact_admin"), callback_data="sup:open")],
         [InlineKeyboardButton(text=t(lang, "btn_family_profiles"), callback_data="hub:family")],
         [InlineKeyboardButton(text=t(lang, "btn_household"), callback_data="hub:household")],
         [InlineKeyboardButton(text=t(lang, "btn_help"), callback_data="hub:help")],

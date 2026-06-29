@@ -9,9 +9,9 @@ def test_normalize_lang():
 
 
 def test_three_languages_welcome():
-    assert "Life AI" in t("ru", "welcome")
-    assert "Life AI" in t("uz", "welcome")
-    assert "Life AI" in t("en", "welcome")
+    assert "Моя жизнь" in t("ru", "welcome")
+    assert "Mening hayotim" in t("uz", "welcome")
+    assert "My Life" in t("en", "welcome")
 
 
 def test_language_labels():

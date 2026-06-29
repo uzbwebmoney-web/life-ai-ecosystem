@@ -1,10 +1,36 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.core.i18n import t
+
+_NO_PROACTIVE_MODULES = frozenset(
+    {
+        "education",
+        "vault",
+        "legal",
+        "health",
+        "finance",
+        "car",
+        "business",
+        "travel",
+        "home",
+        "shopping",
+        "nutrition",
+        "organizer",
+        "music",
+        "family",
+    }
+)
+
+_TRAVEL_PATTERNS = (
+    re.compile(r"\b(?:sayohat|travel|trip|отпуск|поездк)\w*\b", re.I),
+    re.compile(r"\b(?:turkey|istanbul|turkiya|стамбул)\b", re.I),
+    re.compile(r"\b(?:лечу|uçish|flight|рейс)\b", re.I),
+)
 
 
 @dataclass(frozen=True)
@@ -14,7 +40,20 @@ class ProactiveAction:
     callback_data: str
 
 
-def suggest_actions(user_message: str, ai_answer: str = "", lang: str = "ru") -> list[ProactiveAction]:
+def _travel_mentioned(text: str) -> bool:
+    return any(p.search(text) for p in _TRAVEL_PATTERNS)
+
+
+def suggest_actions(
+    user_message: str,
+    ai_answer: str = "",
+    lang: str = "ru",
+    *,
+    module_id: str | None = None,
+) -> list[ProactiveAction]:
+    if module_id in _NO_PROACTIVE_MODULES:
+        return []
+
     text = f"{user_message}\n{ai_answer}".lower()
     actions: list[ProactiveAction] = []
 
@@ -30,10 +69,7 @@ def suggest_actions(user_message: str, ai_answer: str = "", lang: str = "ru") ->
         add("med_course", "act_med_course", "act:med_course")
         add("med_remind", "act_med_remind", "act:med_remind")
 
-    if any(
-        x in text
-        for x in ("лечу", "поездк", "sayohat", "travel", "turkey", "turk", "tur", "отпуск", "trip")
-    ):
+    if _travel_mentioned(text):
         add("travel_plan", "act_travel_plan", "act:travel_plan")
         add("travel_passport", "act_travel_passport", "act:travel_passport")
 
@@ -43,7 +79,7 @@ def suggest_actions(user_message: str, ai_answer: str = "", lang: str = "ru") ->
     if any(x in text for x in ("чек", "receipt", "оплат", "счет", "bill", "xarajat", "expense")):
         add("save_expense", "act_save_expense", "act:save_expense")
 
-    if not actions and len(user_message) > 20:
+    if not actions and len(user_message) > 20 and not module_id:
         add("save_memory", "act_save_memory", "act:save_memory")
 
     seen: set[str] = set()

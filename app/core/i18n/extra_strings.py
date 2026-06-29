@@ -224,7 +224,7 @@ EXTRA_RU: dict[str, str] = {
     ),
     "pay_method_card": "💳 Перевод на карту",
     "pay_method_stars": "⭐ Telegram Stars",
-    "pay_stars_invoice_desc": "{product} — Life AI Ecosystem",
+    "pay_stars_invoice_desc": "{product} — Моя жизнь",
     "pay_admin_stars_notify": (
         "⭐ <b>Оплата Stars</b>\n"
         "Пользователь: {user} (<code>{telegram_id}</code>)\n"
@@ -383,7 +383,23 @@ EXTRA_RU: dict[str, str] = {
     "edu_export_format_txt": "Текст (TXT)",
     "edu_export_format_md": "Markdown",
     "edu_long_notes_wait": "{emoji} Готовлю большой конспект по «{module}»… Это может занять 1–3 минуты.",
-    "ai_request_failed": "⚠️ Не удалось получить ответ AI. Попробуйте ещё раз или сократите запрос (например, 3–5 страниц).",
+    "edu_ask_format_pages": (
+        "📚 <b>Конспект / реферат</b>\n\n"
+        "Уточните, пожалуйста:\n"
+        "• <b>Объём</b> — сколько страниц A4 (например, 5, 10 или 15)\n"
+        "• или напишите: <b>большой / подробный / batafsil / katta</b>\n\n"
+        "Формат (PDF, Word) можно выбрать после готового текста кнопками ниже."
+    ),
+    "edu_spec_5_pdf": "📄 5 стр. PDF",
+    "edu_spec_10_pdf": "📄 10 стр. PDF",
+    "edu_spec_15_chat": "📚 15 стр. большой",
+    "edu_spec_3_chat": "📝 3 стр. в чат",
+    "edu_spec_5_docx": "📎 5 стр. Word",
+    "edu_btn_export_pdf": "📄 PDF",
+    "edu_btn_export_docx": "📎 Word",
+    "edu_btn_export_txt": "📝 TXT",
+    "ai_request_failed": "⚠️ Не удалось получить ответ AI. Попробуйте ещё раз через минуту.",
+    "ai_request_partial": "⚠️ Текст обрезан из‑за сбоя на следующей части. Можно запросить продолжение или экспорт в PDF.",
     "quota_ai_credits": "⚠️ Недостаточно AI-кредитов. /subscription",
     "quota_ai_credits_detail": (
         "⚠️ <b>Недостаточно AI-кредитов</b>\n\n"
@@ -415,6 +431,26 @@ EXTRA_RU: dict[str, str] = {
     "plan_pkg_credits_5000": "💎 +5000 AI-кредитов",
     "plan_pkg_credits_10000": "💎 +10000 AI-кредитов",
     "admin_user_credits_profit": "💰 OpenAI ~${openai_usd:.2f} · кредиты {credits_used} · оценка маржи ~${margin:.2f}",
+    "support_intro": (
+        "💬 <b>Связь с админом</b>\n\n"
+        "Напишите вопрос, предложение или опишите проблему — ответ придёт сюда в бот.\n\n"
+        "Можно отправить текст, фото, документ или голос."
+    ),
+    "support_prompt": "✍️ Напишите сообщение или отправьте файл:",
+    "support_sent": "✅ Сообщение отправлено админу. Ответ придёт в этот чат.",
+    "support_no_admins": "⚠️ Админ пока не настроен. Попробуйте позже.",
+    "support_admin_reply_prompt": "✍️ Напишите ответ пользователю (текст, фото, голос…):",
+    "support_admin_reply_ready": "↩️ Ответ для: {user} (<code>{telegram_id}</code>)",
+    "support_admin_reply_sent": "✅ Ответ отправлен.",
+    "support_user_from_admin": "💬 <b>Ответ админа:</b>",
+    "support_btn_reply": "↩️ Ответить",
+    "support_btn_exit": "↩️ Настройки",
+    "support_btn_continue": "✍️ Написать админу",
+    "support_admin_notify": (
+        "💬 <b>Сообщение от пользователя</b>\n"
+        "Кто: {user} (<code>{telegram_id}</code>)\n"
+        "Тариф: {plan}"
+    ),
 }
 
 EXTRA_UZ: dict[str, str] = {
@@ -615,6 +651,71 @@ EXTRA_UZ: dict[str, str] = {
     "sub_gpt54_monthly": "GPT-5.4 Mini: {used} / {limit}",
     "sub_gpt55_monthly": "GPT-5.5: {used} / {limit}",
     "sub_btn_share_referral": "📤 Havolani ulashish",
+    "sub_plans_title": "💳 <b>Tariflar</b>",
+    "sub_plans_hint": "Batafsil ma'lumot yoki «Rasmiylashtirish» uchun tarifni bosing.",
+    "sub_packages_title": "📦 <b>AI so'rov to'plamlari</b>",
+    "sub_packages_hint": "Bir martalik xarid — bonus so'rovlar kuyib ketmaydi.",
+    "sub_packages_ai_title": "🤖 AI-so'rovlar:",
+    "sub_packages_addon_title": "📦 Bir martalik to'plamlar:",
+    "sub_addon_line": "• {name} — <b>{price}</b>",
+    "sub_usage_title": "📊 <b>Limitlaringiz</b>",
+    "sub_current_plan": "Tarif: {plan}",
+    "sub_trial_until": "🎁 Premium sinov muddati: {date} gacha",
+    "sub_paid_until": "To'langan muddati: {date} gacha",
+    "sub_ai_model": "Model: {model}",
+    "sub_gpt4o_unlimited": "GPT-4o Mini: cheksiz",
+    "sub_trial_welcome": "🎁 {days} kun Premium + {bonus} AI-so'rov. /subscription — tariflar.",
+    "plan_price_monthly": "<b>{price}</b> / oy (~${usd})",
+    "plan_free_name": "Free",
+    "plan_free_desc": "GPT-4o Mini, shaxsiy fayllar, oyiga 3 musiqa amali (qo'shiq matni).",
+    "plan_basic_desc": "GPT-5.4 Mini, ovoz, musiqa 50 amal/oy va 10 vokal ajratish, 40 rasm/oy.",
+    "plan_premium_desc": "GPT-5.5, 5 kishigacha oila, musiqa 200 amal/oy va 40 ajratish, 120 rasm/oy.",
+    "plan_pro_desc": "Maksimal AI, 10 kishigacha oila, cheksiz musiqa, 400 rasm/oy.",
+    "plan_student_name": "Student",
+    "plan_student_desc": "O'qish, GPT-5.4 Mini, parol bilan himoyalangan seyf, 10 rasm/oy.",
+    "plan_family_desc": "Bitta akkauntda 5 kishigacha.",
+    "plan_pkg_img50": "🎨 +50 rasm",
+    "plan_pkg_gpt54_500": "🧠 +500 GPT-5.4 Mini so'rovi",
+    "plan_pkg_gpt55_50": "🚀 +50 GPT-5.5 so'rovi",
+    "plan_pkg_cloud20": "☁️ +20 GB bulut",
+    "plan_features_title": "<b>Nimalar kiradi:</b>",
+    "plan_feature_voice": "Ovozli xabarlar",
+    "plan_feature_photo": "AI-foto tahlili",
+    "plan_feature_memory": "AI-xotira",
+    "plan_feature_family": "Oila",
+    "plan_feature_household": "Oilaviy kirish: {n} kishigacha",
+    "plan_feature_priority": "Ustuvor tezlik",
+    "plan_feature_priority_max": "Maksimal ustuvorlik",
+    "plan_feature_student_modules": "Faqat: o'qish, AI, PDF, konspektlar",
+    "plan_feature_model": "AI-model",
+    "plan_feature_premium_model": "Ustuvor AI-model",
+    "plan_model_none": "GPT-4o mini",
+    "plan_model_limited": "GPT-4o mini + oyiga {cap} murakkab / {model}",
+    "plan_model_full": "AI vazifalari uchun {model}",
+    "plan_model_router": "Router: {top} / {advanced} / {base}",
+    "plan_model_router_short": "GPT-5.5 / GPT-5.4 mini / GPT-4o mini",
+    "plan_limit_photo_unlimited": "Foto tahlili: cheksiz",
+    "plan_limit_photo_monthly": "Foto tahlili: {n}/oy",
+    "plan_limit_pdf": "PDF/DOCX: {n}/oy",
+    "plan_limit_pdf_none": "PDF/DOCX: ❌",
+    "plan_limit_memory": "Xotira: {n} yozuv",
+    "plan_limit_memory_unlimited": "Xotira: cheksiz",
+    "plan_limit_image_gen": "Rasm yaratish: {n}/oy",
+    "plan_limit_image_none": "GPT-Image-1: ❌",
+    "plan_limit_ai_daily": "Kuniga {n} AI-so'rov",
+    "plan_limit_ai_monthly": "Oyiga {n} AI-so'rov",
+    "plan_limit_ai_unlimited": "AI: cheksiz*",
+    "plan_limit_gpt4o_daily": "GPT-4o Mini: {n}/kun",
+    "plan_limit_gpt4o_unlimited": "GPT-4o Mini: ✅",
+    "plan_limit_gpt54": "GPT-5.4 Mini: {n}/oy",
+    "plan_limit_gpt54_none": "GPT-5.4 Mini: ❌",
+    "plan_limit_gpt55": "GPT-5.5: {n}/oy",
+    "plan_limit_gpt55_none": "GPT-5.5: ❌",
+    "plan_limit_reminders": "{n} eslatmagacha",
+    "plan_limit_reminders_unlimited": "Eslatmalar cheksiz",
+    "plan_limit_storage_mb": "Saqlash {n} MB",
+    "plan_limit_storage_gb": "Saqlash {n} GB",
+    "plan_all_modules": "Barcha bo'limlar ochiq",
     "pay_already_processed": "✅ Bu to'lov allaqachon qayta ishlangan.",
     "plan_limit_vault_basic": "Shaxsiy fayllar: hujjat yuklash",
     "plan_limit_vault_lock": "🔐 Himoyalangan seyf: parol bilan",
@@ -692,7 +793,7 @@ EXTRA_UZ: dict[str, str] = {
     ),
     "pay_method_card": "💳 Kartaga o'tkazma",
     "pay_method_stars": "⭐ Telegram Stars",
-    "pay_stars_invoice_desc": "{product} — Life AI Ecosystem",
+    "pay_stars_invoice_desc": "{product} — Mening hayotim",
     "pay_admin_stars_notify": (
         "⭐ <b>Stars to'lovi</b>\n"
         "Foydalanuvchi: {user} (<code>{telegram_id}</code>)\n"
@@ -708,7 +809,23 @@ EXTRA_UZ: dict[str, str] = {
     "edu_export_format_txt": "Matn (TXT)",
     "edu_export_format_md": "Markdown",
     "edu_long_notes_wait": "{emoji} «{module}» bo'yicha katta konspekt tayyorlanmoqda… 1–3 daqiqa kuting.",
-    "ai_request_failed": "⚠️ AI javobini olish mumkin emas. Qayta urinib ko'ring yoki so'rovni qisqartiring (masalan, 3–5 bet).",
+    "edu_ask_format_pages": (
+        "📚 <b>Konspekt / referat</b>\n\n"
+        "Iltimos, aniqlang:\n"
+        "• <b>Hajm</b> — nechta A4 bet (masalan, 5, 10 yoki 15)\n"
+        "• yoki yozing: <b>katta / batafsil / ko'p</b>\n\n"
+        "Formatni (PDF, Word) tayyor matndan keyin tugmalar bilan tanlaysiz."
+    ),
+    "edu_spec_5_pdf": "📄 5 bet PDF",
+    "edu_spec_10_pdf": "📄 10 bet PDF",
+    "edu_spec_15_chat": "📚 15 bet katta",
+    "edu_spec_3_chat": "📝 3 bet chat",
+    "edu_spec_5_docx": "📎 5 bet Word",
+    "edu_btn_export_pdf": "📄 PDF",
+    "edu_btn_export_docx": "📎 Word",
+    "edu_btn_export_txt": "📝 TXT",
+    "ai_request_failed": "⚠️ AI javobini olish mumkin emas. Bir daqiqadan keyin qayta urinib ko'ring.",
+    "ai_request_partial": "⚠️ Matn keyingi qismda uzildi. Davomini so'rang yoki PDFga eksport qiling.",
     "quota_ai_credits": "⚠️ AI-kreditlar yetarli emas. /subscription",
     "quota_ai_credits_detail": (
         "⚠️ <b>AI-kreditlar yetarli emas</b>\n\n"
@@ -772,6 +889,26 @@ EXTRA_UZ: dict[str, str] = {
     "plan_pkg_credits_5000": "💎 +5000 AI-kredit",
     "plan_pkg_credits_10000": "💎 +10000 AI-kredit",
     "admin_user_credits_profit": "💰 OpenAI ~${openai_usd:.2f} · kreditlar {credits_used} · marja ~${margin:.2f}",
+    "support_intro": (
+        "💬 <b>Admin bilan bog'lanish</b>\n\n"
+        "Savol, taklif yoki muammo haqida yozing — admin javob beradi shu yerda.\n\n"
+        "Matn, rasm, hujjat yoki ovoz yuborishingiz mumkin."
+    ),
+    "support_prompt": "✍️ Xabaringizni yozing yoki fayl yuboring:",
+    "support_sent": "✅ Xabar adminga yuborildi. Javob shu chatda keladi.",
+    "support_no_admins": "⚠️ Admin hozircha sozlanmagan. Keyinroq urinib ko'ring.",
+    "support_admin_reply_prompt": "✍️ Foydalanuvchiga javob yozing (matn, rasm, ovoz…):",
+    "support_admin_reply_ready": "↩️ Javob: {user} (<code>{telegram_id}</code>)",
+    "support_admin_reply_sent": "✅ Javob yuborildi.",
+    "support_user_from_admin": "💬 <b>Admin javobi:</b>",
+    "support_btn_reply": "↩️ Javob berish",
+    "support_btn_exit": "↩️ Sozlamalar",
+    "support_btn_continue": "✍️ Adminga yozish",
+    "support_admin_notify": (
+        "💬 <b>Foydalanuvchi xabari</b>\n"
+        "Kim: {user} (<code>{telegram_id}</code>)\n"
+        "Tarif: {plan}"
+    ),
 }
 
 EXTRA_EN: dict[str, str] = {
@@ -1029,7 +1166,7 @@ EXTRA_EN: dict[str, str] = {
     ),
     "pay_method_card": "💳 Bank card transfer",
     "pay_method_stars": "⭐ Telegram Stars",
-    "pay_stars_invoice_desc": "{product} — Life AI Ecosystem",
+    "pay_stars_invoice_desc": "{product} — My Life",
     "pay_admin_stars_notify": (
         "⭐ <b>Stars payment</b>\n"
         "User: {user} (<code>{telegram_id}</code>)\n"
@@ -1127,7 +1264,23 @@ EXTRA_EN: dict[str, str] = {
     "edu_export_format_txt": "Text (TXT)",
     "edu_export_format_md": "Markdown",
     "edu_long_notes_wait": "{emoji} Preparing a large study guide on «{module}»… This may take 1–3 minutes.",
-    "ai_request_failed": "⚠️ Could not get an AI response. Try again or shorten the request (e.g. 3–5 pages).",
+    "edu_ask_format_pages": (
+        "📚 <b>Study notes / report</b>\n\n"
+        "Please specify:\n"
+        "• <b>Length</b> — how many A4 pages (e.g. 5, 10, or 15)\n"
+        "• or write: <b>large / detailed / comprehensive</b>\n\n"
+        "Pick PDF/Word format after the text is ready using the buttons below."
+    ),
+    "edu_spec_5_pdf": "📄 5 pp PDF",
+    "edu_spec_10_pdf": "📄 10 pp PDF",
+    "edu_spec_15_chat": "📚 15 pp large",
+    "edu_spec_3_chat": "📝 3 pp chat",
+    "edu_spec_5_docx": "📎 5 pp Word",
+    "edu_btn_export_pdf": "📄 PDF",
+    "edu_btn_export_docx": "📎 Word",
+    "edu_btn_export_txt": "📝 TXT",
+    "ai_request_failed": "⚠️ Could not get an AI response. Please try again in a minute.",
+    "ai_request_partial": "⚠️ Text was cut off on the next part. Ask to continue or export as PDF.",
     "quota_ai_credits": "⚠️ Not enough AI credits. /subscription",
     "quota_ai_credits_detail": (
         "⚠️ <b>Not enough AI credits</b>\n\n"
@@ -1191,4 +1344,24 @@ EXTRA_EN: dict[str, str] = {
     "plan_pkg_credits_5000": "💎 +5000 AI credits",
     "plan_pkg_credits_10000": "💎 +10000 AI credits",
     "admin_user_credits_profit": "💰 OpenAI ~${openai_usd:.2f} · credits {credits_used} · est. margin ~${margin:.2f}",
+    "support_intro": (
+        "💬 <b>Contact admin</b>\n\n"
+        "Send a question, suggestion, or describe an issue — the reply will arrive here.\n\n"
+        "You can send text, photo, document, or voice."
+    ),
+    "support_prompt": "✍️ Type your message or send a file:",
+    "support_sent": "✅ Message sent to admin. The reply will appear in this chat.",
+    "support_no_admins": "⚠️ Admin is not configured yet. Try again later.",
+    "support_admin_reply_prompt": "✍️ Type your reply to the user (text, photo, voice…):",
+    "support_admin_reply_ready": "↩️ Reply to: {user} (<code>{telegram_id}</code>)",
+    "support_admin_reply_sent": "✅ Reply sent.",
+    "support_user_from_admin": "💬 <b>Admin reply:</b>",
+    "support_btn_reply": "↩️ Reply",
+    "support_btn_exit": "↩️ Settings",
+    "support_btn_continue": "✍️ Write to admin",
+    "support_admin_notify": (
+        "💬 <b>Message from user</b>\n"
+        "From: {user} (<code>{telegram_id}</code>)\n"
+        "Plan: {plan}"
+    ),
 }

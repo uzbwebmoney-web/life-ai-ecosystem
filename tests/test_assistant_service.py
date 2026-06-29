@@ -16,5 +16,6 @@ def test_assistant_ai_hints():
 
 def test_module_hint_scoped_to_assistant():
     hint = build_module_ai_hint("ai_assistant", "code", lang="ru")
+    assert "Моя жизнь" in hint
     assert "ассистент" in hint.lower() or "AI" in hint
     assert "программ" in hint.lower() or "код" in hint.lower()

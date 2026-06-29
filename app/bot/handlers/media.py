@@ -267,7 +267,7 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
         bot=message.bot,
     )
     header = active_module_label(user.active_module_id, user.active_submodule_id, lang=lang)
-    actions = suggest_actions(text, answer, lang)
+    actions = suggest_actions(text, answer, lang, module_id=module_id)
     kb = proactive_kb(actions, lang) or dashboard_kb(lang)
     is_quota = await deliver_ai_reply(
         message,
