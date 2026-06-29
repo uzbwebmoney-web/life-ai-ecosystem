@@ -938,6 +938,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_paste_lyrics": "📝 Вставьте текст песни одним сообщением.",
         "mus_processing": "🎵 Обрабатываю…",
         "mus_polishing": "✨ Уточняю текст песни…",
+        "mus_admin_ai_preview": "🎵 Музыка · текст песни\n{snippet}",
         "mus_need_audio": "Нужен аудиофайл: 🎵 трек, 📎 документ (mp3/m4a) или 🎤 голосовое.",
         "mus_transcribe_failed": "⚠️ Не удалось распознать текст. Проверьте качество записи и OPENAI_API_KEY.",
         "mus_no_vocals_detected": (
@@ -1949,6 +1950,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_paste_lyrics": "📝 Qo'shiq matnini bir xabarda yuboring.",
         "mus_processing": "🎵 Qayta ishlanmoqda…",
         "mus_polishing": "✨ Qo'shiq matni aniqlanmoqda…",
+        "mus_admin_ai_preview": "🎵 Musiqa · qo'shiq matni\n{snippet}",
         "mus_need_audio": "Audio kerak: 🎵 trek, 📎 hujjat (mp3/m4a) yoki 🎤 ovozli xabar.",
         "mus_transcribe_failed": "⚠️ Matn aniqlanmadi. OPENAI_API_KEY va sifatni tekshiring.",
         "mus_no_vocals_detected": (
@@ -2946,6 +2948,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_paste_lyrics": "📝 Paste the song lyrics in one message.",
         "mus_processing": "🎵 Processing…",
         "mus_polishing": "✨ Refining song lyrics…",
+        "mus_admin_ai_preview": "🎵 Music · song lyrics\n{snippet}",
         "mus_need_audio": "Audio required: 🎵 track, 📎 document (mp3/m4a), or 🎤 voice.",
         "mus_transcribe_failed": "⚠️ Could not transcribe. Check audio quality and OPENAI_API_KEY.",
         "mus_no_vocals_detected": (

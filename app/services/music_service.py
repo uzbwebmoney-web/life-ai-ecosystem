@@ -235,6 +235,12 @@ async def polish_lyrics_with_ai(
 
     if not raw.strip():
         return raw
+    snippet = raw[:150].replace("\n", " ").strip()
+    if len(raw) > 150:
+        snippet += "…"
+    from app.core.i18n import t
+
+    admin_preview = t(ui_lang, "mus_admin_ai_preview", snippet=snippet)
     answer = await ask_ai(
         user_message=build_polish_lyrics_prompt(raw, song_lang),
         module_hint=build_module_ai_hint("music", "lyrics", lang=ui_lang),
@@ -245,6 +251,8 @@ async def polish_lyrics_with_ai(
         module_id="music",
         submodule_id="lyrics",
         max_completion_tokens=2000,
+        usage_source="music_lyrics",
+        admin_preview=admin_preview,
     )
     is_quota, body = parse_insufficient_credits_reply(answer)
     if is_quota or not body.strip():

@@ -57,6 +57,8 @@ async def ask_ai(
 
     submodule_id: str | None = None,
     chat_history: list[tuple[str, str]] | None = None,
+    usage_source: str = "chat",
+    admin_preview: str | None = None,
 
 ) -> str:
 
@@ -294,7 +296,7 @@ async def ask_ai(
 
 
 
-                await record_ai_usage(session, user.id, model, response, source="chat")
+                await record_ai_usage(session, user.id, model, response, source=usage_source)
 
                 if bot is not None:
 
@@ -314,13 +316,13 @@ async def ask_ai(
 
                         model=model,
 
-                        source="chat",
+                        source=usage_source,
 
                         prompt_tokens=prompt_tokens,
 
                         completion_tokens=completion_tokens,
 
-                        preview=user_message,
+                        preview=admin_preview if admin_preview is not None else user_message,
 
                     )
 
