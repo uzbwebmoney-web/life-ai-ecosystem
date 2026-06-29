@@ -11,6 +11,20 @@ def _is_not_modified_error(exc: TelegramBadRequest) -> bool:
     return "message is not modified" in (exc.message or "").lower()
 
 
+def _is_stale_callback_error(exc: TelegramBadRequest) -> bool:
+    msg = (exc.message or "").lower()
+    return "query is too old" in msg or "query id is invalid" in msg
+
+
+async def safe_callback_answer(callback, *args, **kwargs) -> None:
+    try:
+        await callback.answer(*args, **kwargs)
+    except TelegramBadRequest as exc:
+        if _is_stale_callback_error(exc):
+            return
+        raise
+
+
 async def safe_edit_text(
     message: Message,
     text: str,

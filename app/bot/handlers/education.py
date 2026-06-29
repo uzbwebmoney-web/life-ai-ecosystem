@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 
-from app.bot.handlers.study_export import export_last_study_document
+from app.bot.message_ui import safe_callback_answer, safe_edit_text
 
 from app.bot.keyboards_education import (
 
@@ -54,11 +54,11 @@ async def education_module(callback: CallbackQuery, user: User, session: AsyncSe
 
     lang = user.language
 
+    await safe_callback_answer(callback)
+
     await set_active_module(session, user, "education")
 
-    await callback.message.edit_text(t(lang, "edu_module_intro"), reply_markup=education_module_kb(lang))
-
-    await callback.answer()
+    await safe_edit_text(callback.message, t(lang, "edu_module_intro"), reply_markup=education_module_kb(lang))
 
 
 
@@ -82,6 +82,8 @@ async def education_submodule(callback: CallbackQuery, user: User, session: Asyn
 
         return
 
+    await safe_callback_answer(callback)
+
     await set_active_module(session, user, "education", submodule_id=sub_id)
 
     desc = education_submodule_description(sub_id, lang)
@@ -94,9 +96,7 @@ async def education_submodule(callback: CallbackQuery, user: User, session: Asyn
 
     )
 
-    await callback.message.edit_text(text, reply_markup=education_ai_kb("education", sub_id, lang))
-
-    await callback.answer()
+    await safe_edit_text(callback.message, text, reply_markup=education_ai_kb("education", sub_id, lang))
 
 
 
@@ -110,9 +110,9 @@ async def education_spec_cancel(callback: CallbackQuery, state: FSMContext, user
 
     await state.clear()
 
-    await callback.message.edit_text(t(lang, "btn_cancel"), reply_markup=education_module_kb(lang))
+    await safe_callback_answer(callback)
 
-    await callback.answer()
+    await safe_edit_text(callback.message, t(lang, "btn_cancel"), reply_markup=education_module_kb(lang))
 
 
 
