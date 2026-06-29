@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class WhisperLyricsResult:
     text: str
+    detected_language: str | None = None
     avg_logprob: float | None = None
     avg_no_speech: float | None = None
     compression_ratio: float | None = None
@@ -120,9 +121,10 @@ async def transcribe_lyrics_detailed(
         kwargs["language"] = lang
     result = await client.audio.transcriptions.create(**kwargs)
     text = (result.text or "").strip()
+    detected = getattr(result, "language", None) or None
     segments = getattr(result, "segments", None) or []
     if not segments:
-        return WhisperLyricsResult(text=text)
+        return WhisperLyricsResult(text=text, detected_language=detected)
     logprobs = [getattr(s, "avg_logprob", None) for s in segments]
     logprobs = [x for x in logprobs if x is not None]
     comp = [getattr(s, "compression_ratio", None) for s in segments]
@@ -131,6 +133,7 @@ async def transcribe_lyrics_detailed(
     no_speech = [x for x in no_speech if x is not None]
     return WhisperLyricsResult(
         text=text,
+        detected_language=detected,
         avg_logprob=(sum(logprobs) / len(logprobs)) if logprobs else None,
         compression_ratio=(sum(comp) / len(comp)) if comp else None,
         avg_no_speech=(sum(no_speech) / len(no_speech)) if no_speech else None,

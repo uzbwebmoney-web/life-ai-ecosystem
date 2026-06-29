@@ -5,6 +5,10 @@ from app.services.music_service import (
     build_analyze_prompt,
     build_chords_prompt,
     build_translate_prompt,
+    clean_whisper_lyrics,
+    compact_repeated_lines,
+    detect_song_language_from_text,
+    normalize_song_language,
     separate_audio,
     validate_lyrics_transcription,
 )
@@ -45,8 +49,8 @@ def test_audio_from_message_document():
 
 def test_build_prompts_contain_lyrics():
     lyrics = "Hello world song"
-    assert lyrics in build_analyze_prompt(lyrics, "ru")
-    assert lyrics in build_translate_prompt(lyrics, "en")
+    assert lyrics in build_analyze_prompt(lyrics, "en", "ru")
+    assert lyrics in build_translate_prompt(lyrics, "uz", "en")
     assert lyrics in build_chords_prompt(lyrics, "uz")
 
 
@@ -57,23 +61,43 @@ async def test_separate_audio_invalid_mode():
     assert vocals is None and inst is None
 
 
+def test_clean_whisper_strips_prompt_leak():
+    raw = "Куплет и припев. Только слова. Alvon alvon gullaring olib"
+    assert clean_whisper_lyrics(raw).startswith("Alvon")
+
+
+def test_compact_repeated_lines_limits_chorus():
+    raw = "Ko'k jiguli. Ko'k jiguli. Ko'k jiguli. Ko'k jiguli."
+    out = compact_repeated_lines(raw, max_same_line=2)
+    assert out.count("Ko'k jiguli") == 2
+
+
 def test_validate_lyrics_rejects_music_emoji_garbage():
     assert validate_lyrics_transcription("🎵🎵🎵 🎵🎵🎵 🎵🎵🎵") is None
 
 
 def test_validate_lyrics_rejects_whisper_loop_hallucination():
     garbage = " ".join(["Альван", "Альван", "Гулярин"] * 8)
-    assert validate_lyrics_transcription(garbage, lang="uz") is None
+    assert validate_lyrics_transcription(garbage, song_lang="uz") is None
+
+
+def test_normalize_song_language_from_whisper_uz():
+    assert normalize_song_language("uz", "Alvon alvon gullaring") == "uz"
+    assert normalize_song_language("tr", "elvan gullaring") == "uz"
+
+
+def test_detect_song_language_uzbek_markers():
+    assert detect_song_language_from_text("Ko'k jiguli qo'shni Guli yodimda") == "uz"
 
 
 def test_validate_lyrics_accepts_real_text():
     text = "Я иду по улице в тихий вечерний час"
-    assert validate_lyrics_transcription(text) == text
+    assert validate_lyrics_transcription(text, song_lang="ru") == text
 
 
 def test_validate_lyrics_accepts_uzbek_latin():
     text = "Alvon alvon gullaring olib atrofingga nazarlar solar eding"
-    assert validate_lyrics_transcription(text, lang="uz") == text
+    assert validate_lyrics_transcription(text, song_lang="uz") == text
 
 
 def test_validate_lyrics_rejects_repeated_word():

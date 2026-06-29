@@ -23,8 +23,11 @@ from app.services.music_service import (
     build_chords_prompt,
     build_translate_prompt,
     download_audio_bytes,
+    finalize_song_lyrics,
     music_submodule_description,
+    detect_song_language_from_text,
     separate_audio,
+    song_language_label,
     transcribe_song_lyrics,
 )
 from app.services.subscription_service import (
@@ -157,9 +160,10 @@ async def music_quick_action(
     session: AsyncSession,
     state: FSMContext,
 ) -> None:
-    action = (callback.data or "").split(":")[-1]
     data = await state.get_data()
+    action = (callback.data or "").split(":")[-1]
     lyrics = (data.get("last_lyrics") or "").strip()
+    song_lang = data.get("last_song_lang")
     lang = user.language
     if not lyrics:
         await callback.answer(t(lang, "mus_no_lyrics"), show_alert=True)
@@ -167,7 +171,9 @@ async def music_quick_action(
     await callback.answer()
     if await _music_quota_blocked(callback.message, user, session):
         return
-    await _run_text_action(callback.message, bot, user, session, action, lyrics, lang)
+    await _run_text_action(
+        callback.message, bot, user, session, action, lyrics, lang, song_lang=song_lang
+    )
 
 
 @router.callback_query(F.data == "mus:collection:view")
@@ -218,25 +224,27 @@ async def _run_text_action(
     session: AsyncSession,
     action: str,
     lyrics: str,
-    lang: str,
+    ui_lang: str,
     *,
+    song_lang: str | None = None,
     consume: bool = True,
 ) -> None:
+    sl = song_lang or ui_lang
     if action == "analyze":
-        prompt = build_analyze_prompt(lyrics, lang)
+        prompt = build_analyze_prompt(lyrics, sl, ui_lang)
     elif action == "translate":
-        prompt = build_translate_prompt(lyrics, lang)
+        prompt = build_translate_prompt(lyrics, sl, ui_lang)
     elif action == "chords":
-        prompt = build_chords_prompt(lyrics, lang)
+        prompt = build_chords_prompt(lyrics, ui_lang)
     else:
         return
 
-    loading = await target.answer(t(lang, "mus_processing"))
-    hint = build_module_ai_hint("music", action, lang=lang)
+    loading = await target.answer(t(ui_lang, "mus_processing"))
+    hint = build_module_ai_hint("music", action, lang=ui_lang)
     answer = await ask_ai(
         user_message=prompt,
         module_hint=hint,
-        language=lang,
+        language=ui_lang,
         session=session,
         user=user,
         bot=bot,
@@ -245,14 +253,14 @@ async def _run_text_action(
     if is_quota:
         from app.bot.keyboards_ecosystem import insufficient_credits_kb
 
-        await loading.edit_text(body, reply_markup=insufficient_credits_kb(lang))
+        await loading.edit_text(body, reply_markup=insufficient_credits_kb(ui_lang))
         return
     if consume:
         await consume_music_operation(session, user, separate=False)
     header = {"analyze": "mus_analyze_result", "translate": "mus_translate_result", "chords": "mus_chords_result"}.get(
         action, "mus_result"
     )
-    await deliver_long_text(loading, f"{t(lang, header)}\n\n{body}", reply_markup=music_after_lyrics_kb(lang))
+    await deliver_long_text(loading, f"{t(ui_lang, header)}\n\n{body}", reply_markup=music_after_lyrics_kb(ui_lang))
 
 
 @router.message(MusicStates.waiting_lyrics_text, F.text)
@@ -272,7 +280,8 @@ async def music_lyrics_text(
         return
     await state.update_data(last_lyrics=lyrics)
     lang = user.language
-    await _run_text_action(message, bot, user, session, action, lyrics, lang)
+    song_lang = detect_song_language_from_text(lyrics) or lang
+    await _run_text_action(message, bot, user, session, action, lyrics, lang, song_lang=song_lang)
     await state.set_state(None)
 
 
@@ -308,8 +317,8 @@ async def music_waiting_audio(
             await state.clear()
             return
 
-        lyrics = await transcribe_song_lyrics(bot, file_id, filename, lang=lang)
-        if lyrics is None:
+        transcription = await transcribe_song_lyrics(bot, file_id, filename)
+        if transcription is None:
             from app.core.config import settings
 
             fail_key = (
@@ -323,6 +332,16 @@ async def music_waiting_audio(
             )
             return
 
+        await loading.edit_text(t(lang, "mus_polishing"))
+        lyrics = await finalize_song_lyrics(
+            transcription.text,
+            song_lang=transcription.song_lang,
+            ui_lang=lang,
+            session=session,
+            user=user,
+            bot=bot,
+        )
+
         await consume_music_operation(session, user, separate=False)
 
         title = ""
@@ -330,16 +349,35 @@ async def music_waiting_audio(
             performer = message.audio.performer or ""
             title = f"{performer} — {message.audio.title}".strip(" —")
 
-        await state.update_data(last_lyrics=lyrics, last_title=title or filename)
+        await state.update_data(
+            last_lyrics=lyrics,
+            last_title=title or filename,
+            last_song_lang=transcription.song_lang,
+        )
 
         if action == "lyrics" or mode == "lyrics":
-            text = f"{t(lang, 'mus_lyrics_result')}\n\n{lyrics}"
+            lang_line = t(
+                lang,
+                "mus_lyrics_detected_lang",
+                lang_label=song_language_label(transcription.song_lang, lang),
+            )
+            text = f"{t(lang, 'mus_lyrics_result')}\n<i>{lang_line}</i>\n\n{lyrics}"
             await deliver_long_text(loading, text, reply_markup=music_after_lyrics_kb(lang))
             await state.set_state(None)
             return
 
         await loading.delete()
-        await _run_text_action(message, bot, user, session, action, lyrics, lang, consume=False)
+        await _run_text_action(
+            message,
+            bot,
+            user,
+            session,
+            action,
+            lyrics,
+            lang,
+            song_lang=transcription.song_lang,
+            consume=False,
+        )
         await state.set_state(None)
     except Exception:
         logger.exception("Music audio processing failed")

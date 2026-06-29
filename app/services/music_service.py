@@ -6,6 +6,7 @@ import logging
 import re
 import shutil
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 
 from aiogram import Bot
@@ -18,17 +19,22 @@ logger = logging.getLogger(__name__)
 AUDIO_MIME_PREFIX = "audio/"
 AUDIO_EXTENSIONS = frozenset({".mp3", ".m4a", ".wav", ".ogg", ".flac", ".aac", ".opus", ".wma"})
 
-_LYRICS_PROMPTS: dict[str, str] = {
-    "ru": "Текст песни, только слова вокала, без описания музыки.",
-    "uz": "O'zbek qo'shiq matni lotin alifboda. Faqat kuylangan so'zlar.",
-    "en": "Song lyrics, sung words only, no instrumental description.",
+_LYRICS_STYLE: dict[str, str] = {
+    "uz": "Alvon alvon gullaring olib, atrofingga nazarlar solar eding, ko'k jiguli qo'shni Guli.",
+    "ru": "В тихий вечер за окном, поют соловьи, только слова песни.",
+    "en": "Love song lyrics, singing words, verse and chorus.",
 }
 
-_LYRICS_PROMPTS_RETRY: dict[str, str] = {
-    "ru": "Текст песни по строчкам. Куплет и припев. Только слова.",
-    "uz": "O'zbek qo'shiq lotin alifboda. o' g' alvon gullaring ko'k jiguli qo'shni guli.",
-    "en": "Song lyrics line by line. Verse and chorus words only.",
-}
+_PROMPT_LEAK_RE = re.compile(
+    r"^("
+    r"куплет и припев[\.!]?\s*только слова[\.!]?\s*|"
+    r"текст песни[,\s]*только слова[^.]*\.?\s*|"
+    r"o'zbek qo'shiq[^.]*\.?\s*|"
+    r"song lyrics line by line[^.]*\.?\s*"
+    r")+",
+    re.IGNORECASE,
+)
+_MUSIC_LABEL_RE = re.compile(r"\b(?:müzik|muzik(?:ani)?|music)\b", re.IGNORECASE)
 
 _WHISPER_HALLUCINATION_RE = re.compile(
     r"(thanks for watching|please subscribe|subtitles by|amara\.org|"
@@ -46,6 +52,30 @@ MUSIC_SUBMODULE_AI: dict[str, str] = {
 }
 
 SEPARATE_MODES = frozenset({"vocal", "instrumental", "both"})
+
+SUPPORTED_SONG_LANGS = frozenset({"ru", "uz", "en"})
+
+_WHISPER_LANG_MAP: dict[str, str] = {
+    "uz": "uz",
+    "ru": "ru",
+    "en": "en",
+    "tr": "uz",
+    "az": "uz",
+    "kk": "uz",
+    "ky": "uz",
+    "tg": "uz",
+}
+
+_UZ_TEXT_MARKERS = re.compile(
+    r"\b(?:o'|g'|qo'y|gullar|yodimda|kelar|atrof|jiguli|qizg'on|sevgi|mendan|yonimda)\b",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class SongLyricsTranscription:
+    text: str
+    song_lang: str
 
 
 def _tokenize_lyrics(text: str) -> list[str]:
@@ -79,20 +109,173 @@ def _is_repetitive_phrase(tokens: list[str]) -> bool:
     return False
 
 
-def _uz_latin_script_expected(cleaned: str, lang: str) -> bool:
-    if lang != "uz":
+def _uz_latin_script_expected(cleaned: str, song_lang: str) -> bool:
+    if song_lang != "uz":
         return True
     cyr = sum(1 for c in cleaned if "\u0400" <= c <= "\u04FF")
-    lat = sum(1 for c in cleaned if c.isalpha() and ord(c) < 128)
-    if cyr >= 15 and cyr > lat * 1.5:
-        return False
-    return True
+    if cyr < 15:
+        return True
+    lat = sum(1 for c in cleaned if c.isalpha() and not ("\u0400" <= c <= "\u04FF"))
+    return lat >= cyr
+
+
+def clean_whisper_lyrics(text: str) -> str:
+    cleaned = (text or "").strip()
+    cleaned = _PROMPT_LEAK_RE.sub("", cleaned).strip()
+    cleaned = _MUSIC_LABEL_RE.sub("", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = re.sub(r"\s+([,.])", r"\1", cleaned)
+    return cleaned.strip()
+
+
+def compact_repeated_lines(text: str, *, max_same_line: int = 2) -> str:
+    parts = re.split(r"(?<=[.!?])\s+|\n+", text)
+    lines = [p.strip() for p in parts if p.strip()]
+    counts: dict[str, int] = {}
+    kept: list[str] = []
+    for line in lines:
+        key = line.lower()
+        counts[key] = counts.get(key, 0) + 1
+        if counts[key] <= max_same_line:
+            kept.append(line)
+    return "\n".join(kept)
+
+
+def _whisper_attempts() -> list[tuple[str, str | None]]:
+    """Language-agnostic attempts: auto-detect first, then common song languages."""
+    return [
+        (_LYRICS_STYLE["uz"], None),
+        (_LYRICS_STYLE["uz"], "uz"),
+        (_LYRICS_STYLE["ru"], "ru"),
+        (_LYRICS_STYLE["en"], "en"),
+        (_LYRICS_STYLE["ru"], None),
+    ]
+
+
+def detect_song_language_from_text(text: str) -> str | None:
+    cleaned = (text or "").lower()
+    if not cleaned:
+        return None
+    cyr = sum(1 for c in cleaned if "\u0400" <= c <= "\u04FF")
+    lat = sum(1 for c in cleaned if c.isalpha() and not ("\u0400" <= c <= "\u04FF"))
+    if cyr > lat and cyr >= 10:
+        return "ru"
+    if _UZ_TEXT_MARKERS.search(cleaned):
+        return "uz"
+    if re.search(r"\b(?:the|and|you|love|heart|baby)\b", cleaned):
+        return "en"
+    if lat >= 10:
+        return "uz"
+    return None
+
+
+def normalize_song_language(detected: str | None, text: str) -> str:
+    code = (detected or "").strip().lower()
+    if code in _WHISPER_LANG_MAP:
+        return _WHISPER_LANG_MAP[code]
+    from_text = detect_song_language_from_text(text)
+    if from_text:
+        return from_text
+    return "en"
+
+
+def _score_transcription(metrics: WhisperLyricsResult, song_lang: str, whisper_lang: str | None) -> float:
+    score = float(len(metrics.text or ""))
+    if metrics.avg_logprob is not None:
+        score += (metrics.avg_logprob + 1.0) * 40
+    if whisper_lang is None:
+        score += 15
+    if whisper_lang == song_lang:
+        score += 25
+    if metrics.detected_language and normalize_song_language(metrics.detected_language, metrics.text) == song_lang:
+        score += 20
+    return score
+
+
+def song_language_label(song_lang: str, ui_lang: str) -> str:
+    from app.core.i18n import t
+
+    key = f"mus_song_lang_{song_lang}"
+    label = t(ui_lang, key)
+    return label if label != key else song_lang
+
+
+def build_polish_lyrics_prompt(raw: str, lang: str) -> str:
+    if lang == "uz":
+        target = "узбекской латинице (o', g', qo'sh, ko'k jiguli)"
+    elif lang == "en":
+        target = "English"
+    else:
+        target = "русском"
+    return (
+        f"Ниже — шумная расшифровка песни (Whisper). Приведи к читаемому тексту на {target}.\n"
+        "Правила:\n"
+        "- Исправь фонетику по смыслу (elvan→Alvon, güllerin→gullaring, ko'k jiguli, qo'shni Guli)\n"
+        "- Удали служебные вставки и повторы припева (оставь 1–2 раза)\n"
+        "- Не придумывай новые куплеты — только то, что есть в расшифровке\n"
+        "- Формат: строки песни, пустая строка между куплетами\n\n"
+        f"Расшифровка:\n{raw[:5000]}"
+    )
+
+
+async def polish_lyrics_with_ai(
+    raw: str,
+    *,
+    song_lang: str,
+    ui_lang: str,
+    session,
+    user,
+    bot,
+) -> str:
+    from app.services.ai_service import ask_ai
+    from app.services.module_context import build_module_ai_hint
+    from app.services.subscription_service import parse_insufficient_credits_reply
+
+    if not raw.strip():
+        return raw
+    answer = await ask_ai(
+        user_message=build_polish_lyrics_prompt(raw, song_lang),
+        module_hint=build_module_ai_hint("music", "lyrics", lang=ui_lang),
+        language=ui_lang,
+        session=session,
+        user=user,
+        bot=bot,
+        module_id="music",
+        submodule_id="lyrics",
+        max_completion_tokens=2000,
+    )
+    is_quota, body = parse_insufficient_credits_reply(answer)
+    if is_quota or not body.strip():
+        return raw
+    return body.strip()
+
+
+async def finalize_song_lyrics(
+    raw: str,
+    *,
+    song_lang: str,
+    ui_lang: str,
+    session,
+    user,
+    bot,
+) -> str:
+    cleaned = compact_repeated_lines(clean_whisper_lyrics(raw))
+    if not cleaned:
+        return raw
+    return await polish_lyrics_with_ai(
+        cleaned,
+        song_lang=song_lang,
+        ui_lang=ui_lang,
+        session=session,
+        user=user,
+        bot=bot,
+    )
 
 
 def validate_lyrics_transcription(
     text: str,
     *,
-    lang: str = "ru",
+    song_lang: str = "ru",
     metrics: WhisperLyricsResult | None = None,
 ) -> str | None:
     """Return cleaned lyrics or None if Whisper output is noise / instrumental hallucination."""
@@ -130,7 +313,7 @@ def validate_lyrics_transcription(
             return None
     if _is_repetitive_phrase(tokens):
         return None
-    if not _uz_latin_script_expected(cleaned, lang):
+    if not _uz_latin_script_expected(cleaned, song_lang):
         return None
     return cleaned
 
@@ -166,26 +349,29 @@ async def download_audio_bytes(bot: Bot, file_id: str) -> bytes:
     return buffer.getvalue()
 
 
-async def transcribe_song_lyrics(bot: Bot, file_id: str, filename: str, *, lang: str = "ru") -> str | None:
+async def transcribe_song_lyrics(bot: Bot, file_id: str, filename: str) -> SongLyricsTranscription | None:
     data = await download_audio_bytes(bot, file_id)
-    code = lang if lang in _LYRICS_PROMPTS else "ru"
     buffer = io.BytesIO(data)
     buffer.name = filename or "audio.mp3"
 
-    attempts: list[tuple[str, str | None]] = [
-        (_LYRICS_PROMPTS[code], code),
-        (_LYRICS_PROMPTS_RETRY[code], code),
-        (_LYRICS_PROMPTS_RETRY[code], None),
-    ]
-    for prompt, whisper_lang in attempts:
+    best: SongLyricsTranscription | None = None
+    best_score = float("-inf")
+
+    for prompt, whisper_lang in _whisper_attempts():
         buffer.seek(0)
         metrics = await transcribe_lyrics_detailed(buffer, prompt=prompt, lang=whisper_lang)
         if not metrics.text:
             continue
-        validated = validate_lyrics_transcription(metrics.text, lang=code, metrics=metrics)
-        if validated:
-            return validated
-    return None
+        song_lang = normalize_song_language(metrics.detected_language, metrics.text)
+        cleaned = clean_whisper_lyrics(metrics.text)
+        validated = validate_lyrics_transcription(cleaned, song_lang=song_lang, metrics=metrics)
+        if not validated:
+            continue
+        score = _score_transcription(metrics, song_lang, whisper_lang)
+        if score > best_score:
+            best_score = score
+            best = SongLyricsTranscription(text=validated, song_lang=song_lang)
+    return best
 
 
 async def _run_ffmpeg(args: list[str]) -> bool:
@@ -272,27 +458,29 @@ async def separate_audio(
         return vocals, instrumental, None
 
 
-def build_analyze_prompt(lyrics: str, lang: str) -> str:
-    lang_label = {"ru": "русском", "uz": "узбекском", "en": "English"}.get(lang, lang)
+def build_analyze_prompt(lyrics: str, song_lang: str, ui_lang: str) -> str:
+    lang_label = {"ru": "русском", "uz": "узбекском", "en": "English"}.get(ui_lang, ui_lang)
+    song_label = {"ru": "русская", "uz": "узбекская", "en": "английская"}.get(song_lang, song_lang)
     return (
-        f"Проанализируй музыкальный трек по распознанному тексту. Ответ на {lang_label} языке.\n"
+        f"Проанализируй музыкальный трек. Текст песни на {song_label} языке. Ответ на {lang_label}.\n"
         "Укажи: жанр, настроение, примерный BPM, язык песни, основные инструменты, "
         "краткое описание (2–3 предложения).\n\n"
         f"Текст:\n{lyrics[:6000]}"
     )
 
 
-def build_translate_prompt(lyrics: str, lang: str) -> str:
-    lang_label = {"ru": "русский", "uz": "узбекский", "en": "английский"}.get(lang, "русский")
+def build_translate_prompt(lyrics: str, song_lang: str, ui_lang: str) -> str:
+    song_label = {"ru": "русского", "uz": "узбекского", "en": "английского"}.get(song_lang, song_lang)
+    target = {"ru": "русский", "uz": "узбекский", "en": "английский"}.get(ui_lang, ui_lang)
     return (
-        f"Переведи текст песни на {lang_label}. Сохраняй строфы и припевы. "
+        f"Переведи текст песни с {song_label} на {target}. Сохраняй строфы и припевы. "
         "Если строка неясна — оставь пометку [?].\n\n"
         f"{lyrics[:6000]}"
     )
 
 
-def build_chords_prompt(lyrics: str, lang: str) -> str:
-    lang_label = {"ru": "русском", "uz": "узбекском", "en": "English"}.get(lang, lang)
+def build_chords_prompt(lyrics: str, ui_lang: str) -> str:
+    lang_label = {"ru": "русском", "uz": "узбекском", "en": "English"}.get(ui_lang, ui_lang)
     return (
         f"По тексту песни предложи тональность и аккорды (формат Am, F, C, G). "
         f"Ответ на {lang_label}. Укажи схему для куплета и припева отдельно.\n\n"

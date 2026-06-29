@@ -937,6 +937,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_send_audio": "🎵 Отправьте аудиофайл, трек или голосовое сообщение с записью песни.",
         "mus_paste_lyrics": "📝 Вставьте текст песни одним сообщением.",
         "mus_processing": "🎵 Обрабатываю…",
+        "mus_polishing": "✨ Уточняю текст песни…",
         "mus_need_audio": "Нужен аудиофайл: 🎵 трек, 📎 документ (mp3/m4a) или 🎤 голосовое.",
         "mus_transcribe_failed": "⚠️ Не удалось распознать текст. Проверьте качество записи и OPENAI_API_KEY.",
         "mus_no_vocals_detected": (
@@ -944,10 +945,13 @@ _STRINGS: dict[str, dict[str, str]] = {
             "Whisper зациклился или не услышал вокал — так бывает на полном треке с музыкой.\n\n"
             "Попробуйте:\n"
             "• 30–60 сек с чистым пением (куплет/припев)\n"
-            "• сначала «🎤 Только вокал», потом снова текст\n"
-            "• для узбекских песен — язык бота «uz» (латиница)"
+            "• сначала «🎤 Только вокал», потом снова текст"
         ),
         "mus_lyrics_result": "📝 <b>Текст песни</b>",
+        "mus_lyrics_detected_lang": "🌐 Язык песни: {lang_label}",
+        "mus_song_lang_uz": "узбекский",
+        "mus_song_lang_ru": "русский",
+        "mus_song_lang_en": "английский",
         "mus_analyze_result": "🎧 <b>Анализ трека</b>",
         "mus_translate_result": "🌐 <b>Перевод</b>",
         "mus_chords_result": "🎸 <b>Аккорды</b>",
@@ -1944,6 +1948,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_send_audio": "🎵 Audio, trek yoki qo'shiq yozuvi (ovozli xabar) yuboring.",
         "mus_paste_lyrics": "📝 Qo'shiq matnini bir xabarda yuboring.",
         "mus_processing": "🎵 Qayta ishlanmoqda…",
+        "mus_polishing": "✨ Qo'shiq matni aniqlanmoqda…",
         "mus_need_audio": "Audio kerak: 🎵 trek, 📎 hujjat (mp3/m4a) yoki 🎤 ovozli xabar.",
         "mus_transcribe_failed": "⚠️ Matn aniqlanmadi. OPENAI_API_KEY va sifatni tekshiring.",
         "mus_no_vocals_detected": (
@@ -1953,6 +1958,10 @@ _STRINGS: dict[str, dict[str, str]] = {
             "• «🎤 Faqat vokal» dan keyin qayta urinib ko'ring"
         ),
         "mus_lyrics_result": "📝 <b>Qo'shiq matni</b>",
+        "mus_lyrics_detected_lang": "🌐 Qo'shiq tili: {lang_label}",
+        "mus_song_lang_uz": "o'zbek",
+        "mus_song_lang_ru": "rus",
+        "mus_song_lang_en": "ingliz",
         "mus_analyze_result": "🎧 <b>Trek tahlili</b>",
         "mus_translate_result": "🌐 <b>Tarjima</b>",
         "mus_chords_result": "🎸 <b>Akkordlar</b>",
@@ -2936,6 +2945,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_send_audio": "🎵 Send an audio file, track, or voice message with the song.",
         "mus_paste_lyrics": "📝 Paste the song lyrics in one message.",
         "mus_processing": "🎵 Processing…",
+        "mus_polishing": "✨ Refining song lyrics…",
         "mus_need_audio": "Audio required: 🎵 track, 📎 document (mp3/m4a), or 🎤 voice.",
         "mus_transcribe_failed": "⚠️ Could not transcribe. Check audio quality and OPENAI_API_KEY.",
         "mus_no_vocals_detected": (
@@ -2945,6 +2955,10 @@ _STRINGS: dict[str, dict[str, str]] = {
             "• Try «🎤 Vocals only» first, then lyrics again"
         ),
         "mus_lyrics_result": "📝 <b>Song lyrics</b>",
+        "mus_lyrics_detected_lang": "🌐 Song language: {lang_label}",
+        "mus_song_lang_uz": "Uzbek",
+        "mus_song_lang_ru": "Russian",
+        "mus_song_lang_en": "English",
         "mus_analyze_result": "🎧 <b>Track analysis</b>",
         "mus_translate_result": "🌐 <b>Translation</b>",
         "mus_chords_result": "🎸 <b>Chords</b>",
