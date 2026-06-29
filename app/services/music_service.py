@@ -11,7 +11,7 @@ from pathlib import Path
 from aiogram import Bot
 from aiogram.types import Message
 
-from app.services.media_ai import transcribe_audio_bytes
+from app.services.media_ai import WhisperLyricsResult, transcribe_lyrics_detailed
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +20,14 @@ AUDIO_EXTENSIONS = frozenset({".mp3", ".m4a", ".wav", ".ogg", ".flac", ".aac", "
 
 _LYRICS_PROMPTS: dict[str, str] = {
     "ru": "Текст песни, только слова вокала, без описания музыки.",
-    "uz": "Qo'shiq matni, faqat vokal so'zlari.",
+    "uz": "O'zbek qo'shiq matni lotin alifboda. Faqat kuylangan so'zlar.",
     "en": "Song lyrics, sung words only, no instrumental description.",
+}
+
+_LYRICS_PROMPTS_RETRY: dict[str, str] = {
+    "ru": "Текст песни по строчкам. Куплет и припев. Только слова.",
+    "uz": "O'zbek qo'shiq lotin alifboda. o' g' alvon gullaring ko'k jiguli qo'shni guli.",
+    "en": "Song lyrics line by line. Verse and chorus words only.",
 }
 
 _WHISPER_HALLUCINATION_RE = re.compile(
@@ -42,7 +48,53 @@ MUSIC_SUBMODULE_AI: dict[str, str] = {
 SEPARATE_MODES = frozenset({"vocal", "instrumental", "both"})
 
 
-def validate_lyrics_transcription(text: str) -> str | None:
+def _tokenize_lyrics(text: str) -> list[str]:
+    return re.findall(r"\w+", text, flags=re.UNICODE)
+
+
+def _is_repetitive_phrase(tokens: list[str]) -> bool:
+    if len(tokens) < 8:
+        return False
+    lowered = [tok.lower() for tok in tokens]
+    for size in range(2, 6):
+        counts: dict[tuple[str, ...], int] = {}
+        for i in range(len(lowered) - size + 1):
+            phrase = tuple(lowered[i : i + size])
+            counts[phrase] = counts.get(phrase, 0) + 1
+        if counts:
+            _, count = max(counts.items(), key=lambda item: item[1])
+            if count >= 4 and count * size >= len(lowered) * 0.4:
+                return True
+        i = 0
+        while i + size * 2 <= len(lowered):
+            phrase = tuple(lowered[i : i + size])
+            reps = 1
+            j = i + size
+            while j + size <= len(lowered) and tuple(lowered[j : j + size]) == phrase:
+                reps += 1
+                j += size
+            if reps >= 4:
+                return True
+            i += 1
+    return False
+
+
+def _uz_latin_script_expected(cleaned: str, lang: str) -> bool:
+    if lang != "uz":
+        return True
+    cyr = sum(1 for c in cleaned if "\u0400" <= c <= "\u04FF")
+    lat = sum(1 for c in cleaned if c.isalpha() and ord(c) < 128)
+    if cyr >= 15 and cyr > lat * 1.5:
+        return False
+    return True
+
+
+def validate_lyrics_transcription(
+    text: str,
+    *,
+    lang: str = "ru",
+    metrics: WhisperLyricsResult | None = None,
+) -> str | None:
     """Return cleaned lyrics or None if Whisper output is noise / instrumental hallucination."""
     cleaned = (text or "").strip()
     if not cleaned:
@@ -53,13 +105,22 @@ def validate_lyrics_transcription(text: str) -> str | None:
     cleaned = re.sub(r"[\s♪🎵🎶]+$", "", cleaned).strip()
     if not cleaned:
         return None
+    if metrics:
+        if metrics.avg_no_speech is not None and metrics.avg_no_speech > 0.55:
+            letters = sum(1 for c in cleaned if c.isalpha())
+            if letters < 25:
+                return None
+        if metrics.compression_ratio is not None and metrics.compression_ratio > 2.15:
+            return None
+        if metrics.avg_logprob is not None and metrics.avg_logprob < -1.0:
+            return None
     letters = sum(1 for c in cleaned if c.isalpha())
     if letters < 12:
         return None
     compact = re.sub(r"\s+", "", cleaned)
     if not compact or letters / len(compact) < 0.55:
         return None
-    tokens = re.findall(r"\w+", cleaned, flags=re.UNICODE)
+    tokens = _tokenize_lyrics(cleaned)
     if len(tokens) < 3:
         return None
     if len(tokens) >= 5:
@@ -67,6 +128,10 @@ def validate_lyrics_transcription(text: str) -> str | None:
         top = max(lowered.count(word) for word in set(lowered))
         if top / len(tokens) > 0.7:
             return None
+    if _is_repetitive_phrase(tokens):
+        return None
+    if not _uz_latin_script_expected(cleaned, lang):
+        return None
     return cleaned
 
 
@@ -104,16 +169,23 @@ async def download_audio_bytes(bot: Bot, file_id: str) -> bytes:
 async def transcribe_song_lyrics(bot: Bot, file_id: str, filename: str, *, lang: str = "ru") -> str | None:
     data = await download_audio_bytes(bot, file_id)
     code = lang if lang in _LYRICS_PROMPTS else "ru"
-    raw = await transcribe_audio_bytes(
-        data,
-        filename,
-        prompt=_LYRICS_PROMPTS[code],
-        lang=code,
-        lyrics_mode=True,
-    )
-    if not raw:
-        return None
-    return validate_lyrics_transcription(raw)
+    buffer = io.BytesIO(data)
+    buffer.name = filename or "audio.mp3"
+
+    attempts: list[tuple[str, str | None]] = [
+        (_LYRICS_PROMPTS[code], code),
+        (_LYRICS_PROMPTS_RETRY[code], code),
+        (_LYRICS_PROMPTS_RETRY[code], None),
+    ]
+    for prompt, whisper_lang in attempts:
+        buffer.seek(0)
+        metrics = await transcribe_lyrics_detailed(buffer, prompt=prompt, lang=whisper_lang)
+        if not metrics.text:
+            continue
+        validated = validate_lyrics_transcription(metrics.text, lang=code, metrics=metrics)
+        if validated:
+            return validated
+    return None
 
 
 async def _run_ffmpeg(args: list[str]) -> bool:

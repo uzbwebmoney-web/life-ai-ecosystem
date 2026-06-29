@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import logging
+from dataclasses import dataclass
 
 from aiogram import Bot
 from openai import AsyncOpenAI, BadRequestError
@@ -9,6 +10,14 @@ from openai import AsyncOpenAI, BadRequestError
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class WhisperLyricsResult:
+    text: str
+    avg_logprob: float | None = None
+    avg_no_speech: float | None = None
+    compression_ratio: float | None = None
 
 
 _DEPRECATED_IMAGE_MODELS = frozenset({"dall-e-3"})
@@ -83,11 +92,48 @@ async def transcribe_audio_bytes(
 ) -> str:
     buffer = io.BytesIO(data)
     buffer.name = filename or "audio.mp3"
-    return await transcribe_audio_buffer(
-        buffer,
-        prompt=prompt,
-        lang=lang,
-        lyrics_mode=lyrics_mode,
+    if lyrics_mode:
+        return (
+            await transcribe_lyrics_detailed(
+                buffer,
+                prompt=prompt,
+                lang=lang,
+            )
+        ).text
+    return await transcribe_audio_buffer(buffer, prompt=prompt, lang=lang, lyrics_mode=False)
+
+
+async def transcribe_lyrics_detailed(
+    buffer: io.BytesIO,
+    *,
+    prompt: str = "",
+    lang: str | None = None,
+) -> WhisperLyricsResult:
+    if not settings.openai_api_key.strip():
+        return WhisperLyricsResult(text="")
+    buffer.seek(0)
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    kwargs: dict = {"model": "whisper-1", "file": buffer, "response_format": "verbose_json"}
+    if prompt:
+        kwargs["prompt"] = prompt[:200]
+    if lang in {"ru", "en", "uz"}:
+        kwargs["language"] = lang
+    result = await client.audio.transcriptions.create(**kwargs)
+    text = (result.text or "").strip()
+    segments = getattr(result, "segments", None) or []
+    if not segments:
+        return WhisperLyricsResult(text=text)
+    logprobs = [getattr(s, "avg_logprob", None) for s in segments]
+    logprobs = [x for x in logprobs if x is not None]
+    comp = [getattr(s, "compression_ratio", None) for s in segments]
+    comp = [x for x in comp if x is not None]
+    no_speech = [getattr(s, "no_speech_prob", None) for s in segments]
+    no_speech = [x for x in no_speech if x is not None]
+    return WhisperLyricsResult(
+        text=text,
+        avg_logprob=(sum(logprobs) / len(logprobs)) if logprobs else None,
+        compression_ratio=(sum(comp) / len(comp)) if comp else None,
+        avg_no_speech=(sum(no_speech) / len(no_speech)) if no_speech else None,
     )
 
 
@@ -98,6 +144,8 @@ async def transcribe_audio_buffer(
     lang: str | None = None,
     lyrics_mode: bool = False,
 ) -> str:
+    if lyrics_mode:
+        return (await transcribe_lyrics_detailed(buffer, prompt=prompt, lang=lang)).text
     if not settings.openai_api_key.strip():
         return ""
     buffer.seek(0)
@@ -107,19 +155,8 @@ async def transcribe_audio_buffer(
         kwargs["prompt"] = prompt[:200]
     if lang in {"ru", "en", "uz"}:
         kwargs["language"] = lang
-    if lyrics_mode:
-        kwargs["response_format"] = "verbose_json"
     result = await client.audio.transcriptions.create(**kwargs)
-    text = (result.text or "").strip()
-    if not lyrics_mode or not text:
-        return text
-    segments = getattr(result, "segments", None) or []
-    if segments:
-        avg_no_speech = sum((getattr(s, "no_speech_prob", 0) or 0) for s in segments) / len(segments)
-        letters = sum(1 for c in text if c.isalpha())
-        if avg_no_speech > 0.55 and letters < 20:
-            return ""
-    return text
+    return (result.text or "").strip()
 
 
 async def analyze_image_url(

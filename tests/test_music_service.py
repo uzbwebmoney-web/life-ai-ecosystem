@@ -61,9 +61,19 @@ def test_validate_lyrics_rejects_music_emoji_garbage():
     assert validate_lyrics_transcription("🎵🎵🎵 🎵🎵🎵 🎵🎵🎵") is None
 
 
+def test_validate_lyrics_rejects_whisper_loop_hallucination():
+    garbage = " ".join(["Альван", "Альван", "Гулярин"] * 8)
+    assert validate_lyrics_transcription(garbage, lang="uz") is None
+
+
 def test_validate_lyrics_accepts_real_text():
     text = "Я иду по улице в тихий вечерний час"
     assert validate_lyrics_transcription(text) == text
+
+
+def test_validate_lyrics_accepts_uzbek_latin():
+    text = "Alvon alvon gullaring olib atrofingga nazarlar solar eding"
+    assert validate_lyrics_transcription(text, lang="uz") == text
 
 
 def test_validate_lyrics_rejects_repeated_word():
