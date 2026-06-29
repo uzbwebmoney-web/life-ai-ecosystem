@@ -165,7 +165,7 @@ def detect_song_language_from_text(text: str) -> str | None:
         return "uz"
     if re.search(r"\b(?:the|and|you|love|heart|baby)\b", cleaned):
         return "en"
-    if lat >= 10:
+    if lat >= 10 and re.search(r"\b(?:va|ham|sen|men|yurak|sevgi|qo'sh|gul)\b", cleaned):
         return "uz"
     return None
 
@@ -391,7 +391,7 @@ async def _transcribe_chunked(data: bytes, filename: str) -> SongLyricsTranscrip
     if not parts:
         return None
     merged = "\n".join(parts)
-    song_lang = normalize_song_language(None, merged, hint="uz")
+    song_lang = normalize_song_language(None, merged)
     cleaned = clean_whisper_lyrics(merged)
     validated = validate_lyrics_transcription(cleaned, song_lang=song_lang)
     if not validated:

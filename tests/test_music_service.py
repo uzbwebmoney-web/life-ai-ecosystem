@@ -99,6 +99,10 @@ def test_detect_song_language_uzbek_markers():
     assert detect_song_language_from_text("Ko'k jiguli qo'shni Guli yodimda") == "uz"
 
 
+def test_detect_song_language_generic_latin_not_uzbek():
+    assert detect_song_language_from_text("Lorem ipsum dolor sit amet consectetur") is None
+
+
 def test_validate_lyrics_accepts_real_text():
     text = "Я иду по улице в тихий вечерний час"
     assert validate_lyrics_transcription(text, song_lang="ru") == text

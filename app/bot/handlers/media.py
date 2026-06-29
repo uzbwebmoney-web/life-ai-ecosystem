@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from aiogram import Bot, F, Router
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -141,6 +142,9 @@ async def _process_photo(
         user=user,
         bot=message.bot,
     )
+    if analysis.startswith("⚠️"):
+        await loading.edit_text(analysis)
+        return
     await consume_photo_analysis(session, user, credits=photo_credits)
     lowered = analysis.lower()
     combined = f"{caption} {analysis}".lower()
@@ -217,9 +221,20 @@ async def _process_photo(
     await deliver_long_text(loading, text, reply_markup=kb)
 
 
-@router.message(F.voice)
+@router.message(StateFilter(None), F.voice)
 async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSession) -> None:
     lang = user.language
+    if user.active_module_id == "music" and user.active_submodule_id in {
+        "lyrics",
+        "separate",
+        "analyze",
+        "translate",
+        "chords",
+    }:
+        from app.bot.keyboards_music import music_cancel_kb
+
+        await message.answer(t(lang, "mus_send_audio"), reply_markup=music_cancel_kb(lang))
+        return
     from app.services.subscription_service import feature_allowed
 
     blocked = feature_allowed(user, "voice")
