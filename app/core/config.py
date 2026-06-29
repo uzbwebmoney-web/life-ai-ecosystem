@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     admin_ai_request_notify: bool = Field(default=True, alias="ADMIN_AI_REQUEST_NOTIFY")
     web_search_enabled: bool = Field(default=True, alias="WEB_SEARCH_ENABLED")
     web_search_all_modules: bool = Field(default=True, alias="WEB_SEARCH_ALL_MODULES")
+    web_search_force_required: bool = Field(default=True, alias="WEB_SEARCH_FORCE_REQUIRED")
+    web_search_context_size: str = Field(default="high", alias="WEB_SEARCH_CONTEXT_SIZE")
+    web_search_unlimited_context: bool = Field(default=True, alias="WEB_SEARCH_UNLIMITED_CONTEXT")
+    web_search_max_results: int = Field(default=15, alias="WEB_SEARCH_MAX_RESULTS")
+    web_search_max_queries: int = Field(default=6, alias="WEB_SEARCH_MAX_QUERIES")
+    web_search_max_links_footer: int = Field(default=20, alias="WEB_SEARCH_MAX_LINKS_FOOTER")
+    web_search_timeout_seconds: float = Field(default=20.0, alias="WEB_SEARCH_TIMEOUT_SECONDS")
 
     @property
     def admin_telegram_id_list(self) -> list[int]:

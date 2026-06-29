@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from html import unescape
@@ -15,31 +16,6 @@ logger = logging.getLogger(__name__)
 _TME_BARE_RE = re.compile(r"(?<![/\w@])(?:t\.me|telegram\.me)/([a-zA-Z0-9_+]{3,})", re.IGNORECASE)
 _TG_HANDLE_RE = re.compile(r"(?<![/\w])@([a-zA-Z][a-zA-Z0-9_]{3,})")
 _HTTP_URL_RE = re.compile(r"https?://[^\s<>\"']+", re.IGNORECASE)
-
-_WEB_HINT_RE = re.compile(
-    r"|".join(
-        (
-            r"telegram|телеграм|t\.me",
-            r"канал|групп|channel|group|chat|guruh|grupp",
-            r"ссылк|link|url|сайт|website|web\s*site|havola",
-            r"телефон|phone|контакт|contact|адрес|address|email|почт|e-mail|aloqa|manzil|telefon",
-            r"миграци|migration|migratsiya|immigr|агентств|agency|agentlik|посольств|embassy|elchixona",
-            r"виз[ауы]?|visa|viza|паспорт|passport|pasport",
-            r"дай\s+(?:мне\s+)?(?:групп|канал|ссылк|контакт|телефон|номер|адрес)",
-            r"(?:ber|bering|boring|top)(?:ing|ish|)?",
-            r"где\s+(?:найти|взять|связаться|находится|записаться|оформить)",
-            r"qayerda|qanday\s+top",
-            r"как\s+(?:связаться|найти|записаться|оформить|получить)",
-            r"актуальн|сейчас|сегодня|текущ|latest|current|now|на\s+данный\s+момент|hozir|bugun",
-            r"официальн|official|гос(?:услуг|organ)|government|rasmiy",
-            r"расписани|schedule|график|часы\s+работ|working\s+hours|ish\s+vaqti",
-            r"стоимость|цена|тариф|fee|price|сколько\s+стоит|how\s+much|narxi|qancha",
-            r"курс\s+(?:валют|доллар|евро|usd|eur|rubl|рубл)",
-            r"@[a-zA-Z0-9_]{3,}",
-        )
-    ),
-    re.IGNORECASE,
-)
 
 _FORCE_WEB_RE = re.compile(
     r"|".join(
@@ -57,50 +33,31 @@ _FORCE_WEB_RE = re.compile(
     re.IGNORECASE,
 )
 
-_MODULE_WEB_HINTS = frozenset(
-    {
-        "travel",
-        "legal",
-        "assistant",
-        "ai_assistant",
-        "business",
-        "education",
-        "home",
-        "health",
-        "car",
-        "finance",
-        "nutrition",
-        "organizer",
-        "vault",
-        "music",
-        "shopping",
-        "generic",
-    }
-)
-
 _WEB_SEARCH_INSTRUCTIONS: dict[str, str] = {
     "ru": (
-        "Веб-поиск доступен во всех разделах бота. Используй его, когда нужны актуальные данные: "
-        "контакты, Telegram, сайты, цены, адреса, правила, законы, расписания, новости, "
-        "инструкции по услугам и организациям. "
-        "В ответе указывай полные ссылки (https://…, t.me/…). "
-        "Не давай только названия без ссылок, если ссылки найдены. "
-        "Для общих знаний без необходимости свежих данных можно ответить без поиска."
+        "Веб-поиск включён для каждого запроса. Сначала ищи актуальную информацию в интернете, "
+        "затем отвечай по сути. Используй найденные данные о контактах, ценах, адресах, правилах, "
+        "законах, расписаниях, Telegram-каналах и официальных сайтах. "
+        "В ответе обязательно указывай полные ссылки (https://…, t.me/…). "
+        "Не давай только названия без ссылок, если ссылки найдены."
     ),
     "uz": (
-        "Veb-qidiruv botning barcha bo'limlarida mavjud. Aktual ma'lumot kerak bo'lsa foydalaning: "
-        "kontaktlar, Telegram, saytlar, narxlar, manzillar, qoidalar, qonunlar, jadval, yangiliklar. "
-        "Javobda to'liq havolalarni (https://…, t.me/…) yozing. "
-        "Havolalar topilsa, faqat nom berish taqiqlanadi. "
-        "Umumiy bilim uchun qidiruv shart emas."
+        "Har bir so'rovda veb-qidiruv yoqilgan. Avval internetdan aktual ma'lumot qidiring, "
+        "keyin javob bering. Kontaktlar, narxlar, manzillar, qoidalar, Telegram va rasmiy saytlar "
+        "uchun topilgan ma'lumotlardan foydalaning. "
+        "Javobda to'liq havolalarni (https://…, t.me/…) yozing."
     ),
     "en": (
-        "Web search is available in every bot section. Use it when fresh data is needed: "
-        "contacts, Telegram, websites, prices, addresses, rules, laws, schedules, news. "
-        "Include full links (https://…, t.me/…) in answers. "
-        "Do not give names only when links were found. "
-        "For general knowledge without fresh data, search is optional."
+        "Web search is enabled for every request. Search the web first for fresh data, then answer. "
+        "Use found contacts, prices, addresses, rules, Telegram channels, and official sites. "
+        "Always include full links (https://…, t.me/…) in the answer."
     ),
+}
+
+_USE_NOTE: dict[str, str] = {
+    "ru": "Используй блок «Актуальные результаты из интернета» и результаты OpenAI web search. Укажи полные URL.",
+    "uz": "«Aktual internet natijalari» va OpenAI qidiruv natijalaridan foydalaning. To'liq URL yozing.",
+    "en": "Use the «Current web results» block and OpenAI web search results. Include full URLs.",
 }
 
 
@@ -108,22 +65,14 @@ def should_use_web_search(user_message: str, *, module_id: str | None = None) ->
     if not settings.web_search_enabled:
         return False, False
     text = (user_message or "").strip()
-    if len(text) < 4:
+    if len(text) < 3:
         return False, False
-
-    force = bool(_FORCE_WEB_RE.search(text))
-    if _WEB_HINT_RE.search(text):
-        return True, force
-
+    force_match = bool(_FORCE_WEB_RE.search(text))
     if settings.web_search_all_modules:
-        if module_id is not None:
-            return True, force
-        words = text.split()
-        if "?" in text or len(words) >= 4:
-            return True, False
-
-    if module_id in _MODULE_WEB_HINTS and "?" in text:
-        return True, False
+        force = settings.web_search_force_required or force_match
+        return True, force
+    if force_match:
+        return True, True
     return False, False
 
 
@@ -132,11 +81,22 @@ def web_search_system_note(language: str = "ru") -> str:
     return _WEB_SEARCH_INSTRUCTIONS.get(lang, _WEB_SEARCH_INSTRUCTIONS["ru"])
 
 
+def _web_search_tool() -> dict:
+    tool: dict = {
+        "type": "web_search",
+        "search_context_size": settings.web_search_context_size,
+    }
+    if settings.web_search_unlimited_context:
+        tool["return_token_budget"] = "unlimited"
+    return tool
+
+
 def build_search_queries(
     user_message: str,
     *,
     language: str = "ru",
     country: str | None = None,
+    module_id: str | None = None,
 ) -> list[str]:
     base = re.sub(r"\s+", " ", (user_message or "").strip())
     if not base:
@@ -145,15 +105,15 @@ def build_search_queries(
     queries = [base]
     lower = base.lower()
 
-    if "telegram" not in lower and "t.me" not in lower:
-        queries.append(f"{base} telegram t.me")
     if country and country.lower() not in lower:
         queries.append(f"{base} {country}")
-
-    if re.search(r"migratsiya|migration|миграци", lower, re.IGNORECASE):
-        if country:
-            queries.append(f"{country} migratsiya agentligi rasmiy telegram t.me")
-            queries.append(f"migration agency {country} official telegram channel")
+    if module_id:
+        queries.append(f"{base} {module_id.replace('_', ' ')}")
+    if "telegram" not in lower and "t.me" not in lower:
+        queries.append(f"{base} telegram t.me")
+    if re.search(r"migratsiya|migration|миграци", lower, re.IGNORECASE) and country:
+        queries.append(f"{country} migratsiya agentligi rasmiy telegram t.me")
+        queries.append(f"migration agency {country} official telegram")
 
     seen: set[str] = set()
     unique: list[str] = []
@@ -161,8 +121,8 @@ def build_search_queries(
         key = q.lower()
         if key not in seen:
             seen.add(key)
-            unique.append(q[:200])
-    return unique[:4]
+            unique.append(q[:240])
+    return unique[: settings.web_search_max_queries]
 
 
 def collect_links_from_text(text: str) -> list[str]:
@@ -207,13 +167,23 @@ def append_links_footer(answer: str, links: list[str], *, language: str = "ru") 
     if not extra:
         return answer
     lang = normalize_lang(language)
-    title = {
-        "ru": "🔗 Ссылки",
-        "uz": "🔗 Havolalar",
-        "en": "🔗 Links",
-    }.get(lang, "🔗 Ссылки")
-    lines = "\n".join(f"• {link}" for link in extra[:12])
+    title = {"ru": "🔗 Ссылки", "uz": "🔗 Havolalar", "en": "🔗 Links"}.get(lang, "🔗 Ссылки")
+    limit = settings.web_search_max_links_footer
+    lines = "\n".join(f"• {link}" for link in extra[:limit])
     return f"{answer.rstrip()}\n\n{title}:\n{lines}"
+
+
+def merge_system_with_web_context(
+    system: str,
+    web_context: str,
+    *,
+    language: str = "ru",
+) -> str:
+    if not web_context.strip():
+        return system + "\n\n" + web_search_system_note(language)
+    lang = normalize_lang(language)
+    note = _USE_NOTE.get(lang, _USE_NOTE["ru"])
+    return system + "\n\n" + web_context + "\n\n" + note + "\n\n" + web_search_system_note(language)
 
 
 def _build_responses_input(
@@ -255,6 +225,15 @@ def _parse_ddg_html(html: str, *, max_results: int) -> list[tuple[str, str, str]
                 flags=re.IGNORECASE | re.DOTALL,
             )
         ]
+    if not rows:
+        rows = [
+            (href, title, "")
+            for href, title in re.findall(
+                r'class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>',
+                html,
+                flags=re.IGNORECASE | re.DOTALL,
+            )
+        ]
 
     parsed: list[tuple[str, str, str]] = []
     for href, title, snippet in rows[: max_results * 2]:
@@ -262,21 +241,32 @@ def _parse_ddg_html(html: str, *, max_results: int) -> list[tuple[str, str, str]
         clean_snippet = unescape(re.sub(r"<[^>]+>", " ", snippet)).strip()
         clean_snippet = re.sub(r"\s+", " ", clean_snippet)
         url = _unwrap_ddg_url(unescape(href))
-        if clean_title:
+        if clean_title and not url.startswith("//duckduckgo.com"):
             parsed.append((clean_title, url, clean_snippet))
     return parsed[:max_results]
 
 
-async def _ddg_search_once(query: str, *, max_results: int = 5) -> list[tuple[str, str, str]]:
+async def _ddg_search_once(query: str, *, max_results: int = 8) -> list[tuple[str, str, str]]:
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; LifeAIBot/1.0)"}
+    timeout = httpx.Timeout(settings.web_search_timeout_seconds)
     try:
-        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
             resp = await client.post(
                 "https://lite.duckduckgo.com/lite/",
                 data={"q": query},
-                headers={"User-Agent": "Mozilla/5.0 (compatible; LifeAIBot/1.0)"},
+                headers=headers,
             )
             resp.raise_for_status()
-            return _parse_ddg_html(resp.text, max_results=max_results)
+            parsed = _parse_ddg_html(resp.text, max_results=max_results)
+            if parsed:
+                return parsed
+            resp2 = await client.get(
+                "https://html.duckduckgo.com/html/",
+                params={"q": query},
+                headers=headers,
+            )
+            resp2.raise_for_status()
+            return _parse_ddg_html(resp2.text, max_results=max_results)
     except Exception as exc:
         logger.warning("DuckDuckGo search failed for %r: %s", query[:80], exc)
         return []
@@ -287,32 +277,43 @@ async def fetch_web_context(
     *,
     language: str = "ru",
     country: str | None = None,
-    max_results: int = 6,
+    module_id: str | None = None,
+    max_results: int | None = None,
 ) -> tuple[str, list[str]]:
-    queries = build_search_queries(user_message, language=language, country=country)
+    limit = max_results or settings.web_search_max_results
+    per_query = max(4, limit // max(1, settings.web_search_max_queries // 2))
+    queries = build_search_queries(
+        user_message,
+        language=language,
+        country=country,
+        module_id=module_id,
+    )
     if not queries:
         return "", []
+
+    search_tasks = [_ddg_search_once(q, max_results=per_query) for q in queries]
+    batches = await asyncio.gather(*search_tasks)
 
     seen_urls: set[str] = set()
     lines: list[str] = []
     all_links: list[str] = []
 
-    for query in queries:
-        for title, url, snippet in await _ddg_search_once(query, max_results=max_results):
+    for batch in batches:
+        for title, url, snippet in batch:
             if url in seen_urls:
                 continue
             seen_urls.add(url)
             block = f"• {title}\n  {url}"
             if snippet:
-                block += f"\n  {snippet[:280]}"
+                block += f"\n  {snippet[:400]}"
             lines.append(block)
             chunk_text = f"{url} {snippet} {title}"
             for link in collect_links_from_text(chunk_text):
                 if link not in all_links:
                     all_links.append(link)
-            if len(lines) >= max_results:
+            if len(lines) >= limit:
                 break
-        if len(lines) >= max_results:
+        if len(lines) >= limit:
             break
 
     if not lines and not all_links:
@@ -334,13 +335,13 @@ async def fetch_web_context(
         }.get(lang, "Telegram-ссылки (t.me)")
         tme_only = [l for l in all_links if "t.me/" in l.lower() or "telegram.me/" in l.lower()]
         show = tme_only or all_links
-        parts.append(tme_header + ":\n" + "\n".join(f"• {link}" for link in show[:10]))
+        parts.append(tme_header + ":\n" + "\n".join(f"• {link}" for link in show[:15]))
     if lines:
         parts.append("\n\n".join(lines))
     return "\n\n".join(parts), all_links
 
 
-async def fetch_ddg_context(query: str, *, max_results: int = 5) -> str:
+async def fetch_ddg_context(query: str, *, max_results: int = 8) -> str:
     context, _ = await fetch_web_context(query, language="ru", max_results=max_results)
     return context
 
@@ -359,23 +360,34 @@ async def call_ai_with_web_search(
     web_context: str = "",
     web_links: list[str] | None = None,
 ):
-    note = web_search_system_note(language)
-    instructions = system + "\n\n" + note
-    if web_context:
-        instructions += "\n\n" + web_context
-
+    instructions = merge_system_with_web_context(system, web_context, language=language)
+    tool_choice = "required" if force else "auto"
     payload = {
         "model": model,
         "instructions": instructions,
         "input": _build_responses_input(user_content, chat_history),
-        "tools": [{"type": "web_search", "search_context_size": "high"}],
-        "tool_choice": "required" if force else "auto",
+        "tools": [_web_search_tool()],
+        "tool_choice": tool_choice,
         "max_output_tokens": max_output_tokens,
     }
-    response = await client.responses.create(**payload)
-    text = (getattr(response, "output_text", None) or "").strip()
-    links = merge_unique_links(web_links or [], collect_links_from_text(text))
-    text = append_links_footer(text, links, language=language)
+
+    text = ""
+    response = None
+    try:
+        response = await client.responses.create(**payload)
+        text = (getattr(response, "output_text", None) or "").strip()
+    except Exception as exc:
+        if "return_token_budget" in str(exc).lower() or "unknown" in str(exc).lower():
+            logger.warning("Web search with unlimited context failed, retrying: %s", exc)
+            payload["tools"] = [{"type": "web_search", "search_context_size": settings.web_search_context_size}]
+            response = await client.responses.create(**payload)
+            text = (getattr(response, "output_text", None) or "").strip()
+        else:
+            raise
+
+    links = merge_unique_links(web_links or [], collect_links_from_text(text), collect_links_from_text(web_context))
+    if text:
+        text = append_links_footer(text, links, language=language)
     return text, response
 
 
@@ -385,13 +397,15 @@ async def enrich_system_with_web_context(
     *,
     language: str,
     country: str | None = None,
+    module_id: str | None = None,
+    web_context: str | None = None,
 ) -> str:
-    context, _ = await fetch_web_context(query, language=language, country=country)
+    context = web_context
     if not context:
-        return system + "\n\n" + web_search_system_note(language)
-    use_note = {
-        "ru": "Используй эти данные в ответе. Укажи полные URL, особенно t.me.",
-        "uz": "Bu ma'lumotlardan foydalaning. To'liq URL yozing, ayniqsa t.me.",
-        "en": "Use this data in your answer. Include full URLs, especially t.me.",
-    }.get(normalize_lang(language), "Используй эти данные в ответе.")
-    return system + "\n\n" + context + "\n\n" + use_note + "\n\n" + web_search_system_note(language)
+        context, _ = await fetch_web_context(
+            query,
+            language=language,
+            country=country,
+            module_id=module_id,
+        )
+    return merge_system_with_web_context(system, context or "", language=language)

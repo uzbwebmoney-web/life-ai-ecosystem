@@ -29,8 +29,8 @@ from app.services.web_search_service import (
     append_links_footer,
     call_ai_with_web_search,
     collect_links_from_text,
-    enrich_system_with_web_context,
     fetch_web_context,
+    merge_system_with_web_context,
     merge_unique_links,
     should_use_web_search,
 )
@@ -237,7 +237,8 @@ async def ask_ai(
             user_message,
             language=language,
             country=audience,
-            max_results=8,
+            module_id=mod_id,
+            max_results=settings.web_search_max_results,
         )
 
     def _chat_messages(user_content: str, *, system_prompt: str | None = None) -> list[dict[str, str]]:
@@ -304,6 +305,11 @@ async def ask_ai(
             for attempt in range(2):
                 try:
                     if part_use_web:
+                        enriched_system = merge_system_with_web_context(
+                            system,
+                            web_context_str,
+                            language=language,
+                        )
                         try:
                             raw, response = await call_ai_with_web_search(
                                 client,
@@ -324,24 +330,32 @@ async def ask_ai(
                                 attempt + 1,
                                 web_exc,
                             )
-                            enriched_system = await enrich_system_with_web_context(
-                                system,
-                                user_message,
-                                language=language,
-                                country=audience,
-                            )
-                            response = await client.chat.completions.create(
-                                model=model,
-                                messages=_chat_messages(user_content, system_prompt=enriched_system),
-                                **chat_token_limit_kwargs(model, attempt_tokens),
-                            )
-                            raw = (response.choices[0].message.content or "").strip()
-                            if raw:
-                                links = merge_unique_links(
-                                    web_links,
-                                    collect_links_from_text(raw),
+                            raw = ""
+                            response = None
+
+                        if not raw:
+                            try:
+                                response = await client.chat.completions.create(
+                                    model=model,
+                                    messages=_chat_messages(user_content, system_prompt=enriched_system),
+                                    **chat_token_limit_kwargs(model, attempt_tokens),
                                 )
-                                raw = append_links_footer(raw, links, language=language)
+                                raw = (response.choices[0].message.content or "").strip()
+                            except Exception as chat_exc:
+                                logger.warning(
+                                    "Web-augmented chat fallback failed (attempt %s): %s",
+                                    attempt + 1,
+                                    chat_exc,
+                                )
+                                if attempt == 0:
+                                    raise
+                        if raw:
+                            links = merge_unique_links(
+                                web_links,
+                                collect_links_from_text(raw),
+                                collect_links_from_text(web_context_str),
+                            )
+                            raw = append_links_footer(raw, links, language=language)
                     else:
                         response = await client.chat.completions.create(
                             model=model,

@@ -7,8 +7,15 @@ from app.services.web_search_service import (
     collect_links_from_text,
     fetch_ddg_context,
     fetch_web_context,
+    merge_system_with_web_context,
     should_use_web_search,
 )
+
+
+def test_should_use_web_search_always_on():
+    use, force = should_use_web_search("что такое фотосинтез")
+    assert use is True
+    assert force is True
 
 
 def test_should_use_web_search_telegram_channel_ru():
@@ -23,22 +30,15 @@ def test_should_use_web_search_telegram_channel_uz():
     assert force is True
 
 
-def test_should_use_web_search_general_question():
-    use, force = should_use_web_search("что такое фотосинтез")
-    assert use is False
-    assert force is False
-
-
 def test_should_use_web_search_any_module():
     use, force = should_use_web_search("какие документы нужны для замены прав", module_id="car")
     assert use is True
-    assert force is False
+    assert force is True
 
 
-def test_should_use_web_search_health_module():
-    use, force = should_use_web_search("боль в колене что делать", module_id="health")
-    assert use is True
-    assert force is False
+def test_should_use_web_search_too_short():
+    use, force = should_use_web_search("ok")
+    assert use is False
 
 
 def test_collect_links_from_handles_and_bare_tme():
@@ -55,18 +55,25 @@ def test_append_links_footer_adds_missing_links():
     assert "🔗 Havolalar" in out
 
 
+def test_merge_system_with_web_context():
+    out = merge_system_with_web_context("Base", "Context line", language="ru")
+    assert "Context line" in out
+    assert "Веб-поиск включён" in out
+
+
 def test_format_ai_reply_html_makes_links_clickable():
     html = format_ai_reply_html("Qarang: https://t.me/test")
     assert '<a href="https://t.me/test">https://t.me/test</a>' in html
 
 
-def test_build_search_queries_migration_uz():
-    queries = build_search_queries(
-        "migratsiya uchun telegram guruh",
-        language="uz",
-        country="O'zbekiston",
-    )
-    assert any("telegram" in q.lower() for q in queries)
+def test_format_ai_reply_html_bare_tme():
+    html = format_ai_reply_html("Kanal: t.me/migration_uz")
+    assert '<a href="https://t.me/migration_uz">t.me/migration_uz</a>' in html
+
+
+def test_build_search_queries_includes_module():
+    queries = build_search_queries("как оформить визу", module_id="travel", country="Узбекистан")
+    assert any("travel" in q for q in queries)
 
 
 @pytest.mark.asyncio
@@ -90,6 +97,9 @@ async def test_fetch_ddg_context_returns_text(monkeypatch):
         async def post(self, *args, **kwargs):
             return FakeResp()
 
+        async def get(self, *args, **kwargs):
+            return FakeResp()
+
     monkeypatch.setattr("app.services.web_search_service.httpx.AsyncClient", lambda **kwargs: FakeClient())
     text = await fetch_ddg_context("migration agency telegram")
     assert "Migration UZ" in text
@@ -97,7 +107,9 @@ async def test_fetch_ddg_context_returns_text(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_fetch_web_context_extracts_tme_links(monkeypatch):
+async def test_fetch_web_context_parallel_queries(monkeypatch):
+    calls: list[str] = []
+
     class FakeResp:
         text = (
             '<a class="result-link" href="https://t.me/test_channel">Test</a>'
@@ -115,9 +127,14 @@ async def test_fetch_web_context_extracts_tme_links(monkeypatch):
             return None
 
         async def post(self, *args, **kwargs):
+            calls.append(kwargs.get("data", {}).get("q", ""))
+            return FakeResp()
+
+        async def get(self, *args, **kwargs):
             return FakeResp()
 
     monkeypatch.setattr("app.services.web_search_service.httpx.AsyncClient", lambda **kwargs: FakeClient())
-    context, links = await fetch_web_context("migratsiya telegram", language="uz")
+    context, links = await fetch_web_context("migratsiya telegram", language="uz", module_id="travel")
+    assert len(calls) >= 2
     assert "t.me/test_channel" in context
     assert any("t.me/test_channel" in link for link in links)

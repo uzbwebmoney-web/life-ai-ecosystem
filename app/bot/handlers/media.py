@@ -256,6 +256,7 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
         return
     hint = module_hint(user.active_module_id, user.active_submodule_id, lang=lang) if user.active_module_id else ""
     profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)
+    voice_module_id = user.active_module_id
     answer = await ask_ai(
         user_message=text,
         module_hint=hint,
@@ -265,9 +266,10 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
         session=session,
         user=user,
         bot=message.bot,
+        module_id=voice_module_id,
     )
     header = active_module_label(user.active_module_id, user.active_submodule_id, lang=lang)
-    actions = suggest_actions(text, answer, lang, module_id=module_id)
+    actions = suggest_actions(text, answer, lang, module_id=voice_module_id)
     kb = proactive_kb(actions, lang) or dashboard_kb(lang)
     is_quota = await deliver_ai_reply(
         message,
