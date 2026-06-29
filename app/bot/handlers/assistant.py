@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 from app.bot.keyboards_assistant import assistant_ai_kb, assistant_module_kb
+from app.bot.keyboards_subscription import quota_upgrade_kb
 from app.bot.message_ui import edit_or_answer_text
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
@@ -22,8 +23,8 @@ from app.services.media_ai import generate_image
 from app.services.subscription_service import (
     check_image_gen_quota,
     consume_image_generation,
-    feature_allowed,
     image_quality_for_user,
+    parse_insufficient_credits_reply,
 )
 
 router = Router()
@@ -37,15 +38,12 @@ async def reply_with_generated_image(message: Message, user: User, session: Asyn
     if len(text) < 2:
         await message.answer(t(lang, "ast_send_image_prompt"), reply_markup=kb)
         return
-    blocked = feature_allowed(user, "image_gen")
-    if blocked:
-        await message.answer(t(lang, blocked), parse_mode="HTML", reply_markup=kb)
-        return
     quality = image_quality_for_user(user)
     img_credits = image_generation_credits(quality)  # type: ignore[arg-type]
     quota_msg = await check_image_gen_quota(session, user, lang=lang, credits=img_credits)
     if quota_msg:
-        await message.answer(quota_msg, parse_mode="HTML", reply_markup=kb)
+        _, display = parse_insufficient_credits_reply(quota_msg)
+        await message.answer(display, parse_mode="HTML", reply_markup=quota_upgrade_kb(lang))
         return
     wait_msg = await message.answer(t(lang, "ast_image_generating"))
     try:

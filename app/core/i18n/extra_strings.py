@@ -145,6 +145,8 @@ EXTRA_RU: dict[str, str] = {
     "sub_ai_monthly": "AI в месяц: {used} / {limit}",
     "sub_ai_bonus": "Бонусные запросы: {bonus}",
     "sub_storage_limit": "Хранилище: до {limit} МБ",
+    "sub_vault_lock_on": "🔐 Защищённый сейф: пароль на хранилище",
+    "sub_vault_lock_off": "🔐 Сейф: без пароля (защита — от Student)",
     "sub_memory_limit": "Память AI: до {limit} фактов",
     "sub_memory_unlimited": "Память AI: без ограничений",
     "sub_referral_info": (
@@ -230,15 +232,15 @@ EXTRA_RU: dict[str, str] = {
     "plan_price_free": "Бесплатно",
     "plan_price_monthly": "<b>{price}</b> / мес (~${usd})",
     "plan_free_name": "Free",
-    "plan_free_desc": "GPT-4o Mini, 5 анализов фото, 3 PDF, 100 записей памяти, 100 МБ.",
+    "plan_free_desc": "GPT-4o Mini, сейф для документов, лимиты на AI и фото.",
     "plan_basic_name": "Basic",
-    "plan_basic_desc": "GPT-5.4 Mini (300/мес), 30 изображений, голос, 5 ГБ — $7.99.",
+    "plan_basic_desc": "GPT-5.4 Mini, голос, защищённый сейф с паролем, 40 картинок/мес.",
     "plan_premium_name": "Premium",
-    "plan_premium_desc": "GPT-5.5 (30/мес), семья до 5, 100 изображений, 20 ГБ — $14.99.",
+    "plan_premium_desc": "GPT-5.5, семья до 5, защищённый сейф, 120 картинок/мес.",
     "plan_pro_name": "Pro",
-    "plan_pro_desc": "GPT-5.5 (300/мес), семья до 10, 500 изображений, 100 ГБ — $29.99.",
+    "plan_pro_desc": "Максимум AI, семья до 10, защищённый сейф, 400 картинок/мес.",
     "plan_student_name": "Student",
-    "plan_student_desc": "Учёба, GPT-5.4 Mini (50/мес), 5 изображений, 1 ГБ — $2.99.",
+    "plan_student_desc": "Учёба, GPT-5.4 Mini, защищённый сейф с паролем, 10 картинок/мес.",
     "plan_family_name": "Семейная",
     "plan_family_desc": "До 5 человек в одном аккаунте.",
     "plan_pkg_img50": "🎨 +50 изображений",
@@ -292,6 +294,20 @@ EXTRA_RU: dict[str, str] = {
         "Лимит обновится в начале следующего месяца, либо можно перейти на тариф с большим лимитом.\n\n"
         "Подробнее: /subscription"
     ),
+    "quota_image_gen_detail": (
+        "🎨 <b>Создание картинок недоступно на тарифе Free</b>\n\n"
+        "Вы отправили запрос на генерацию изображения (например, «нарисуй…», «создай картинку…»). "
+        "На бесплатном тарифе доступны текстовые ответы AI и другие разделы бота, "
+        "но <b>генерация изображений по описанию не включена</b> — это отдельная функция: "
+        "она использует модель GPT-Image и списывает AI-кредиты за каждую картинку."
+    ),
+    "quota_image_gen_monthly_detail": (
+        "⚠️ <b>Лимит картинок на этот месяц исчерпан</b> ({used} из {limit}).\n\n"
+        "Генерация изображений включена в ваш тариф, но количество созданий в месяц ограничено. "
+        "Лимит обновится в начале следующего месяца, либо перейдите на тариф с большим лимитом."
+    ),
+    "quota_image_gen_plans_title": "💳 <b>Тарифы с генерацией изображений</b>",
+    "quota_image_gen_plan_line": "{emoji} {name} — <b>{images}</b> карт./мес · {price}",
     "quota_image_gen": (
         "🎨 <b>Создание картинок недоступно на тарифе Free</b>\n\n"
         "Вы отправили запрос на генерацию изображения (например, «нарисуй…», «создай картинку…»). "
@@ -314,6 +330,8 @@ EXTRA_RU: dict[str, str] = {
     "plan_limit_reminders_unlimited": "Без лимита напоминаний",
     "plan_limit_storage_mb": "Хранилище {n} МБ",
     "plan_limit_storage_gb": "Хранилище {n} ГБ",
+    "plan_limit_vault_basic": "Личное хранилище: загрузка документов",
+    "plan_limit_vault_lock": "🔐 Защищённый сейф: пароль на хранилище",
     "plan_all_modules": "Все модули доступны",
     "plan_feature_voice": "Голосовые сообщения",
     "plan_feature_photo": "AI-анализ фото",
@@ -322,6 +340,13 @@ EXTRA_RU: dict[str, str] = {
     "quota_ai_daily": "⚠️ Дневной лимит AI исчерпан. /subscription",
     "quota_ai_monthly": "⚠️ Месячный лимит AI исчерпан. /subscription",
     "quota_voice": "🎤 Голос — от Basic. /subscription",
+    "quota_vault_lock": (
+        "🔐 <b>Защищённый сейф — от тарифа Student</b>\n\n"
+        "В «Личное хранилище» можно сохранять паспорт, полисы, чеки и другие документы. "
+        "На платных тарифах сейф дополнительно <b>защищается паролем</b>: без него раздел не откроется, "
+        "а записи не попадут в общий поиск.\n\n"
+        "На Free сейф работает, но без пароля."
+    ),
     "quota_photo_ai": "📷 AI-фото — от Basic. /subscription",
     "quota_reminders": "⚠️ Лимит напоминаний {used}/{limit}. /subscription",
     "quota_memory": "⚠️ Лимит памяти {used}/{limit}. /subscription",
@@ -524,6 +549,13 @@ EXTRA_UZ: dict[str, str] = {
     "sub_btn_back": "↩️ Orqaga",
     "quota_ai_daily": "⚠️ Kunlik AI limiti tugadi. /subscription",
     "quota_voice": "🎤 Ovoz Basic dan. /subscription",
+    "quota_vault_lock": (
+        "🔐 <b>Himoyalangan seyf — Student tarifidan</b>\n\n"
+        "«Shaxsiy ombor»da pasport, polislar, cheklar va boshqa hujjatlarni saqlashingiz mumkin. "
+        "Pullik tariflarda seyf <b>parol bilan himoyalanadi</b>: parolsiz bo'lim ochilmaydi "
+        "va yozuvlar umumiy qidiruvda ko'rinmaydi.\n\n"
+        "Free tarifida ombor ishlaydi, lekin parolsiz."
+    ),
     "quota_photo_ai": "📷 AI-foto Basic dan. /subscription",
     "plan_price_free": "Bepul",
     "plan_basic_name": "Basic",
@@ -630,6 +662,20 @@ EXTRA_UZ: dict[str, str] = {
         "Limit yangi oy boshida yangilanadi yoki kattaroq limitli tarifga o'ting.\n\n"
         "Batafsil: /subscription"
     ),
+    "quota_image_gen_detail": (
+        "🎨 <b>Free tarifida rasm yaratish yo'q</b>\n\n"
+        "Siz rasm yaratish so'rovi yubordingiz (masalan, «chiz…», «rasm yarat…»). "
+        "Bepul tarifda matnli AI va boshqa bo'limlar ishlaydi, "
+        "lekin <b>tavsif bo'yicha rasm yaratish kirmaydi</b> — bu alohida funksiya: "
+        "GPT-Image modeli ishlatiladi va har bir rasm uchun AI-kredit yechiladi."
+    ),
+    "quota_image_gen_monthly_detail": (
+        "⚠️ <b>Bu oy uchun rasm yaratish limiti tugadi</b> ({used} / {limit}).\n\n"
+        "Tarifingizda rasm yaratish bor, lekin oyiga cheklangan. "
+        "Limit yangi oy boshida yangilanadi yoki kattaroq limitli tarifga o'ting."
+    ),
+    "quota_image_gen_plans_title": "💳 <b>Rasm yaratishli tariflar</b>",
+    "quota_image_gen_plan_line": "{emoji} {name} — <b>{images}</b> rasm/oy · {price}",
     "quota_image_gen": (
         "🎨 <b>Free tarifida rasm yaratish yo'q</b>\n\n"
         "Siz rasm yaratish so'rovi yubordingiz (masalan, «chiz…», «rasm yarat…»). "
@@ -839,6 +885,8 @@ EXTRA_EN: dict[str, str] = {
     "sub_ai_monthly": "AI this month: {used} / {limit}",
     "sub_ai_bonus": "Bonus requests: {bonus}",
     "sub_storage_limit": "Storage: up to {limit} MB",
+    "sub_vault_lock_on": "🔐 Protected vault: password lock",
+    "sub_vault_lock_off": "🔐 Vault: no password (protection from Student)",
     "sub_memory_limit": "AI memory: up to {limit} facts",
     "sub_memory_unlimited": "AI memory: unlimited",
     "sub_referral_info": (
@@ -924,13 +972,13 @@ EXTRA_EN: dict[str, str] = {
     "plan_price_free": "Free",
     "plan_price_monthly": "<b>{price}</b> / mo (~${usd})",
     "plan_free_name": "Free",
-    "plan_free_desc": "All modules, usage limits apply.",
+    "plan_free_desc": "GPT-4o Mini, document vault, AI and photo limits.",
     "plan_basic_name": "Basic",
-    "plan_basic_desc": "For most users.",
+    "plan_basic_desc": "GPT-5.4 Mini, voice, password-protected vault, 40 images/mo.",
     "plan_premium_name": "Premium",
-    "plan_premium_desc": "For active users.",
+    "plan_premium_desc": "GPT-5.5, family up to 5, protected vault, 120 images/mo.",
     "plan_pro_name": "Pro",
-    "plan_pro_desc": "Near-unlimited + premium model.",
+    "plan_pro_desc": "Max AI, family up to 10, protected vault, 400 images/mo.",
     "plan_family_name": "Family",
     "plan_family_desc": "Up to 5 people.",
     "plan_pkg_100": "100 AI requests",
@@ -942,6 +990,8 @@ EXTRA_EN: dict[str, str] = {
     "plan_limit_reminders_unlimited": "Unlimited reminders",
     "plan_limit_storage_mb": "Storage {n} MB",
     "plan_limit_storage_gb": "Storage {n} GB",
+    "plan_limit_vault_basic": "Personal vault: upload documents",
+    "plan_limit_vault_lock": "🔐 Protected vault: password lock",
     "plan_all_modules": "All modules available",
     "plan_feature_voice": "Voice messages",
     "plan_feature_photo": "AI photo analysis",
@@ -950,6 +1000,13 @@ EXTRA_EN: dict[str, str] = {
     "quota_ai_daily": "⚠️ Daily AI limit reached. /subscription",
     "quota_ai_monthly": "⚠️ Monthly AI limit reached. /subscription",
     "quota_voice": "🎤 Voice from Basic plan. /subscription",
+    "quota_vault_lock": (
+        "🔐 <b>Protected vault — from Student plan</b>\n\n"
+        "Save passport scans, policies, receipts and other documents in Personal vault. "
+        "On paid plans the vault is <b>password-protected</b>: it won't open without the password, "
+        "and entries are hidden from global search.\n\n"
+        "On Free the vault works, but without a password."
+    ),
     "quota_photo_ai": "📷 AI photos from Basic. /subscription",
     "quota_reminders": "⚠️ Reminder limit {used}/{limit}. /subscription",
     "quota_memory": "⚠️ Memory limit {used}/{limit}. /subscription",
@@ -984,6 +1041,20 @@ EXTRA_EN: dict[str, str] = {
         "The limit resets at the start of next month, or you can upgrade to a plan with a higher cap.\n\n"
         "Details: /subscription"
     ),
+    "quota_image_gen_detail": (
+        "🎨 <b>Image generation is not available on the Free plan</b>\n\n"
+        "You sent a request to create an image (e.g. “draw…”, “generate a picture…”). "
+        "On the free plan you can use text AI and other bot sections, "
+        "but <b>image generation from a text prompt is not included</b> — it's a separate feature: "
+        "it uses the GPT-Image model and spends AI credits per image."
+    ),
+    "quota_image_gen_monthly_detail": (
+        "⚠️ <b>Image generation limit reached for this month</b> ({used} of {limit}).\n\n"
+        "Your plan includes image generation, but the number of images per month is limited. "
+        "The limit resets at the start of next month, or upgrade to a plan with a higher cap."
+    ),
+    "quota_image_gen_plans_title": "💳 <b>Plans with image generation</b>",
+    "quota_image_gen_plan_line": "{emoji} {name} — <b>{images}</b> images/mo · {price}",
     "quota_image_gen": (
         "🎨 <b>Image generation is not available on the Free plan</b>\n\n"
         "You sent a request to create an image (e.g. “draw…”, “generate a picture…”). "

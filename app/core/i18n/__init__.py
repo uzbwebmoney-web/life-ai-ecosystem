@@ -714,9 +714,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_lock_settings_off": "🔐 Защита хранилища",
         "vlt_lock_settings_on": "🔐 Защита хранилища ✅",
         "vlt_lock_settings_intro_off": (
-            "🔐 <b>Защита личных данных</b>\n\n"
-            "Можно установить пароль на «Личное хранилище». "
-            "Без пароля раздел не откроется."
+            "🔐 <b>Защищённый сейф</b>\n\n"
+            "В «Личное хранилище» можно сохранять паспорт, полисы, чеки и сканы документов. "
+            "Установите пароль — без него раздел не откроется, записи скроются из общего поиска.\n\n"
+            "Пароль хранится в зашифрованном виде только в базе бота."
         ),
         "vlt_lock_settings_intro_on": (
             "🔐 <b>Защита личных данных</b>\n\n"
@@ -1646,9 +1647,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_lock_settings_off": "🔐 Ombor himoyasi",
         "vlt_lock_settings_on": "🔐 Ombor himoyasi ✅",
         "vlt_lock_settings_intro_off": (
-            "🔐 <b>Shaxsiy ma'lumotlarni himoya qilish</b>\n\n"
-            "«Shaxsiy ombor» uchun parol o'rnatish mumkin. "
-            "Parolsiz bo'lim ochilmaydi."
+            "🔐 <b>Himoyalangan seyf</b>\n\n"
+            "«Shaxsiy ombor»da pasport, polislar, cheklar va hujjat skanlarini saqlashingiz mumkin. "
+            "Parol o'rnating — bo'limsiz ochilmaydi, yozuvlar umumiy qidiruvda ko'rinmaydi.\n\n"
+            "Parol faqat bot bazasida shifrlangan holda saqlanadi."
         ),
         "vlt_lock_settings_intro_on": (
             "🔐 <b>Shaxsiy ma'lumotlarni himoya qilish</b>\n\n"
@@ -2579,9 +2581,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_lock_settings_off": "🔐 Vault protection",
         "vlt_lock_settings_on": "🔐 Vault protection ✅",
         "vlt_lock_settings_intro_off": (
-            "🔐 <b>Personal data protection</b>\n\n"
-            "Set a password for «Personal vault». "
-            "The section won't open without it."
+            "🔐 <b>Protected vault</b>\n\n"
+            "Save passport scans, policies, receipts and other documents in Personal vault. "
+            "Set a password — the section stays locked without it, and entries are hidden from global search.\n\n"
+            "Your password is stored encrypted in the bot database only."
         ),
         "vlt_lock_settings_intro_on": (
             "🔐 <b>Personal data protection</b>\n\n"

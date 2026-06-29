@@ -19,7 +19,7 @@ from app.bot.keyboards import (
     settings_kb,
     submodule_kb,
 )
-from app.bot.keyboards_subscription import insufficient_credits_kb
+from app.bot.keyboards_subscription import insufficient_credits_kb, quota_upgrade_kb
 from app.bot.keyboards_vault import vault_lock_cancel_kb, vault_lock_settings_kb
 from app.bot.keyboards_ecosystem import ecosystem_features_kb, notifications_kb
 from app.bot.states import MemoryStates, VaultLockStates
@@ -29,7 +29,7 @@ from app.core.modules.catalog import CATEGORIES, MODULE_BY_ID
 from app.core.modules.ui_texts import module_example_text, module_hint_text
 from app.models.entities import User
 from app.services.ai_service import ask_ai
-from app.services.subscription_service import parse_insufficient_credits_reply
+from app.services.subscription_service import feature_allowed, parse_insufficient_credits_reply
 from app.services.ecosystem_service import (
     build_search_ai_context,
     format_notifications_list,
@@ -346,12 +346,19 @@ async def settings_toggle_voice(callback: CallbackQuery, user: User, session: As
 async def _show_vault_lock_settings(target, user: User, *, edit: bool = False) -> None:
     lang = _lang(user)
     protected = is_vault_protected(user)
-    text = t(lang, "vlt_lock_settings_intro_on" if protected else "vlt_lock_settings_intro_off")
-    kb = vault_lock_settings_kb(protected, lang)
-    if edit:
-        await target.edit_text(text, reply_markup=kb)
+    can_enable = feature_allowed(user, "vault_lock") is None
+    if protected:
+        text = t(lang, "vlt_lock_settings_intro_on")
+    elif can_enable:
+        text = t(lang, "vlt_lock_settings_intro_off")
     else:
-        await target.answer(text, reply_markup=kb)
+        text = t(lang, "quota_vault_lock")
+    kb = vault_lock_settings_kb(protected, lang, can_enable=can_enable)
+    reply_kb = quota_upgrade_kb(lang) if not can_enable and not protected else kb
+    if edit:
+        await target.edit_text(text, parse_mode="HTML", reply_markup=reply_kb)
+    else:
+        await target.answer(text, parse_mode="HTML", reply_markup=reply_kb)
 
 
 @router.callback_query(F.data == "set:vault_lock")
@@ -369,6 +376,14 @@ async def settings_vault_lock_cancel(callback: CallbackQuery, state: FSMContext,
 @router.callback_query(F.data == "set:vault_lock:enable")
 async def settings_vault_lock_enable(callback: CallbackQuery, state: FSMContext, user: User) -> None:
     lang = _lang(user)
+    if feature_allowed(user, "vault_lock"):
+        await callback.message.answer(
+            t(lang, "quota_vault_lock"),
+            parse_mode="HTML",
+            reply_markup=quota_upgrade_kb(lang),
+        )
+        await callback.answer()
+        return
     await state.clear()
     await state.set_state(VaultLockStates.waiting_set_password)
     await callback.message.answer(

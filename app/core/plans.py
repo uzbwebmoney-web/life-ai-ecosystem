@@ -29,6 +29,7 @@ class PlanLimits:
     pdf_docx_monthly: int | None
     memory_facts: int | None
     storage_mb: int
+    vault_lock: bool
     reminders: int | None
     voice: bool
     ocr: bool
@@ -106,6 +107,7 @@ PLANS: dict[PlanId, PlanInfo] = {
             pdf_docx_monthly=0,
             memory_facts=100,
             storage_mb=100,
+            vault_lock=False,
             reminders=10,
             voice=False,
             ocr=False,
@@ -138,6 +140,7 @@ PLANS: dict[PlanId, PlanInfo] = {
             pdf_docx_monthly=20,
             memory_facts=1000,
             storage_mb=2048,
+            vault_lock=True,
             reminders=20,
             voice=True,
             ocr=True,
@@ -170,6 +173,7 @@ PLANS: dict[PlanId, PlanInfo] = {
             pdf_docx_monthly=100,
             memory_facts=5000,
             storage_mb=10240,
+            vault_lock=True,
             reminders=50,
             voice=True,
             ocr=True,
@@ -202,6 +206,7 @@ PLANS: dict[PlanId, PlanInfo] = {
             pdf_docx_monthly=500,
             memory_facts=20000,
             storage_mb=51200,
+            vault_lock=True,
             reminders=None,
             voice=True,
             ocr=True,
@@ -234,6 +239,7 @@ PLANS: dict[PlanId, PlanInfo] = {
             pdf_docx_monthly=2000,
             memory_facts=100000,
             storage_mb=204800,
+            vault_lock=True,
             reminders=None,
             voice=True,
             ocr=True,
@@ -261,7 +267,6 @@ ADDON_PACKAGES: tuple[AddonPackage, ...] = (
     AddonPackage("p_credits_2000", "ai_credits", 2000, 2.99, "plan_pkg_credits_2000"),
     AddonPackage("p_credits_5000", "ai_credits", 5000, 5.99, "plan_pkg_credits_5000"),
     AddonPackage("p_credits_10000", "ai_credits", 10000, 9.99, "plan_pkg_credits_10000"),
-    AddonPackage("p_cloud20", "storage_mb", 20_480, 2.99, "plan_pkg_cloud20"),
 )
 
 AI_PACKAGES = ADDON_PACKAGES

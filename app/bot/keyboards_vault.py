@@ -106,7 +106,12 @@ def vault_unlock_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     )
 
 
-def vault_lock_settings_kb(has_lock: bool, lang: str = "ru") -> InlineKeyboardMarkup:
+def vault_lock_settings_kb(
+    has_lock: bool,
+    lang: str = "ru",
+    *,
+    can_enable: bool = True,
+) -> InlineKeyboardMarkup:
     rows: list[list[InlineKeyboardButton]] = []
     if has_lock:
         rows.append(
@@ -118,7 +123,7 @@ def vault_lock_settings_kb(has_lock: bool, lang: str = "ru") -> InlineKeyboardMa
         rows.append(
             [InlineKeyboardButton(text=t(lang, "vlt_lock_disable_btn"), callback_data="set:vault_lock:disable")]
         )
-    else:
+    elif can_enable:
         rows.append(
             [InlineKeyboardButton(text=t(lang, "vlt_lock_enable_btn"), callback_data="set:vault_lock:enable")]
         )

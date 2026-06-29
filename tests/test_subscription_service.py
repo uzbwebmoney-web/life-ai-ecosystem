@@ -6,6 +6,7 @@ from app.services.subscription_service import (
     credits_left,
     credits_total,
     effective_plan_id,
+    feature_allowed,
     module_allowed,
 )
 
@@ -85,6 +86,16 @@ def test_free_photo_analysis_limit():
     assert PLANS["free"].limits.photo_ai is True
 
 
+def test_vault_lock_by_plan():
+    assert PLANS["free"].limits.vault_lock is False
+    assert PLANS["student"].limits.vault_lock is True
+    assert PLANS["basic"].limits.vault_lock is True
+    user = User(id=1, telegram_id=1, plan_id="free")
+    assert feature_allowed(user, "vault_lock") == "quota_vault_lock"
+    paid = User(id=2, telegram_id=2, plan_id="student")
+    assert feature_allowed(paid, "vault_lock") is None
+
+
 def test_student_all_modules():
     user = User(
         id=1,
@@ -124,3 +135,20 @@ def test_format_insufficient_credits_lists_plans_and_payment():
     is_normal, normal = parse_insufficient_credits_reply("Hello")
     assert is_normal is False
     assert normal == "Hello"
+
+
+def test_format_image_gen_blocked_lists_plans_and_payment():
+    from app.services.subscription_service import format_image_gen_blocked
+
+    user = User(id=1, telegram_id=1, plan_id="free")
+    text = format_image_gen_blocked(user, lang="ru", kind="plan")
+    assert "Создание картинок недоступно" in text
+    assert "Тарифы с генерацией" in text
+    assert "Способы оплаты" in text
+    assert "Student" in text or PLANS["student"].emoji in text
+    assert "/subscription" not in text
+
+    user_student = User(id=2, telegram_id=2, plan_id="student", image_gen_used_month=10)
+    monthly = format_image_gen_blocked(user_student, lang="ru", kind="monthly", used=10, limit=10)
+    assert "исчерпан" in monthly
+    assert "10" in monthly

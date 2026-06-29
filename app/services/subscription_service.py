@@ -361,6 +361,48 @@ def format_insufficient_credits(user: User, *, cost: int, lang: str) -> str:
     return "\n".join(lines)
 
 
+def format_image_gen_blocked(
+    user: User,
+    *,
+    lang: str,
+    kind: str,
+    used: int = 0,
+    limit: int = 0,
+) -> str:
+    from app.core.config import settings
+
+    if kind == "monthly":
+        lines = [t(lang, "quota_image_gen_monthly_detail", used=used, limit=limit)]
+    else:
+        lines = [t(lang, "quota_image_gen_detail")]
+    lines.extend(["", t(lang, "quota_image_gen_plans_title")])
+    for plan_id in ("student", "basic", "premium", "pro"):
+        plan = PLANS[plan_id]
+        images = int(plan.limits.image_gen_monthly or 0)
+        if images <= 0:
+            continue
+        if plan.usd_monthly:
+            price = format_uzs(usd_to_uzs(plan.usd_monthly))
+        else:
+            price = t(lang, "plan_price_free")
+        lines.append(
+            t(
+                lang,
+                "quota_image_gen_plan_line",
+                emoji=plan.emoji,
+                name=t(lang, plan.name_key),
+                images=images,
+                price=price,
+            )
+        )
+    lines.extend(["", t(lang, "quota_ai_credits_pay_title")])
+    lines.append(t(lang, "quota_ai_credits_pay_line", method=t(lang, "pay_method_stars")))
+    if settings.payment_card_number.strip():
+        lines.append(t(lang, "quota_ai_credits_pay_line", method=t(lang, "pay_method_card")))
+    lines.extend(["", t(lang, "quota_ai_credits_cta")])
+    return "\n".join(lines)
+
+
 INSUFFICIENT_CREDITS_PREFIX = "\x00quota_credits\x00"
 
 
@@ -583,6 +625,10 @@ def feature_allowed(user: User, feature: str) -> str | None:
 
             return "quota_pdf"
 
+    if feature == "vault_lock" and not limits.vault_lock:
+
+        return "quota_vault_lock"
+
     return None
 
 
@@ -649,7 +695,7 @@ async def check_image_gen_quota(
 
     if blocked:
 
-        return t(lang, blocked)
+        return format_image_gen_blocked(user, lang=lang, kind="plan")
 
     _reset_usage_counters(user)
 
@@ -659,7 +705,7 @@ async def check_image_gen_quota(
 
     if used >= limit:
 
-        return t(lang, "quota_image_gen_monthly", used=used, limit=limit)
+        return format_image_gen_blocked(user, lang=lang, kind="monthly", used=used, limit=limit)
 
     return check_credits_for_cost(user, credits, lang=lang)
 
@@ -946,7 +992,11 @@ def format_usage_summary(user: User, *, lang: str) -> str:
 
         lines.append(t(lang, "sub_memory_unlimited"))
 
-    lines.append(t(lang, "sub_storage_limit", limit=_effective_storage_limit_mb(user)))
+    lines.append(
+        t(lang, "sub_vault_lock_on")
+        if plan_info(user).limits.vault_lock
+        else t(lang, "sub_vault_lock_off")
+    )
 
     return "\n".join(lines)
 
@@ -1018,16 +1068,10 @@ def format_plan_card(plan_id: PlanId, *, lang: str) -> str:
 
     )
 
-    storage_gb = limits.storage_mb / 1024 if limits.storage_mb >= 1024 else None
-
-    storage_line = (
-
-        t(lang, "plan_limit_storage_gb", n=f"{storage_gb:g}")
-
-        if storage_gb
-
-        else t(lang, "plan_limit_storage_mb", n=limits.storage_mb)
-
+    vault_line = (
+        t(lang, "plan_limit_vault_lock")
+        if limits.vault_lock
+        else t(lang, "plan_limit_vault_basic")
     )
 
     memory_line = (
@@ -1070,7 +1114,7 @@ def format_plan_card(plan_id: PlanId, *, lang: str) -> str:
 
         f"• {t(lang, 'plan_feature_memory')}: {memory_line}",
 
-        f"• {storage_line}",
+        f"• {vault_line}",
 
     ]
 

@@ -111,3 +111,8 @@ def insufficient_credits_kb(lang: str = "ru") -> InlineKeyboardMarkup:
         ]
     )
 
+
+def quota_upgrade_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    """Tariffs, packages, and payment entry — for credits and image-gen limits."""
+    return insufficient_credits_kb(lang)
+
