@@ -66,27 +66,40 @@ _MODULE_WEB_HINTS = frozenset(
         "business",
         "education",
         "home",
+        "health",
+        "car",
+        "finance",
+        "nutrition",
+        "organizer",
+        "vault",
+        "music",
+        "shopping",
+        "generic",
     }
 )
 
 _WEB_SEARCH_INSTRUCTIONS: dict[str, str] = {
     "ru": (
-        "Если пользователь просит Telegram-канал/группу, сайт, телефон или контакты — "
-        "обязательно используй веб-поиск. В ответе укажи полные ссылки (https://t.me/…). "
-        "Запрещено давать только названия без ссылок, если ссылки есть в результатах поиска. "
-        "Запрещены общие советы «откройте Telegram и ищите сами», если поиск уже дал ссылки."
+        "Веб-поиск доступен во всех разделах бота. Используй его, когда нужны актуальные данные: "
+        "контакты, Telegram, сайты, цены, адреса, правила, законы, расписания, новости, "
+        "инструкции по услугам и организациям. "
+        "В ответе указывай полные ссылки (https://…, t.me/…). "
+        "Не давай только названия без ссылок, если ссылки найдены. "
+        "Для общих знаний без необходимости свежих данных можно ответить без поиска."
     ),
     "uz": (
-        "Foydalanuvchi Telegram kanal/guruh, sayt, telefon yoki kontaktlarni so'rasa — "
-        "veb-qidiruvdan foydalaning. Javobda to'liq havolalarni (https://t.me/…) yozing. "
-        "Havolalar topilgan bo'lsa, faqat nom berish taqiqlanadi. "
-        "«Telegramni oching va qidiring» kabi umumiy maslahat taqiqlanadi."
+        "Veb-qidiruv botning barcha bo'limlarida mavjud. Aktual ma'lumot kerak bo'lsa foydalaning: "
+        "kontaktlar, Telegram, saytlar, narxlar, manzillar, qoidalar, qonunlar, jadval, yangiliklar. "
+        "Javobda to'liq havolalarni (https://…, t.me/…) yozing. "
+        "Havolalar topilsa, faqat nom berish taqiqlanadi. "
+        "Umumiy bilim uchun qidiruv shart emas."
     ),
     "en": (
-        "If the user asks for Telegram channels/groups, websites, phones, or contacts — "
-        "use web search. Include full links (https://t.me/…) in the answer. "
-        "Do not give names only when links are available. "
-        "Do not reply with generic «open Telegram and search yourself» when links were found."
+        "Web search is available in every bot section. Use it when fresh data is needed: "
+        "contacts, Telegram, websites, prices, addresses, rules, laws, schedules, news. "
+        "Include full links (https://…, t.me/…) in answers. "
+        "Do not give names only when links were found. "
+        "For general knowledge without fresh data, search is optional."
     ),
 }
 
@@ -97,8 +110,18 @@ def should_use_web_search(user_message: str, *, module_id: str | None = None) ->
     text = (user_message or "").strip()
     if len(text) < 4:
         return False, False
+
+    force = bool(_FORCE_WEB_RE.search(text))
     if _WEB_HINT_RE.search(text):
-        return True, bool(_FORCE_WEB_RE.search(text))
+        return True, force
+
+    if settings.web_search_all_modules:
+        if module_id is not None:
+            return True, force
+        words = text.split()
+        if "?" in text or len(words) >= 4:
+            return True, False
+
     if module_id in _MODULE_WEB_HINTS and "?" in text:
         return True, False
     return False, False

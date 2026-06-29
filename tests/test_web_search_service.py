@@ -29,6 +29,18 @@ def test_should_use_web_search_general_question():
     assert force is False
 
 
+def test_should_use_web_search_any_module():
+    use, force = should_use_web_search("какие документы нужны для замены прав", module_id="car")
+    assert use is True
+    assert force is False
+
+
+def test_should_use_web_search_health_module():
+    use, force = should_use_web_search("боль в колене что делать", module_id="health")
+    assert use is True
+    assert force is False
+
+
 def test_collect_links_from_handles_and_bare_tme():
     links = collect_links_from_text("Kanal @migration_uz yoki t.me/official_uz")
     assert "https://t.me/migration_uz" in links

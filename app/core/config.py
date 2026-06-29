@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     admin_new_user_notify: bool = Field(default=True, alias="ADMIN_NEW_USER_NOTIFY")
     admin_ai_request_notify: bool = Field(default=True, alias="ADMIN_AI_REQUEST_NOTIFY")
     web_search_enabled: bool = Field(default=True, alias="WEB_SEARCH_ENABLED")
+    web_search_all_modules: bool = Field(default=True, alias="WEB_SEARCH_ALL_MODULES")
 
     @property
     def admin_telegram_id_list(self) -> list[int]:
