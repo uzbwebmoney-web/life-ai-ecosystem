@@ -39,6 +39,8 @@ from app.services.organizer_service import (
     toggle_task,
 )
 
+router = Router()
+
 
 @router.callback_query(F.data == "mod:organizer")
 async def organizer_module(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
