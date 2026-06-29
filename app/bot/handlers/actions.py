@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.ai_reply_ui import deliver_ai_reply
 from app.bot.message_ui import deliver_long_text
+from app.bot.voice_reply import maybe_send_voice_reply
 from app.bot.keyboards import ai_chat_insufficient_kb, ai_chat_kb, back_menu_kb, record_saved_kb
 from app.bot.states import AiChatStates, MemoryStates, RecordStates, ReminderStates
 from app.core.i18n import t
@@ -24,12 +25,6 @@ from app.services.study_notes_service import needs_study_document_clarification,
 from app.services.ai_chat_history import append_turn, module_history_key, normalize_history, serialize_history
 
 router = Router()
-
-
-async def _maybe_send_voice(message: Message, user: User, text: str) -> None:
-    from app.bot.voice_reply import maybe_send_voice_reply
-
-    await maybe_send_voice_reply(message, user, text)
 
 
 @router.callback_query(F.data == "ai:end")
@@ -172,7 +167,7 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
             module_id=module_id,
             submodule_id=sub_id or None,
         )
-    await _maybe_send_voice(message, user, answer)
+    await maybe_send_voice_reply(message, user, answer)
     if not is_quota and user.memory_enabled:
         await add_memory(
             session,
