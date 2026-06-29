@@ -25,6 +25,12 @@ from app.services.subscription_service import (
 
 from app.services.text_format import format_ai_reply
 
+from app.services.web_search_service import (
+    call_ai_with_web_search,
+    enrich_system_with_web_context,
+    should_use_web_search,
+)
+
 
 
 logger = logging.getLogger(__name__)
@@ -218,8 +224,12 @@ async def ask_ai(
 
     history = list(chat_history or [])
 
-    def _chat_messages(user_content: str) -> list[dict[str, str]]:
-        messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+    mod_id = module_id or (getattr(user, "active_module_id", None) if user is not None else None)
+    use_web_search, force_web_search = should_use_web_search(user_message, module_id=mod_id)
+
+    def _chat_messages(user_content: str, *, system_prompt: str | None = None) -> list[dict[str, str]]:
+        prompt = system_prompt if system_prompt is not None else system
+        messages: list[dict[str, str]] = [{"role": "system", "content": prompt}]
         for past_q, past_a in history:
             messages.append({"role": "user", "content": past_q})
             messages.append({"role": "assistant", "content": past_a})
@@ -258,7 +268,7 @@ async def ask_ai(
 
             logger.info(
 
-                "AI request model=%s part=%s/%s max_tokens=%s preview=%r",
+                "AI request model=%s part=%s/%s max_tokens=%s web=%s preview=%r",
 
                 model,
 
@@ -268,6 +278,8 @@ async def ask_ai(
 
                 chunk_tokens,
 
+                use_web_search and part_idx == 0,
+
                 user_message[:120],
 
             )
@@ -275,14 +287,45 @@ async def ask_ai(
             response = None
             raw = ""
             attempt_tokens = chunk_tokens
+            part_use_web = use_web_search and part_idx == 0
             for attempt in range(2):
                 try:
-                    response = await client.chat.completions.create(
-                        model=model,
-                        messages=_chat_messages(user_content),
-                        **chat_token_limit_kwargs(model, attempt_tokens),
-                    )
-                    raw = (response.choices[0].message.content or "").strip()
+                    if part_use_web:
+                        try:
+                            raw, response = await call_ai_with_web_search(
+                                client,
+                                model=model,
+                                system=system,
+                                user_content=user_content,
+                                chat_history=history,
+                                max_output_tokens=attempt_tokens,
+                                force=force_web_search,
+                                language=language,
+                            )
+                        except Exception as web_exc:
+                            logger.warning(
+                                "Web search via Responses API failed (attempt %s): %s",
+                                attempt + 1,
+                                web_exc,
+                            )
+                            enriched_system = await enrich_system_with_web_context(
+                                system,
+                                user_message,
+                                language=language,
+                            )
+                            response = await client.chat.completions.create(
+                                model=model,
+                                messages=_chat_messages(user_content, system_prompt=enriched_system),
+                                **chat_token_limit_kwargs(model, attempt_tokens),
+                            )
+                            raw = (response.choices[0].message.content or "").strip()
+                    else:
+                        response = await client.chat.completions.create(
+                            model=model,
+                            messages=_chat_messages(user_content),
+                            **chat_token_limit_kwargs(model, attempt_tokens),
+                        )
+                        raw = (response.choices[0].message.content or "").strip()
                     if raw:
                         break
                     attempt_tokens = max(1500, int(attempt_tokens * 0.75))
