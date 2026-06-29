@@ -404,11 +404,14 @@ def format_image_gen_blocked(
 
 
 INSUFFICIENT_CREDITS_PREFIX = "\x00quota_credits\x00"
+QUOTA_BLOCK_PREFIX = "\x00quota_block\x00"
 
 
 def parse_insufficient_credits_reply(text: str) -> tuple[bool, str]:
     if text.startswith(INSUFFICIENT_CREDITS_PREFIX):
         return True, text[len(INSUFFICIENT_CREDITS_PREFIX) :]
+    if text.startswith(QUOTA_BLOCK_PREFIX):
+        return True, text[len(QUOTA_BLOCK_PREFIX) :]
     return False, text
 
 
@@ -479,6 +482,18 @@ async def consume_ai_request(
 
 ) -> None:
 
+    _reset_usage_counters(user)
+
+    tier = _model_tier(model or "")
+
+    if tier == "advanced":
+
+        user.advanced_model_used_month = (user.advanced_model_used_month or 0) + 1
+
+    elif tier == "pro":
+
+        user.pro_model_used_month = (user.pro_model_used_month or 0) + 1
+
     await consume_credits(session, user, credits)
 
 
@@ -531,15 +546,70 @@ async def check_ai_quota(
 
 
 
+from app.core.config import settings
+
+GPT54_MONTHLY_CAP: dict[str, int] = {
+    "free": 0,
+    "student": 50,
+    "basic": 300,
+    "premium": 0,
+    "pro": 0,
+}
+
+GPT55_MONTHLY_CAP: dict[str, int] = {
+    "free": 0,
+    "student": 0,
+    "basic": 0,
+    "premium": 30,
+    "pro": 300,
+}
+
+
+def _model_tier(model: str) -> str:
+    m = (model or "").lower()
+    if m == settings.effective_pro_model.lower():
+        return "pro"
+    if m == settings.effective_advanced_model.lower():
+        return "advanced"
+    return "base"
+
+
+def _gpt54_cap(user: User) -> int:
+    plan = effective_plan_id(user)
+    return GPT54_MONTHLY_CAP.get(plan, 0) + (user.bonus_advanced_model or 0)
+
+
+def _gpt55_cap(user: User) -> int:
+    plan = effective_plan_id(user)
+    return GPT55_MONTHLY_CAP.get(plan, 0) + (user.bonus_pro_model or 0)
+
+
 def check_model_quota(user: User, model: str, *, lang: str) -> str | None:
+    tier = _model_tier(model)
+    limits = plan_info(user).limits
+    _reset_usage_counters(user)
 
-    from app.core.credits import estimate_request_credits
+    if tier == "advanced":
+        if limits.advanced_model == "none":
+            return QUOTA_BLOCK_PREFIX + t(lang, "quota_advanced_model")
+        cap = _gpt54_cap(user)
+        if cap > 0:
+            used = user.advanced_model_used_month or 0
+            if used >= cap:
+                return QUOTA_BLOCK_PREFIX + t(
+                    lang, "quota_advanced_model_monthly", used=used, limit=cap
+                )
 
+    if tier == "pro":
+        if limits.advanced_model not in ("router", "full"):
+            return QUOTA_BLOCK_PREFIX + t(lang, "quota_pro_model")
+        cap = _gpt55_cap(user)
+        if cap > 0:
+            used = user.pro_model_used_month or 0
+            if used >= cap:
+                return QUOTA_BLOCK_PREFIX + t(lang, "quota_pro_model_monthly", used=used, limit=cap)
 
-
-    estimate = estimate_request_credits(user_message="стандартный запрос", model=model, max_output_tokens=1200)
-
-    return check_credits_for_cost(user, estimate.credits, lang=lang)
+    return None
 
 
 
@@ -777,8 +847,24 @@ async def check_module_access(session: AsyncSession, user: User, module_id: str,
 
     if key:
 
-        return t(lang, key, plan=t(lang, plan_info(user).name_key))
+        return t(lang, key, plan=f"{PLANS['student'].emoji} {t(lang, PLANS['student'].name_key)}")
 
+    return None
+
+
+def check_export_allowed(user: User, *, lang: str) -> str | None:
+    if plan_info(user).limits.export_level == "none":
+        return t(lang, "quota_export")
+    return None
+
+
+async def check_family_profile_quota(session: AsyncSession, user: User, *, lang: str) -> str | None:
+    from app.services.life_data import list_family_profiles
+
+    limit = plan_info(user).limits.family_profiles
+    profiles = await list_family_profiles(session, user.id)
+    if len(profiles) >= limit:
+        return t(lang, "quota_family_profiles", used=len(profiles), limit=limit)
     return None
 
 
@@ -982,6 +1068,18 @@ def format_usage_summary(user: User, *, lang: str) -> str:
 
         lines.append(t(lang, "sub_image_gen_monthly", used=user.image_gen_used_month or 0, limit=img_limit))
 
+    pdf_limit = plan_info(user).limits.pdf_docx_monthly or 0
+    if pdf_limit > 0:
+        lines.append(t(lang, "sub_pdf_monthly", used=user.pdf_used_month or 0, limit=pdf_limit))
+
+    gpt54_cap = _gpt54_cap(user)
+    if gpt54_cap > 0:
+        lines.append(t(lang, "sub_gpt54_monthly", used=user.advanced_model_used_month or 0, limit=gpt54_cap))
+
+    gpt55_cap = _gpt55_cap(user)
+    if gpt55_cap > 0:
+        lines.append(t(lang, "sub_gpt55_monthly", used=user.pro_model_used_month or 0, limit=gpt55_cap))
+
     mem_limit = _effective_memory_limit(user)
 
     if mem_limit is not None:
@@ -1117,6 +1215,10 @@ def format_plan_card(plan_id: PlanId, *, lang: str) -> str:
         f"• {vault_line}",
 
     ]
+
+    if limits.allowed_modules is not None:
+
+        parts.append(f"• {t(lang, 'plan_feature_student_modules')}")
 
     if limits.household_members > 1:
 

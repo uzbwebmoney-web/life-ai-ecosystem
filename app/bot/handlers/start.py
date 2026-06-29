@@ -21,7 +21,9 @@ async def _show_modules_menu(message: Message, user: User, session: AsyncSession
 
 
 async def _show_welcome(message: Message, lang: str) -> None:
-    await message.answer(t(lang, "onb_welcome"), reply_markup=onboarding_kb(lang))
+    from app.core.plans import TRIAL_DAYS
+
+    await message.answer(t(lang, "onb_welcome", days=TRIAL_DAYS), reply_markup=onboarding_kb(lang))
 
 
 @router.message(CommandStart())
@@ -66,7 +68,7 @@ async def start_pick_language(callback: CallbackQuery, user: User, session: Asyn
     new_lang = await set_user_language(session, user, code)
     await mark_welcome_pending(session, user)
     await callback.message.edit_text(t(new_lang, "language_changed", label=LANG_LABELS[new_lang]))
-    await callback.message.answer(t(new_lang, "onb_welcome"), reply_markup=onboarding_kb(new_lang))
+    await callback.message.answer(t(new_lang, "onb_welcome", days=TRIAL_DAYS), reply_markup=onboarding_kb(new_lang))
     await callback.answer()
 
 

@@ -26,6 +26,7 @@ class User(Base):
     household_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("households.id"), nullable=True)
     last_daily_feed_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
     vault_password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    vault_unlocked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     plan_id: Mapped[str] = mapped_column(String(16), default="free")
     plan_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     trial_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -401,4 +402,15 @@ class OrganizerItem(Base):
     due_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)
     done: Mapped[bool] = mapped_column(Boolean, default=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class ProcessedStarsPayment(Base):
+    __tablename__ = "processed_stars_payments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    charge_id: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    product_type: Mapped[str] = mapped_column(String(16))
+    product_id: Mapped[str] = mapped_column(String(32))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -419,6 +419,30 @@ MODULES: tuple[ModuleDef, ...] = (
 
     ),
 
+    ModuleDef(
+
+        "music", "🎵", "Музыка", "Musiqa", "Music", 1, "Развлечения",
+
+        "Текст песен, разделение вокала и минуса, анализ трека, перевод, аккорды.",
+
+        (
+
+            _sub("lyrics", "Текст песни", "Qo'shiq matni", "Song lyrics"),
+
+            _sub("separate", "Вокал и минус", "Vokal va minus", "Vocal separation"),
+
+            _sub("analyze", "Анализ трека", "Trek tahlili", "Track analysis"),
+
+            _sub("translate", "Перевод текста", "Matn tarjimasi", "Lyrics translation"),
+
+            _sub("chords", "Аккорды", "Akkordlar", "Chords"),
+
+            _sub("collection", "Моя коллекция", "Mening to'plamim", "My collection"),
+
+        ),
+
+    ),
+
 )
 
 
@@ -444,6 +468,8 @@ CATEGORIES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Планирование", ("organizer",)),
 
     ("AI и данные", ("ai_assistant", "vault")),
+
+    ("Музыка", ("music",)),
 
 )
 

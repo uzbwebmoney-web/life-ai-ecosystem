@@ -21,6 +21,7 @@ from app.services.payment_service import (
     notify_admins_stars_purchase,
     parse_stars_payload,
     product_label,
+    register_stars_payment,
     resolve_product,
     resolve_product_stars,
     submit_receipt,
@@ -116,6 +117,20 @@ async def stars_payment_success(message: Message, bot: Bot, user: User, session:
     _, _, expected_stars = resolve_product_stars(product_id)
     if payment.total_amount != expected_stars or payment.currency != "XTR":
         await message.answer(t(lang, "pay_order_not_found"))
+        return
+
+    charge_id = payment.telegram_payment_charge_id or payment.provider_payment_charge_id or ""
+    if not charge_id:
+        await message.answer(t(lang, "pay_order_not_found"))
+        return
+    if not await register_stars_payment(
+        session,
+        charge_id=charge_id,
+        user_id=user.id,
+        product_type=product_type,
+        product_id=product_id,
+    ):
+        await message.answer(t(lang, "pay_already_processed"))
         return
 
     await activate_product_purchase(session, user, product_type, product_id)

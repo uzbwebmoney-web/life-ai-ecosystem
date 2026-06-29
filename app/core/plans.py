@@ -94,6 +94,9 @@ def format_stars(amount: int) -> str:
     return f"{amount} ⭐"
 
 
+STUDENT_MODULE_IDS: frozenset[str] = frozenset({"education", "ai_assistant", "vault", "organizer"})
+
+
 PLANS: dict[PlanId, PlanInfo] = {
     "free": PlanInfo(
         id="free",
@@ -153,7 +156,7 @@ PLANS: dict[PlanId, PlanInfo] = {
             export_level="pdf",
             backup=False,
             workspaces=1,
-            allowed_modules=None,
+            allowed_modules=STUDENT_MODULE_IDS,
             cars=1,
             health_profiles=1,
             family_profiles=1,
@@ -274,5 +277,3 @@ AI_PACKAGES = ADDON_PACKAGES
 TRIAL_DAYS = 3
 REFERRAL_AI_BONUS = 100
 WELCOME_AI_BONUS = 50
-
-STUDENT_MODULE_IDS: frozenset[str] = frozenset({"education", "ai_assistant", "vault", "organizer"})

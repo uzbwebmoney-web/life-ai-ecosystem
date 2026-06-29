@@ -17,8 +17,14 @@ from app.bot.states import VaultLockStates, VaultStates
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
 from app.models.entities import User
+from app.services.date_parse import parse_date_flexible
 from app.services.home_service import parse_amount
 from app.services.life_data import set_active_module
+from app.services.vault_expiry_service import (
+    VAULT_EXPIRY_SUBMODULES,
+    merge_meta_expiry,
+    schedule_vault_expiry_alert,
+)
 from app.services.vault_service import (
     VAULT_FILE_SUBMODULES,
     add_vault_item,
@@ -103,12 +109,24 @@ async def _finalize_vault_item(
     title = str(data.get("vlt_title") or t(lang, "vlt_default_title"))
     body = str(data.get("vlt_body") or "")
     amount = data.get("vlt_amount")
-    meta = (
-        vault_file_meta(sub_id, file_id, mime=mime, kind=kind)
-        if file_id
-        else None
-    )
-    await add_vault_item(
+    expires_raw = data.get("vlt_expires_at")
+    expires_at = None
+    if expires_raw:
+        from datetime import datetime
+
+        try:
+            expires_at = datetime.fromisoformat(str(expires_raw))
+        except ValueError:
+            expires_at = None
+    meta = None
+    if file_id:
+        meta = merge_meta_expiry(
+            vault_file_meta(sub_id, file_id, mime=mime, kind=kind),
+            expires_at,
+        )
+    elif expires_at:
+        meta = merge_meta_expiry(None, expires_at)
+    record = await add_vault_item(
         session,
         user_id=user.id,
         submodule_id=sub_id,
@@ -118,6 +136,14 @@ async def _finalize_vault_item(
         profile_id=user.active_profile_id,
         meta_json=meta,
     )
+    if expires_at:
+        await schedule_vault_expiry_alert(
+            session,
+            user_id=user.id,
+            record=record,
+            expires_at=expires_at,
+            lang=lang,
+        )
     await message.answer(t(lang, "vlt_saved_with_file" if file_id else "vlt_saved"))
     await _show_items(message, user, session, lang, sub_id)
     await state.clear()
@@ -157,6 +183,24 @@ async def vault_submodule(
         return
     await set_active_module(session, user, "vault", submodule_id=sub_id)
     await _show_items(callback.message, user, session, lang, sub_id, edit=True)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("vlt:quick:"))
+async def vault_quick_add(callback: CallbackQuery, state: FSMContext, user: User, session: AsyncSession) -> None:
+    lang = user.language
+    sub_id = (callback.data or "").split(":")[2]
+    if not await require_vault_unlock(user, state, lang, f"sub:vault:{sub_id}", reply=callback):
+        return
+    titles = {
+        "passport": t(lang, "vlt_quick_passport"),
+        "policies": t(lang, "vlt_quick_policy"),
+        "receipts": t(lang, "vlt_quick_receipt"),
+    }
+    await state.clear()
+    await state.update_data(vlt_sub=sub_id, vlt_record_id=None, vlt_title=titles.get(sub_id, ""))
+    await state.set_state(VaultStates.waiting_body)
+    await callback.message.answer(t(lang, "vlt_body_prompt"), reply_markup=vault_cancel_kb(lang))
     await callback.answer()
 
 
@@ -228,6 +272,32 @@ async def vault_body(message: Message, state: FSMContext, user: User) -> None:
     if body == "-":
         body = ""
     await state.update_data(vlt_body=body)
+    data = await state.get_data()
+    sub_id = str(data.get("vlt_sub") or "notes")
+    if _needs_expiry_step(sub_id):
+        await state.set_state(VaultStates.waiting_expiry)
+        await message.answer(t(lang, "vlt_expiry_prompt"), reply_markup=vault_cancel_kb(lang))
+        return
+    await state.set_state(VaultStates.waiting_attachment)
+    await message.answer(t(lang, "vlt_attach_prompt"), reply_markup=vault_cancel_kb(lang))
+
+
+def _needs_expiry_step(sub_id: str) -> bool:
+    return sub_id in VAULT_EXPIRY_SUBMODULES
+
+
+@router.message(VaultStates.waiting_expiry)
+async def vault_expiry(message: Message, state: FSMContext, user: User) -> None:
+    lang = user.language
+    raw = (message.text or "").strip()
+    expires_at = None
+    if raw and raw != "-":
+        expires_at = parse_date_flexible(raw)
+        if not expires_at:
+            await message.answer(t(lang, "vlt_expiry_invalid"))
+            return
+    if expires_at:
+        await state.update_data(vlt_expires_at=expires_at.isoformat())
     await state.set_state(VaultStates.waiting_attachment)
     await message.answer(t(lang, "vlt_attach_prompt"), reply_markup=vault_cancel_kb(lang))
 

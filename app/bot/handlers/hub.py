@@ -134,7 +134,10 @@ async def open_module(callback: CallbackQuery, user: User, session: AsyncSession
         return
     blocked = await check_module_access(session, user, module_id, lang=lang)
     if blocked:
-        await callback.answer(blocked, show_alert=True)
+        from app.bot.quota_ui import answer_quota_block
+
+        await answer_quota_block(callback.message, blocked, lang=lang)
+        await callback.answer()
         return
     await set_active_module(session, user, module_id)
     subs = "\n".join(f"• {s.title(lang)}" for s in mod.submodules[:8])
@@ -174,7 +177,10 @@ async def open_submodule(callback: CallbackQuery, user: User, session: AsyncSess
         return
     blocked = await check_module_access(session, user, module_id, lang=lang)
     if blocked:
-        await callback.answer(blocked, show_alert=True)
+        from app.bot.quota_ui import answer_quota_block
+
+        await answer_quota_block(callback.message, blocked, lang=lang)
+        await callback.answer()
         return
     await set_active_module(session, user, module_id, submodule_id=sub_id)
     text = (
@@ -327,7 +333,10 @@ async def settings_toggle_voice(callback: CallbackQuery, user: User, session: As
     if not user.voice_mode:
         blocked = feature_allowed(user, "voice")
         if blocked:
-            await callback.answer(t(lang, blocked), show_alert=True)
+            from app.bot.quota_ui import answer_quota_block
+
+            await answer_quota_block(callback.message, t(lang, blocked), lang=lang)
+            await callback.answer()
             return
     enabled = await toggle_voice_mode(session, user)
     await callback.answer(t(lang, "voice_on_toast") if enabled else t(lang, "voice_off_toast"))
@@ -426,12 +435,13 @@ async def settings_vault_lock_disable(callback: CallbackQuery, state: FSMContext
 
 
 @router.callback_query(F.data == "set:vault_lock:locknow")
-async def settings_vault_lock_now(callback: CallbackQuery, user: User) -> None:
+async def settings_vault_lock_now(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
     lang = _lang(user)
     if not is_vault_protected(user):
         await callback.answer(t(lang, "vlt_lock_not_enabled"), show_alert=True)
         return
-    lock_vault(user.id)
+    lock_vault(user)
+    await session.commit()
     await callback.answer(t(lang, "vlt_lock_locked_now"))
 
 
@@ -463,6 +473,10 @@ async def settings_vault_confirm_password(
         return
     await set_vault_password(session, user, password)
     await state.clear()
+    try:
+        await message.delete()
+    except Exception:
+        pass
     await message.answer(t(lang, "vlt_lock_enabled"))
 
 
@@ -472,8 +486,16 @@ async def settings_vault_change_old(message: Message, state: FSMContext, user: U
     password = (message.text or "").strip()
     if not verify_vault_password(user, password):
         await message.answer(t(lang, "vlt_lock_wrong"))
+        try:
+            await message.delete()
+        except Exception:
+            pass
         return
     await state.set_state(VaultLockStates.waiting_set_password)
+    try:
+        await message.delete()
+    except Exception:
+        pass
     await message.answer(t(lang, "vlt_lock_set_prompt"), reply_markup=vault_lock_cancel_kb(lang))
 
 

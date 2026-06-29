@@ -14,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards_payment import payment_method_kb
 
-from app.bot.keyboards_subscription import packages_kb, subscription_kb, subscription_plan_kb
+from app.bot.keyboards_subscription import packages_kb, referral_kb, subscription_kb, subscription_plan_kb
+from app.services.subscription_service import referral_link
 
 from app.bot.message_ui import safe_edit_text
 
@@ -282,13 +283,15 @@ async def sub_referral(callback: CallbackQuery, user: User, session: AsyncSessio
 
     username = me.username or "bot"
 
+    link = referral_link(username, user)
+
     await safe_edit_text(
 
         callback.message,
 
         format_referral_info(user, username, lang=user.language),
 
-        reply_markup=subscription_kb(user.language),
+        reply_markup=referral_kb(user.language, link),
 
     )
 

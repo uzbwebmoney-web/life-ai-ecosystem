@@ -18,6 +18,8 @@ from app.bot.handlers.organizer import router as organizer_router
 
 from app.bot.handlers.nutrition import router as nutrition_router
 
+from app.bot.handlers.music import router as music_router
+
 from app.bot.handlers.education import router as education_router
 
 from app.bot.handlers.shopping import router as shopping_router
@@ -107,6 +109,8 @@ def create_dispatcher(session_maker: async_sessionmaker) -> Dispatcher:
     dp.include_router(assistant_router)
 
     dp.include_router(vault_router)
+
+    dp.include_router(music_router)
 
     dp.include_router(generic_ai_router)
 

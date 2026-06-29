@@ -19,6 +19,7 @@ _MODULE_HINT_KEYS: dict[str, str] = {
     "organizer": "mod_hint_organizer",
     "ai_assistant": "mod_hint_ai_assistant",
     "vault": "mod_hint_vault",
+    "music": "mod_hint_music",
 }
 
 _MODULE_EXAMPLE_KEYS: dict[str, str] = {
@@ -36,6 +37,7 @@ _MODULE_EXAMPLE_KEYS: dict[str, str] = {
     "organizer": "mod_example_organizer",
     "ai_assistant": "mod_example_ai_assistant",
     "vault": "mod_example_vault",
+    "music": "mod_example_music",
 }
 
 

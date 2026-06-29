@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.i18n import t
 from app.core.plans import ADDON_PACKAGES, PLANS, format_stars, format_uzs, usd_to_stars, usd_to_uzs
-from app.models.entities import PaymentOrder, User
+from app.models.entities import PaymentOrder, ProcessedStarsPayment, User
 
 
 def _utcnow() -> datetime:
@@ -92,6 +92,32 @@ async def activate_product_purchase(
     await session.commit()
     await session.refresh(user)
     return user
+
+
+async def register_stars_payment(
+    session: AsyncSession,
+    *,
+    charge_id: str,
+    user_id: int,
+    product_type: str,
+    product_id: str,
+) -> bool:
+    """Return True if payment is new and should be fulfilled."""
+    existing = (
+        await session.execute(select(ProcessedStarsPayment).where(ProcessedStarsPayment.charge_id == charge_id))
+    ).scalar_one_or_none()
+    if existing:
+        return False
+    session.add(
+        ProcessedStarsPayment(
+            charge_id=charge_id,
+            user_id=user_id,
+            product_type=product_type,
+            product_id=product_id,
+        )
+    )
+    await session.flush()
+    return True
 
 
 async def get_open_order(session: AsyncSession, user_id: int) -> PaymentOrder | None:

@@ -319,9 +319,23 @@ async def remind_datetime(message: Message, state: FSMContext, user: User, sessi
 @router.message(Command("export"))
 async def cmd_export(message: Message, user: User, session: AsyncSession) -> None:
     lang = user.language
-    payload = await build_user_export(session, user.id)
+    from app.bot.quota_ui import answer_quota_block
+    from app.services.subscription_service import check_export_allowed
+    from app.services.vault_lock_service import is_vault_protected, is_vault_unlocked
+
+    blocked = check_export_allowed(user, lang=lang)
+    if blocked:
+        await answer_quota_block(message, blocked, lang=lang)
+        return
+    include_vault = True
+    if is_vault_protected(user) and not is_vault_unlocked(user):
+        include_vault = False
+    payload = await build_user_export(session, user.id, include_vault=include_vault)
     doc = BufferedInputFile(payload.encode("utf-8"), filename=f"life_ai_export_{user.telegram_id}.json")
-    await message.answer_document(doc, caption=t(lang, "export_done"))
+    caption = t(lang, "export_done")
+    if not include_vault:
+        caption = f"{caption}\n\n{t(lang, 'export_vault_excluded')}"
+    await message.answer_document(doc, caption=caption)
 
 
 @router.message(Command("expense"))

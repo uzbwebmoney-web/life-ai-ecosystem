@@ -59,7 +59,19 @@ async def ask_ai(
 
     model = settings.openai_model
 
+    if user is not None and session is not None:
+        from app.services.subscription_service import QUOTA_BLOCK_PREFIX, feature_allowed
 
+        mod_id = module_id or getattr(user, "active_module_id", None)
+        sub_id = submodule_id or getattr(user, "active_submodule_id", None)
+        lower = user_message.lower()
+        doc_translate = sub_id == "documents" or any(
+            k in lower for k in ("перевед", "translate", "tarjima", "translation")
+        )
+        if doc_translate:
+            blocked = feature_allowed(user, "doc_translate")
+            if blocked:
+                return QUOTA_BLOCK_PREFIX + t(language, blocked)
 
     if user is not None and session is not None:
 
@@ -108,6 +120,12 @@ async def ask_ai(
         chunk_size = max_output_tokens_for_user(user)
 
         estimate = apply_chunk_estimate(raw_estimate, chunk_size=chunk_size)
+
+        model_quota = check_model_quota(user, model, lang=language)
+
+        if model_quota:
+
+            return model_quota
 
         quota_msg = await check_ai_quota(session, user, lang=language, estimate=estimate)
 

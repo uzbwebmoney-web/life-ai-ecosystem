@@ -54,6 +54,11 @@ _MODULE_DISCLAIMERS: dict[str, dict[str, str]] = {
         "uz": "Maxfiy ma'lumotlar — mahalliy saqlanadi, botni uchinchi shaxslarga bermang.",
         "en": "Confidential data — stored locally; do not share the bot with others.",
     },
+    "music": {
+        "ru": "Разделение вокала — ориентировочное (зависит от микса); не для коммерческого дистрибутива без лицензии.",
+        "uz": "Vokal ajratish taxminiy; litsenziyasiz tijorat uchun emas.",
+        "en": "Vocal separation is approximate; not for commercial distribution without rights.",
+    },
 }
 
 
@@ -132,6 +137,12 @@ def build_module_ai_hint(module_id: str, submodule_id: str | None = None, *, lan
                 from app.services.nutrition_service import NUTRITION_SUBMODULE_AI
 
                 extra = NUTRITION_SUBMODULE_AI.get(submodule_id)
+                if extra:
+                    parts.append(extra)
+            if module_id == "music":
+                from app.services.music_service import MUSIC_SUBMODULE_AI
+
+                extra = MUSIC_SUBMODULE_AI.get(submodule_id)
                 if extra:
                     parts.append(extra)
             if module_id == "ai_assistant":

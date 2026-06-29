@@ -79,6 +79,8 @@ _EXTRA_COLUMNS: dict[str, dict[str, str]] = {
 
         "bonus_storage_mb": "INTEGER DEFAULT 0",
 
+        "vault_unlocked_until": "DATETIME",
+
     },
 
     "calendar_events": {

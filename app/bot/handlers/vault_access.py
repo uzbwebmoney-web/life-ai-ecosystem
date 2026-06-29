@@ -9,7 +9,14 @@ from app.bot.states import VaultLockStates
 from app.core.i18n import t
 from app.models.entities import User
 from app.services.life_data import set_active_module
-from app.services.vault_lock_service import is_vault_protected, is_vault_unlocked, unlock_vault, verify_vault_password
+from app.services.vault_lock_service import (
+    is_vault_protected,
+    is_vault_unlocked,
+    record_vault_unlock_failure,
+    unlock_vault,
+    vault_unlock_rate_limited,
+    verify_vault_password,
+)
 
 
 async def require_vault_unlock(
@@ -20,7 +27,7 @@ async def require_vault_unlock(
     *,
     reply: Message | CallbackQuery,
 ) -> bool:
-    if not is_vault_protected(user) or is_vault_unlocked(user.id):
+    if not is_vault_protected(user) or is_vault_unlocked(user):
         return True
     await state.set_state(VaultLockStates.waiting_unlock)
     await state.update_data(vlt_pending=pending)
@@ -59,10 +66,27 @@ async def try_unlock_vault(
     password: str,
 ) -> bool:
     lang = user.language
-    if not verify_vault_password(user, password):
-        await message.answer(t(lang, "vlt_lock_wrong"))
+    if vault_unlock_rate_limited(user.id):
+        await message.answer(t(lang, "vlt_lock_rate_limited"))
+        try:
+            await message.delete()
+        except Exception:
+            pass
         return False
-    unlock_vault(user.id)
+    if not verify_vault_password(user, password):
+        record_vault_unlock_failure(user.id)
+        await message.answer(t(lang, "vlt_lock_wrong"))
+        try:
+            await message.delete()
+        except Exception:
+            pass
+        return False
+    unlock_vault(user)
+    await session.commit()
+    try:
+        await message.delete()
+    except Exception:
+        pass
     data = await state.get_data()
     pending = str(data.get("vlt_pending") or "mod:vault")
     await message.answer(t(lang, "vlt_lock_unlocked"))

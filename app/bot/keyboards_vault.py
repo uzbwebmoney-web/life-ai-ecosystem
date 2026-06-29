@@ -13,9 +13,17 @@ VAULT_PAGE_SIZE = 8
 def vault_module_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     mod = MODULE_BY_ID["vault"]
     rows = [
-        [InlineKeyboardButton(text=sub.title(lang), callback_data=f"sub:vault:{sub.id}")]
-        for sub in mod.submodules
+        [
+            InlineKeyboardButton(text=t(lang, "vlt_quick_passport"), callback_data="vlt:quick:passport"),
+            InlineKeyboardButton(text=t(lang, "vlt_quick_policy"), callback_data="vlt:quick:policies"),
+        ],
+        [
+            InlineKeyboardButton(text=t(lang, "vlt_quick_receipt"), callback_data="vlt:quick:receipts"),
+        ],
     ]
+    rows.extend(
+        [[InlineKeyboardButton(text=sub.title(lang), callback_data=f"sub:vault:{sub.id}")] for sub in mod.submodules]
+    )
     rows.append([InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 

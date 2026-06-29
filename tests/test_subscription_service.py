@@ -96,7 +96,7 @@ def test_vault_lock_by_plan():
     assert feature_allowed(paid, "vault_lock") is None
 
 
-def test_student_all_modules():
+def test_student_module_restrictions():
     user = User(
         id=1,
         telegram_id=1,
@@ -104,7 +104,8 @@ def test_student_all_modules():
         plan_expires_at=datetime.utcnow() + timedelta(days=10),
     )
     assert module_allowed(user, "education") is None
-    assert module_allowed(user, "finance") is None
+    assert module_allowed(user, "vault") is None
+    assert module_allowed(user, "finance") == "quota_student_module"
 
 
 def test_uzs_and_stars():

@@ -22,6 +22,7 @@ from app.services.life_profile_service import extract_facts_from_text, parse_rem
 from app.services.module_context import active_module_label
 from app.services.media_ai import synthesize_speech
 from app.services.proactive_service import proactive_kb, suggest_actions
+from app.services.study_notes_service import prepare_study_notes_request
 from app.services.ai_chat_history import (
     append_turn,
     module_history_key,
@@ -151,6 +152,14 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
         return
 
     if user.active_module_id and user.active_module_id in MODULE_BY_ID:
+        from app.services.subscription_service import check_module_access
+
+        blocked = await check_module_access(session, user, user.active_module_id, lang=lang)
+        if blocked:
+            from app.bot.quota_ui import answer_quota_block
+
+            await answer_quota_block(message, blocked, lang=lang)
+            return
         if user.active_module_id == "education":
             from app.bot.handlers.study_export import try_format_only_export
 
@@ -171,6 +180,14 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
 
     module_id = detect_module(text)
     if module_id and module_id in MODULE_BY_ID:
+        from app.services.subscription_service import check_module_access
+
+        blocked = await check_module_access(session, user, module_id, lang=lang)
+        if blocked:
+            from app.bot.quota_ui import answer_quota_block
+
+            await answer_quota_block(message, blocked, lang=lang)
+            return
         await _answer_in_module(message, user=user, session=session, state=state, text=text, module_id=module_id)
         return
 

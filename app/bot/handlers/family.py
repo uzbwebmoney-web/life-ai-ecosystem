@@ -10,6 +10,7 @@ from app.bot.states import FamilyStates
 from app.core.i18n import t
 from app.models.entities import User
 from app.services.life_data import add_family_profile, list_family_profiles, switch_active_profile
+from app.services.subscription_service import check_family_profile_quota
 
 router = Router()
 
@@ -57,6 +58,13 @@ async def family_add_name(message: Message, state: FSMContext, user: User) -> No
         await message.answer(t(lang, "family_name_short"))
         return
     await state.update_data(fam_name=name)
+    quota = await check_family_profile_quota(session, user, lang=lang)
+    if quota:
+        from app.bot.quota_ui import answer_quota_block
+
+        await answer_quota_block(message, quota, lang=lang)
+        await state.clear()
+        return
     await state.set_state(FamilyStates.waiting_relation)
     await message.answer(t(lang, "family_add_relation"), reply_markup=family_relation_kb(lang))
 
@@ -67,6 +75,14 @@ async def family_add_relation_pick(callback: CallbackQuery, state: FSMContext, u
     relation = (callback.data or "").split(":")[2]
     data = await state.get_data()
     name = str(data.get("fam_name") or "Profile")
+    quota = await check_family_profile_quota(session, user, lang=lang)
+    if quota:
+        from app.bot.quota_ui import answer_quota_block
+
+        await answer_quota_block(callback.message, quota, lang=lang)
+        await state.clear()
+        await callback.answer()
+        return
     await add_family_profile(session, user.id, name, relation)
     profiles = await list_family_profiles(session, user.id)
     await callback.message.edit_text(t(lang, "family_added", name=name), reply_markup=family_kb(profiles, user.active_profile_id, lang))
@@ -80,6 +96,13 @@ async def family_add_relation(message: Message, state: FSMContext, user: User, s
     relation = (message.text or "other").strip()[:64]
     data = await state.get_data()
     name = str(data.get("fam_name") or "Profile")
+    quota = await check_family_profile_quota(session, user, lang=lang)
+    if quota:
+        from app.bot.quota_ui import answer_quota_block
+
+        await answer_quota_block(message, quota, lang=lang)
+        await state.clear()
+        return
     await add_family_profile(session, user.id, name, relation)
     profiles = await list_family_profiles(session, user.id)
     await message.answer(t(lang, "family_added", name=name), reply_markup=family_kb(profiles, user.active_profile_id, lang))

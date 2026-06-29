@@ -99,6 +99,7 @@ class NutritionStates(StatesGroup):
 class VaultStates(StatesGroup):
     waiting_title = State()
     waiting_body = State()
+    waiting_expiry = State()
     waiting_amount = State()
     waiting_attachment = State()
 
@@ -149,3 +150,8 @@ class OnboardingStates(StatesGroup):
 
 class HouseholdStates(StatesGroup):
     waiting_join_code = State()
+
+
+class MusicStates(StatesGroup):
+    waiting_audio = State()
+    waiting_lyrics_text = State()

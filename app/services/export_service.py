@@ -22,11 +22,13 @@ def _dt(value: datetime | None) -> str | None:
     return value.isoformat() if value else None
 
 
-async def build_user_export(session: AsyncSession, user_id: int) -> str:
+async def build_user_export(session: AsyncSession, user_id: int, *, include_vault: bool = True) -> str:
     user = (await session.execute(select(User).where(User.id == user_id))).scalar_one()
     records = (
         await session.execute(select(LifeRecord).where(LifeRecord.user_id == user_id).order_by(LifeRecord.id))
     ).scalars().all()
+    if not include_vault:
+        records = [r for r in records if r.module_id != "vault"]
     events = (
         await session.execute(select(CalendarEvent).where(CalendarEvent.user_id == user_id).order_by(CalendarEvent.id))
     ).scalars().all()

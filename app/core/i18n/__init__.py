@@ -742,6 +742,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_lock_unlocked": "✅ Доступ открыт.",
         "vlt_lock_locked_now": "🔒 Хранилище заблокировано. При входе нужен пароль.",
         "vlt_lock_not_enabled": "Защита ещё не включена.",
+        "vlt_lock_rate_limited": "⛔ Слишком много попыток. Подождите 15 минут и попробуйте снова.",
         "admin_stats_title": "📊 <b>Статистика бота</b>",
         "admin_total_users": "Всего пользователей",
         "admin_new_today": "Новых сегодня",
@@ -922,24 +923,89 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mod_example_ai_assistant": "«переведи на английский: доброе утро»",
         "mod_hint_vault": "Документы, паспорт, полисы, гарантии и чеки.",
         "mod_example_vault": "«куда сохранить скан паспорта»",
+        "mod_hint_music": "Текст песен, вокал/минус, анализ, перевод и аккорды.",
+        "mod_example_music": "«распознай текст из этой песни»",
+        "mus_module_intro": (
+            "Загрузите аудиофайл или отправьте 🎵 трек из Telegram.\n\n"
+            "• <b>Текст песни</b> — распознавание слов (Whisper)\n"
+            "• <b>Вокал и минус</b> — разделение дорожек\n"
+            "• <b>Анализ</b> — жанр, BPM, настроение\n"
+            "• <b>Перевод</b> и <b>аккорды</b> по тексту\n"
+            "• <b>Коллекция</b> — сохранение любимых треков"
+        ),
+        "mus_upload_hint": "Выберите действие ниже или отправьте аудио после выбора режима.",
+        "mus_send_audio": "🎵 Отправьте аудиофайл, трек или голосовое сообщение с записью песни.",
+        "mus_paste_lyrics": "📝 Вставьте текст песни одним сообщением.",
+        "mus_processing": "🎵 Обрабатываю…",
+        "mus_need_audio": "Нужен аудиофайл: 🎵 трек, 📎 документ (mp3/m4a) или 🎤 голосовое.",
+        "mus_transcribe_failed": "⚠️ Не удалось распознать текст. Проверьте качество записи и OPENAI_API_KEY.",
+        "mus_lyrics_result": "📝 <b>Текст песни</b>",
+        "mus_analyze_result": "🎧 <b>Анализ трека</b>",
+        "mus_translate_result": "🌐 <b>Перевод</b>",
+        "mus_chords_result": "🎸 <b>Аккорды</b>",
+        "mus_result": "🎵 <b>Результат</b>",
+        "mus_separate_done": "✅ Разделение готово — отправляю файлы…",
+        "mus_separate_failed": "⚠️ Не удалось разделить трек. Попробуйте другой файл.",
+        "mus_no_ffmpeg": "⚠️ Разделение недоступно: на сервере нет ffmpeg.",
+        "mus_separate_hint": "💡 Качество зависит от микса. Для студийного разделения нужен оригинальный многодорожечный файл.",
+        "mus_vocal_title": "Вокал",
+        "mus_instrumental_title": "Минус (инструментал)",
+        "mus_cancelled": "Отменено.",
+        "mus_error": "⚠️ Ошибка обработки. Попробуйте позже.",
+        "mus_no_lyrics": "Сначала распознайте текст песни или вставьте его вручную.",
+        "mus_collection_title": "🎵 <b>Моя коллекция</b>",
+        "mus_collection_empty": "Пока пусто. Сохраните текст после распознавания.",
+        "mus_saved_collection": "Сохранено в коллекцию",
+        "mus_untitled": "Без названия",
+        "mus_btn_vocal": "🎤 Только вокал",
+        "mus_btn_instrumental": "🎹 Только минус",
+        "mus_btn_both": "📦 Оба файла",
+        "mus_btn_from_audio": "🎵 Из аудио",
+        "mus_btn_paste_text": "📝 Вставить текст",
+        "mus_btn_send_track": "🎵 Отправить трек",
+        "mus_btn_view_collection": "📋 Моя коллекция",
+        "mus_btn_save_last": "💾 Сохранить последний",
+        "mus_btn_analyze": "🎧 Анализ",
+        "mus_btn_translate": "🌐 Перевод",
+        "mus_btn_chords": "🎸 Аккорды",
+        "mus_btn_save_collection": "💾 В коллекцию",
+        "mus_sub_lyrics": "Распознавание слов из песни — отправьте аудио.",
+        "mus_sub_separate": "Разделение вокала и инструментала (караоке-фильтр).",
+        "mus_sub_analyze": "Жанр, темп, настроение и описание трека.",
+        "mus_sub_translate": "Перевод текста песни на ваш язык.",
+        "mus_sub_chords": "Подбор тональности и аккордов.",
+        "mus_sub_collection": "Список сохранённых треков и текстов.",
         "onb_welcome": (
             "👋 <b>Добро пожаловать в Life AI!</b>\n\n"
             "<b>Как пользоваться:</b>\n"
             "1️⃣ Выберите тему (Здоровье, Финансы, Авто…)\n"
             "2️⃣ Напишите вопрос текстом — AI ответит по теме\n"
-            "3️⃣ «Сохранить заметку» — записать анализ, расход, напоминание\n\n"
-            "🔍 Поиск и ⚙️ Настройки — внизу главного экрана.\n"
-            "❓ Справка: /help"
+            "3️⃣ 🔐 <b>Личное хранилище</b> — сохраните паспорт и документы\n"
+            "4️⃣ На платном тарифе — <b>защищённый сейф с паролем</b>\n\n"
+            "🎁 {days} дня Premium trial + бонусные AI-кредиты после старта.\n"
+            "🔍 Поиск и ⚙️ Настройки — внизу главного экрана."
         ),
         "onb_start_btn": "🚀 Начать",
         "onb_done": "✅ Готово! Можно пользоваться ботом.",
         "export_done": "📦 Экспорт ваших данных (JSON).",
+        "export_vault_excluded": "🔐 Записи защищённого сейфа не включены — сначала разблокируйте сейф.",
         "cmd_expense_format": "Формат: /expense Название | 50000",
         "cmd_expense_saved": "✅ Расход «{title}» — {amount} UZS",
         "cmd_oil_hint": "🚗 Раздел «Авто → ТО» открыт. Напишите, когда меняли масло, или добавьте через меню.",
         "vlt_delete_confirm": "🗑 Удалить эту запись? Это действие нельзя отменить.",
         "vlt_file_expired": "⚠️ Файл недоступен (Telegram хранит файлы ограниченное время). Загрузите снова.",
         "vlt_no_file_attached": "Файл не прикреплён. Нажмите «📎 Прикрепить файл» или добавьте запись через ➕ Добавить.",
+        "vlt_quick_passport": "🛂 Паспорт",
+        "vlt_quick_policy": "📋 Полис",
+        "vlt_quick_receipt": "🧾 Чек",
+        "vlt_expiry_prompt": (
+            "📅 Укажите срок действия документа (дата окончания):\n"
+            "<code>31.12.2030</code>\n\n"
+            "Или «-» чтобы пропустить."
+        ),
+        "vlt_expiry_invalid": "Не удалось разобрать дату. Формат: <code>ДД.ММ.ГГГГ</code>",
+        "vlt_expiry_warn_title": "⏰ Скоро истекает: {doc}",
+        "vlt_expiry_due_title": "⚠️ Истекает сегодня: {doc}",
         "vlt_confirm_yes": "✅ Да, удалить",
     },
     "uz": {
@@ -1856,6 +1922,58 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mod_example_ai_assistant": "«inglizchaga tarjima: xayrli tong»",
         "mod_hint_vault": "Hujjatlar, pasport, polislar va cheklar.",
         "mod_example_vault": "«pasport skanini qayerga saqlash»",
+        "mod_hint_music": "Qo'shiq matni, vokal/minus, tahlil, tarjima va akkordlar.",
+        "mod_example_music": "«bu qo'shiqdan matnni aniqlang»",
+        "mus_module_intro": (
+            "Audio fayl yuboring yoki Telegramdan 🎵 trek yuboring.\n\n"
+            "• <b>Qo'shiq matni</b> — so'zlarni aniqlash\n"
+            "• <b>Vokal va minus</b> — ajratish\n"
+            "• <b>Tahlil</b> — janr, BPM, kayfiyat\n"
+            "• <b>Tarjima</b> va <b>akkordlar</b>\n"
+            "• <b>To'plam</b> — sevimli treklar"
+        ),
+        "mus_upload_hint": "Quyidagi amalni tanlang yoki rejimdan keyin audio yuboring.",
+        "mus_send_audio": "🎵 Audio, trek yoki qo'shiq yozuvi (ovozli xabar) yuboring.",
+        "mus_paste_lyrics": "📝 Qo'shiq matnini bir xabarda yuboring.",
+        "mus_processing": "🎵 Qayta ishlanmoqda…",
+        "mus_need_audio": "Audio kerak: 🎵 trek, 📎 hujjat (mp3/m4a) yoki 🎤 ovozli xabar.",
+        "mus_transcribe_failed": "⚠️ Matn aniqlanmadi. OPENAI_API_KEY va sifatni tekshiring.",
+        "mus_lyrics_result": "📝 <b>Qo'shiq matni</b>",
+        "mus_analyze_result": "🎧 <b>Trek tahlili</b>",
+        "mus_translate_result": "🌐 <b>Tarjima</b>",
+        "mus_chords_result": "🎸 <b>Akkordlar</b>",
+        "mus_result": "🎵 <b>Natija</b>",
+        "mus_separate_done": "✅ Ajratish tayyor — fayllar yuborilmoqda…",
+        "mus_separate_failed": "⚠️ Ajratib bo'lmadi. Boshqa fayl sinab ko'ring.",
+        "mus_no_ffmpeg": "⚠️ Ajratish mavjud emas: serverda ffmpeg yo'q.",
+        "mus_separate_hint": "💡 Sifat miksdan bog'liq.",
+        "mus_vocal_title": "Vokal",
+        "mus_instrumental_title": "Minus",
+        "mus_cancelled": "Bekor qilindi.",
+        "mus_error": "⚠️ Xatolik. Keyinroq urinib ko'ring.",
+        "mus_no_lyrics": "Avval matnni aniqlang yoki qo'lda kiriting.",
+        "mus_collection_title": "🎵 <b>Mening to'plamim</b>",
+        "mus_collection_empty": "Hozircha bo'sh.",
+        "mus_saved_collection": "To'plamga saqlandi",
+        "mus_untitled": "Nomsiz",
+        "mus_btn_vocal": "🎤 Faqat vokal",
+        "mus_btn_instrumental": "🎹 Faqat minus",
+        "mus_btn_both": "📦 Ikkalasi",
+        "mus_btn_from_audio": "🎵 Audiodan",
+        "mus_btn_paste_text": "📝 Matn kiritish",
+        "mus_btn_send_track": "🎵 Trek yuborish",
+        "mus_btn_view_collection": "📋 To'plam",
+        "mus_btn_save_last": "💾 Oxirgisini saqlash",
+        "mus_btn_analyze": "🎧 Tahlil",
+        "mus_btn_translate": "🌐 Tarjima",
+        "mus_btn_chords": "🎸 Akkordlar",
+        "mus_btn_save_collection": "💾 To'plamga",
+        "mus_sub_lyrics": "Qo'shiq so'zlarini audiodan aniqlash.",
+        "mus_sub_separate": "Vokal va instrumental ajratish.",
+        "mus_sub_analyze": "Janr, tempo, kayfiyat.",
+        "mus_sub_translate": "Matn tarjimasi.",
+        "mus_sub_chords": "Tonallik va akkordlar.",
+        "mus_sub_collection": "Saqlangan treklar ro'yxati.",
         "onb_welcome": (
             "👋 <b>Life AI ga xush kelibsiz!</b>\n\n"
             "<b>Qanday foydalanish:</b>\n"
@@ -2790,6 +2908,58 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mod_example_ai_assistant": "«translate to English: good morning»",
         "mod_hint_vault": "Documents, passport, policies, receipts.",
         "mod_example_vault": "«where to store passport scan»",
+        "mod_hint_music": "Song lyrics, vocal/instrumental split, analysis, translation, chords.",
+        "mod_example_music": "«transcribe lyrics from this song»",
+        "mus_module_intro": (
+            "Upload an audio file or send a 🎵 track from Telegram.\n\n"
+            "• <b>Song lyrics</b> — word recognition (Whisper)\n"
+            "• <b>Vocal & instrumental</b> — stem separation\n"
+            "• <b>Analysis</b> — genre, BPM, mood\n"
+            "• <b>Translation</b> and <b>chords</b>\n"
+            "• <b>Collection</b> — save favorite tracks"
+        ),
+        "mus_upload_hint": "Pick an action below or send audio after choosing a mode.",
+        "mus_send_audio": "🎵 Send an audio file, track, or voice message with the song.",
+        "mus_paste_lyrics": "📝 Paste the song lyrics in one message.",
+        "mus_processing": "🎵 Processing…",
+        "mus_need_audio": "Audio required: 🎵 track, 📎 document (mp3/m4a), or 🎤 voice.",
+        "mus_transcribe_failed": "⚠️ Could not transcribe. Check audio quality and OPENAI_API_KEY.",
+        "mus_lyrics_result": "📝 <b>Song lyrics</b>",
+        "mus_analyze_result": "🎧 <b>Track analysis</b>",
+        "mus_translate_result": "🌐 <b>Translation</b>",
+        "mus_chords_result": "🎸 <b>Chords</b>",
+        "mus_result": "🎵 <b>Result</b>",
+        "mus_separate_done": "✅ Separation done — sending files…",
+        "mus_separate_failed": "⚠️ Separation failed. Try another file.",
+        "mus_no_ffmpeg": "⚠️ Separation unavailable: ffmpeg not installed on server.",
+        "mus_separate_hint": "💡 Quality depends on the mix.",
+        "mus_vocal_title": "Vocals",
+        "mus_instrumental_title": "Instrumental",
+        "mus_cancelled": "Cancelled.",
+        "mus_error": "⚠️ Processing error. Try again later.",
+        "mus_no_lyrics": "Transcribe lyrics first or paste them manually.",
+        "mus_collection_title": "🎵 <b>My collection</b>",
+        "mus_collection_empty": "Empty for now. Save lyrics after transcription.",
+        "mus_saved_collection": "Saved to collection",
+        "mus_untitled": "Untitled",
+        "mus_btn_vocal": "🎤 Vocals only",
+        "mus_btn_instrumental": "🎹 Instrumental only",
+        "mus_btn_both": "📦 Both files",
+        "mus_btn_from_audio": "🎵 From audio",
+        "mus_btn_paste_text": "📝 Paste text",
+        "mus_btn_send_track": "🎵 Send track",
+        "mus_btn_view_collection": "📋 My collection",
+        "mus_btn_save_last": "💾 Save last",
+        "mus_btn_analyze": "🎧 Analyze",
+        "mus_btn_translate": "🌐 Translate",
+        "mus_btn_chords": "🎸 Chords",
+        "mus_btn_save_collection": "💾 To collection",
+        "mus_sub_lyrics": "Recognize lyrics from audio.",
+        "mus_sub_separate": "Split vocals and instrumental.",
+        "mus_sub_analyze": "Genre, tempo, mood.",
+        "mus_sub_translate": "Translate song lyrics.",
+        "mus_sub_chords": "Key and chord suggestions.",
+        "mus_sub_collection": "Saved tracks list.",
         "onb_welcome": (
             "👋 <b>Welcome to Life AI!</b>\n\n"
             "<b>How to use:</b>\n"

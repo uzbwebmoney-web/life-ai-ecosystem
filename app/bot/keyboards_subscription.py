@@ -112,6 +112,15 @@ def insufficient_credits_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     )
 
 
+def referral_kb(lang: str, link: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "sub_btn_share_referral"), url=link)],
+            [InlineKeyboardButton(text=t(lang, "sub_btn_back"), callback_data="sub:menu")],
+        ]
+    )
+
+
 def quota_upgrade_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     """Tariffs, packages, and payment entry — for credits and image-gen limits."""
     return insufficient_credits_kb(lang)

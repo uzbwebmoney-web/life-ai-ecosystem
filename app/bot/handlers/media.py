@@ -98,16 +98,19 @@ async def _process_photo(
             return
         await message.answer(t(lang, "vlt_use_add_flow"))
         return
-    if not universal_scan:
-        blocked = feature_allowed(user, "photo_ai")
-        if blocked:
-            await message.answer(t(lang, blocked))
-            return
-        photo_credits = photo_analysis_credits(multi=False)
-        photo_quota = await check_photo_analysis_quota(session, user, lang=lang, credits=photo_credits)
-        if photo_quota:
-            await message.answer(photo_quota)
-            return
+    blocked = feature_allowed(user, "photo_ai")
+    if blocked:
+        from app.bot.quota_ui import answer_quota_key
+
+        await answer_quota_key(message, blocked, lang=lang)
+        return
+    photo_credits = photo_analysis_credits(multi=False)
+    photo_quota = await check_photo_analysis_quota(session, user, lang=lang, credits=photo_credits)
+    if photo_quota:
+        from app.bot.quota_ui import answer_quota_block
+
+        await answer_quota_block(message, photo_quota, lang=lang)
+        return
     file_id = message.photo[-1].file_id
     caption = (message.caption or "").strip()
     loading = await message.answer(t(lang, "photo_analyzing"))
@@ -138,8 +141,7 @@ async def _process_photo(
         user=user,
         bot=message.bot,
     )
-    if not universal_scan:
-        await consume_photo_analysis(session, user, credits=photo_credits)
+    await consume_photo_analysis(session, user, credits=photo_credits)
     lowered = analysis.lower()
     combined = f"{caption} {analysis}".lower()
 
@@ -222,7 +224,9 @@ async def handle_voice(message: Message, bot: Bot, user: User, session: AsyncSes
 
     blocked = feature_allowed(user, "voice")
     if blocked:
-        await message.answer(t(lang, blocked))
+        from app.bot.quota_ui import answer_quota_key
+
+        await answer_quota_key(message, blocked, lang=lang)
         return
     loading = await message.answer(t(lang, "voice_recognizing"))
     text = await transcribe_voice(bot, message.voice.file_id)
@@ -292,8 +296,16 @@ async def handle_document(
         await message.answer(t(lang, "vlt_use_add_flow"))
         return
     doc = message.document
-    name = doc.file_name or "document"
+    from app.bot.quota_ui import answer_quota_key
+    from app.services.subscription_service import feature_allowed
+
+    if user.active_module_id == "ai_assistant" and user.active_submodule_id == "documents":
+        blocked = feature_allowed(user, "ocr")
+        if blocked:
+            await answer_quota_key(message, blocked, lang=lang)
+            return
     assistant_docs = user.active_module_id == "ai_assistant" and user.active_submodule_id == "documents"
+    name = doc.file_name or "document"
     if vault_docs:
         module_id, sub_id = "vault", user.active_submodule_id
     elif assistant_docs:

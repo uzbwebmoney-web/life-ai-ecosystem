@@ -44,6 +44,16 @@ async def join_household(session: AsyncSession, user: User, code: str) -> tuple[
     ).scalar_one_or_none()
     if existing:
         return False, "already"
+    members = await get_household_members(session, household.id)
+    owner = (
+        await session.execute(select(User).where(User.id == household.owner_user_id))
+    ).scalar_one_or_none()
+    if owner:
+        from app.services.subscription_service import plan_info
+
+        limit = plan_info(owner).limits.household_members
+        if len(members) >= limit:
+            return False, "full"
     session.add(HouseholdMember(household_id=household.id, user_id=user.id, role="member"))
     user.household_id = household.id
     await session.commit()

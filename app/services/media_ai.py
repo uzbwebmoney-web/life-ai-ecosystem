@@ -70,8 +70,29 @@ async def transcribe_voice(bot: Bot, file_id: str) -> str:
     await bot.download_file(file.file_path, buffer)
     buffer.seek(0)
     buffer.name = "voice.ogg"
+    return await transcribe_audio_buffer(buffer, prompt="")
+
+
+async def transcribe_audio_bytes(
+    data: bytes,
+    filename: str,
+    *,
+    prompt: str = "",
+) -> str:
+    buffer = io.BytesIO(data)
+    buffer.name = filename or "audio.mp3"
+    return await transcribe_audio_buffer(buffer, prompt=prompt)
+
+
+async def transcribe_audio_buffer(buffer: io.BytesIO, *, prompt: str = "") -> str:
+    if not settings.openai_api_key.strip():
+        return ""
+    buffer.seek(0)
     client = AsyncOpenAI(api_key=settings.openai_api_key)
-    result = await client.audio.transcriptions.create(model="whisper-1", file=buffer)
+    kwargs: dict = {"model": "whisper-1", "file": buffer}
+    if prompt:
+        kwargs["prompt"] = prompt[:200]
+    result = await client.audio.transcriptions.create(**kwargs)
     return (result.text or "").strip()
 
 
