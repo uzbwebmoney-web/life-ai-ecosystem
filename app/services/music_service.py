@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -17,6 +18,18 @@ logger = logging.getLogger(__name__)
 AUDIO_MIME_PREFIX = "audio/"
 AUDIO_EXTENSIONS = frozenset({".mp3", ".m4a", ".wav", ".ogg", ".flac", ".aac", ".opus", ".wma"})
 
+_LYRICS_PROMPTS: dict[str, str] = {
+    "ru": "Текст песни, только слова вокала, без описания музыки.",
+    "uz": "Qo'shiq matni, faqat vokal so'zlari.",
+    "en": "Song lyrics, sung words only, no instrumental description.",
+}
+
+_WHISPER_HALLUCINATION_RE = re.compile(
+    r"(thanks for watching|please subscribe|subtitles by|amara\.org|"
+    r"субтитр|подписывайтесь|subscribe to)",
+    re.IGNORECASE,
+)
+
 MUSIC_SUBMODULE_AI: dict[str, str] = {
     "lyrics": "Распознавай текст песни из аудио максимально точно, сохраняя строфы и припевы.",
     "separate": "Объясняй разделение вокала и инструментала; качество зависит от микса трека.",
@@ -27,6 +40,34 @@ MUSIC_SUBMODULE_AI: dict[str, str] = {
 }
 
 SEPARATE_MODES = frozenset({"vocal", "instrumental", "both"})
+
+
+def validate_lyrics_transcription(text: str) -> str | None:
+    """Return cleaned lyrics or None if Whisper output is noise / instrumental hallucination."""
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return None
+    if _WHISPER_HALLUCINATION_RE.search(cleaned):
+        return None
+    cleaned = re.sub(r"^[\s♪🎵🎶🎤•\-\.…]+", "", cleaned)
+    cleaned = re.sub(r"[\s♪🎵🎶]+$", "", cleaned).strip()
+    if not cleaned:
+        return None
+    letters = sum(1 for c in cleaned if c.isalpha())
+    if letters < 12:
+        return None
+    compact = re.sub(r"\s+", "", cleaned)
+    if not compact or letters / len(compact) < 0.55:
+        return None
+    tokens = re.findall(r"\w+", cleaned, flags=re.UNICODE)
+    if len(tokens) < 3:
+        return None
+    if len(tokens) >= 5:
+        lowered = [tok.lower() for tok in tokens]
+        top = max(lowered.count(word) for word in set(lowered))
+        if top / len(tokens) > 0.7:
+            return None
+    return cleaned
 
 
 def music_submodule_description(sub_id: str, lang: str) -> str:
@@ -46,7 +87,7 @@ def audio_from_message(message: Message) -> tuple[str, str] | None:
         mime = (doc.mime_type or "").lower()
         name = doc.file_name or "audio.mp3"
         ext = Path(name).suffix.lower()
-        if mime.startswith(AUDIO_MIME_PREFIX) or ext in AUDIO_EXTENSIONS:
+        if mime.startswith(AUDIO_MIME_PREFIX) or mime in {"application/ogg"} or ext in AUDIO_EXTENSIONS:
             return doc.file_id, name
     if message.voice:
         return message.voice.file_id, "voice.ogg"
@@ -60,13 +101,19 @@ async def download_audio_bytes(bot: Bot, file_id: str) -> bytes:
     return buffer.getvalue()
 
 
-async def transcribe_song_lyrics(bot: Bot, file_id: str, filename: str) -> str:
+async def transcribe_song_lyrics(bot: Bot, file_id: str, filename: str, *, lang: str = "ru") -> str | None:
     data = await download_audio_bytes(bot, file_id)
-    return await transcribe_audio_bytes(
+    code = lang if lang in _LYRICS_PROMPTS else "ru"
+    raw = await transcribe_audio_bytes(
         data,
         filename,
-        prompt="Song lyrics. Preserve verses and chorus structure.",
+        prompt=_LYRICS_PROMPTS[code],
+        lang=code,
+        lyrics_mode=True,
     )
+    if not raw:
+        return None
+    return validate_lyrics_transcription(raw)
 
 
 async def _run_ffmpeg(args: list[str]) -> bool:
@@ -106,8 +153,9 @@ async def separate_audio(
         inst_path = Path(tmp) / "instrumental.mp3"
         src.write_bytes(audio_bytes)
 
-        vocal_filter = "pan=mono|c0=0.5*c0+0.5*c1"
-        inst_filter = "pan=stereo|c0=c0-c1|c1=c1-c0"
+        stereo = "aformat=channel_layouts=stereo"
+        vocal_filter = f"{stereo},pan=mono|c0=0.5*c0+0.5*c1"
+        inst_filter = f"{stereo},pan=stereo|c0=c0-c1|c1=c1-c0"
 
         vocal_ok = await _run_ffmpeg(
             [

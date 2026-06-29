@@ -14,7 +14,12 @@ from app.core.i18n import ai_reply_language, normalize_lang, t
 
 from app.services.model_router import classify_query_complexity, select_ai_model
 
-from app.services.subscription_service import check_ai_quota, consume_ai_request, max_output_tokens_for_user
+from app.services.subscription_service import (
+    check_ai_quota,
+    check_model_quota,
+    consume_ai_request,
+    max_output_tokens_for_user,
+)
 
 from app.services.text_format import format_ai_reply
 

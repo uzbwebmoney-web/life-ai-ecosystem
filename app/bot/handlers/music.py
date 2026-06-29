@@ -76,6 +76,15 @@ async def music_module(callback: CallbackQuery, user: User, session: AsyncSessio
 @router.callback_query(F.data.startswith("sub:music:"))
 async def music_submodule(callback: CallbackQuery, user: User, session: AsyncSession, state: FSMContext) -> None:
     lang = user.language
+    from app.services.subscription_service import check_module_access
+
+    blocked = await check_module_access(session, user, "music", lang=lang)
+    if blocked:
+        from app.bot.quota_ui import answer_quota_block
+
+        await answer_quota_block(callback.message, blocked, lang=lang)
+        await callback.answer()
+        return
     sub_id = (callback.data or "").split(":")[2]
     mod = MODULE_BY_ID["music"]
     sub = next((s for s in mod.submodules if s.id == sub_id), None)
@@ -111,6 +120,7 @@ async def music_mode_lyrics(callback: CallbackQuery, state: FSMContext, user: Us
 async def music_mode_separate(callback: CallbackQuery, state: FSMContext, user: User) -> None:
     mode = (callback.data or "").split(":")[-1]
     if mode == "lyrics":
+        await callback.answer()
         return
     lang = user.language
     await state.set_state(MusicStates.waiting_audio)
@@ -274,32 +284,43 @@ async def music_waiting_audio(
     session: AsyncSession,
     state: FSMContext,
 ) -> None:
-    if await _music_quota_blocked(message, user, session):
-        return
-    audio = audio_from_message(message)
-    if not audio:
-        await message.answer(t(user.language, "mus_need_audio"), reply_markup=music_cancel_kb(user.language))
-        return
-
-    file_id, filename = audio
     data = await state.get_data()
     action = data.get("mus_action", "lyrics")
     mode = data.get("mus_mode", "lyrics")
     lang = user.language
+    is_separate = action == "separate"
+
+    if await _music_quota_blocked(message, user, session, separate=is_separate):
+        return
+
+    audio = audio_from_message(message)
+    if not audio:
+        await message.answer(t(lang, "mus_need_audio"), reply_markup=music_cancel_kb(lang))
+        return
+
+    file_id, filename = audio
     loading = await message.answer(t(lang, "mus_processing"))
 
     try:
-        if action == "separate":
-            if await _music_quota_blocked(message, user, session, separate=True):
-                return
-            await _handle_separate(message, loading, bot, file_id, filename, mode, lang)
-            await consume_music_operation(session, user, separate=True)
+        if is_separate:
+            if await _handle_separate(message, loading, bot, file_id, filename, mode, lang):
+                await consume_music_operation(session, user, separate=True)
             await state.clear()
             return
 
-        lyrics = await transcribe_song_lyrics(bot, file_id, filename)
-        if not lyrics:
-            await loading.edit_text(t(lang, "mus_transcribe_failed"))
+        lyrics = await transcribe_song_lyrics(bot, file_id, filename, lang=lang)
+        if lyrics is None:
+            from app.core.config import settings
+
+            fail_key = (
+                "mus_transcribe_failed"
+                if not settings.openai_api_key.strip()
+                else "mus_no_vocals_detected"
+            )
+            await loading.edit_text(
+                t(lang, fail_key),
+                reply_markup=music_sub_kb("lyrics", lang),
+            )
             return
 
         await consume_music_operation(session, user, separate=False)
@@ -333,15 +354,15 @@ async def _handle_separate(
     filename: str,
     mode: str,
     lang: str,
-) -> None:
+) -> bool:
     raw = await download_audio_bytes(bot, file_id)
     vocals, instrumental, err = await separate_audio(raw, filename, mode)
     if err == "no_ffmpeg":
         await loading.edit_text(t(lang, "mus_no_ffmpeg"))
-        return
+        return False
     if err:
         await loading.edit_text(t(lang, "mus_separate_failed"))
-        return
+        return False
 
     await loading.edit_text(t(lang, "mus_separate_done"))
     if vocals and mode in {"vocal", "both"}:
@@ -355,3 +376,4 @@ async def _handle_separate(
             title=t(lang, "mus_instrumental_title"),
         )
     await message.answer(t(lang, "mus_separate_hint"), reply_markup=music_sub_kb("separate", lang))
+    return True

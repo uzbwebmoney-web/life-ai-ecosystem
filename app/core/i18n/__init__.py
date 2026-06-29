@@ -939,6 +939,14 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_processing": "🎵 Обрабатываю…",
         "mus_need_audio": "Нужен аудиофайл: 🎵 трек, 📎 документ (mp3/m4a) или 🎤 голосовое.",
         "mus_transcribe_failed": "⚠️ Не удалось распознать текст. Проверьте качество записи и OPENAI_API_KEY.",
+        "mus_no_vocals_detected": (
+            "⚠️ <b>Слова в треке не найдены</b>\n\n"
+            "Whisper не услышал вокал — часто так бывает на инструментале или плохой записи.\n\n"
+            "Попробуйте:\n"
+            "• фрагмент с пением (куплет или припев)\n"
+            "• сначала «🎤 Только вокал», потом снова текст\n"
+            "• файл без сильного шума"
+        ),
         "mus_lyrics_result": "📝 <b>Текст песни</b>",
         "mus_analyze_result": "🎧 <b>Анализ трека</b>",
         "mus_translate_result": "🌐 <b>Перевод</b>",
@@ -1938,6 +1946,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_processing": "🎵 Qayta ishlanmoqda…",
         "mus_need_audio": "Audio kerak: 🎵 trek, 📎 hujjat (mp3/m4a) yoki 🎤 ovozli xabar.",
         "mus_transcribe_failed": "⚠️ Matn aniqlanmadi. OPENAI_API_KEY va sifatni tekshiring.",
+        "mus_no_vocals_detected": (
+            "⚠️ <b>So'zlar topilmadi</b>\n\n"
+            "Vokal eshitilmadi — instrumental yoki past sifatda bunday bo'ladi.\n\n"
+            "• Kuylangan parcha yuboring\n"
+            "• «🎤 Faqat vokal» dan keyin qayta urinib ko'ring"
+        ),
         "mus_lyrics_result": "📝 <b>Qo'shiq matni</b>",
         "mus_analyze_result": "🎧 <b>Trek tahlili</b>",
         "mus_translate_result": "🌐 <b>Tarjima</b>",
@@ -2924,6 +2938,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "mus_processing": "🎵 Processing…",
         "mus_need_audio": "Audio required: 🎵 track, 📎 document (mp3/m4a), or 🎤 voice.",
         "mus_transcribe_failed": "⚠️ Could not transcribe. Check audio quality and OPENAI_API_KEY.",
+        "mus_no_vocals_detected": (
+            "⚠️ <b>No lyrics detected</b>\n\n"
+            "No clear vocals found — common with instrumentals or poor recordings.\n\n"
+            "• Send a section with singing (verse or chorus)\n"
+            "• Try «🎤 Vocals only» first, then lyrics again"
+        ),
         "mus_lyrics_result": "📝 <b>Song lyrics</b>",
         "mus_analyze_result": "🎧 <b>Track analysis</b>",
         "mus_translate_result": "🌐 <b>Translation</b>",

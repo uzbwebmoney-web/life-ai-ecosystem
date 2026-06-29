@@ -6,6 +6,7 @@ from app.services.music_service import (
     build_chords_prompt,
     build_translate_prompt,
     separate_audio,
+    validate_lyrics_transcription,
 )
 
 
@@ -54,6 +55,23 @@ async def test_separate_audio_invalid_mode():
     vocals, inst, err = await separate_audio(b"fake", "x.mp3", "nope")
     assert err == "invalid_mode"
     assert vocals is None and inst is None
+
+
+def test_validate_lyrics_rejects_music_emoji_garbage():
+    assert validate_lyrics_transcription("🎵🎵🎵 🎵🎵🎵 🎵🎵🎵") is None
+
+
+def test_validate_lyrics_accepts_real_text():
+    text = "Я иду по улице в тихий вечерний час"
+    assert validate_lyrics_transcription(text) == text
+
+
+def test_validate_lyrics_rejects_repeated_word():
+    assert validate_lyrics_transcription("music music music music music music") is None
+
+
+def test_validate_lyrics_rejects_whisper_hallucination():
+    assert validate_lyrics_transcription("Thanks for watching!") is None
 
 
 def test_music_module_in_catalog():

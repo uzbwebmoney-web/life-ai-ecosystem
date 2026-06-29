@@ -78,13 +78,26 @@ async def transcribe_audio_bytes(
     filename: str,
     *,
     prompt: str = "",
+    lang: str | None = None,
+    lyrics_mode: bool = False,
 ) -> str:
     buffer = io.BytesIO(data)
     buffer.name = filename or "audio.mp3"
-    return await transcribe_audio_buffer(buffer, prompt=prompt)
+    return await transcribe_audio_buffer(
+        buffer,
+        prompt=prompt,
+        lang=lang,
+        lyrics_mode=lyrics_mode,
+    )
 
 
-async def transcribe_audio_buffer(buffer: io.BytesIO, *, prompt: str = "") -> str:
+async def transcribe_audio_buffer(
+    buffer: io.BytesIO,
+    *,
+    prompt: str = "",
+    lang: str | None = None,
+    lyrics_mode: bool = False,
+) -> str:
     if not settings.openai_api_key.strip():
         return ""
     buffer.seek(0)
@@ -92,8 +105,21 @@ async def transcribe_audio_buffer(buffer: io.BytesIO, *, prompt: str = "") -> st
     kwargs: dict = {"model": "whisper-1", "file": buffer}
     if prompt:
         kwargs["prompt"] = prompt[:200]
+    if lang in {"ru", "en", "uz"}:
+        kwargs["language"] = lang
+    if lyrics_mode:
+        kwargs["response_format"] = "verbose_json"
     result = await client.audio.transcriptions.create(**kwargs)
-    return (result.text or "").strip()
+    text = (result.text or "").strip()
+    if not lyrics_mode or not text:
+        return text
+    segments = getattr(result, "segments", None) or []
+    if segments:
+        avg_no_speech = sum((getattr(s, "no_speech_prob", 0) or 0) for s in segments) / len(segments)
+        letters = sum(1 for c in text if c.isalpha())
+        if avg_no_speech > 0.55 and letters < 20:
+            return ""
+    return text
 
 
 async def analyze_image_url(
