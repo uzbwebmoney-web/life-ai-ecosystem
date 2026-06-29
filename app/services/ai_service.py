@@ -301,6 +301,7 @@ async def ask_ai(
                                 max_output_tokens=attempt_tokens,
                                 force=force_web_search,
                                 language=language,
+                                country=audience,
                             )
                         except Exception as web_exc:
                             logger.warning(
@@ -312,6 +313,7 @@ async def ask_ai(
                                 system,
                                 user_message,
                                 language=language,
+                                country=audience,
                             )
                             response = await client.chat.completions.create(
                                 model=model,
