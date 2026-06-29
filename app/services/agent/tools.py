@@ -232,11 +232,16 @@ async def _tool_add_calendar(session, user, args, *, lang) -> ToolRunResult:
 
 
 async def _tool_web_research(user, args, *, lang) -> ToolRunResult:
+    from app.core.i18n import t
+
     query = str(args.get("query") or "")
     ctx, links = await fetch_web_context(query, language=lang, max_results=12)
     set_agent_context(user.id, web_context=ctx, web_links=links, last_query=query)
-    preview = ctx[:2000] if ctx else "No web results"
-    return ToolRunResult("web_research", True, preview, {"context": ctx, "links": links})
+    if ctx:
+        preview = ctx[:2000]
+    else:
+        preview = t(lang, "agent_no_web_results")
+    return ToolRunResult("web_research", True, preview, {"context": ctx, "links": links, "empty": not ctx})
 
 
 async def _tool_analyze_spending(session, user, args, *, lang) -> ToolRunResult:

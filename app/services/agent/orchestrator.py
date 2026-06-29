@@ -140,7 +140,7 @@ async def execute_agent_plan(
     if chart:
         files.append((chart, "chart.png", "image/png"))
 
-    summary = await _compose_agent_reply(session, user, plan, results, lang=lang, bot=bot)
+    summary = await _compose_agent_reply(session, user, plan, results, lang=lang, bot=bot, user_message=text)
     project = await get_active_project(session, user)
     if project:
         await append_project_message(session, project.id, role="user", content=plan.intent)
@@ -161,6 +161,7 @@ async def run_agent(
 ) -> AgentResult:
     lang = lang or user.language
     clear_agent_context(user.id)
+    set_agent_context(user.id, user_message=text)
     if photo_context:
         set_agent_context(user.id, **{k: v for k, v in photo_context.items() if v is not None})
 
@@ -199,10 +200,37 @@ def _format_plan_preview(plan: AgentPlan, lang: str) -> str:
     return "\n".join(lines)
 
 
-async def _compose_agent_reply(session, user, plan, results, *, lang, bot) -> str:
+async def _compose_agent_reply(session, user, plan, results, *, lang, bot, user_message: str = "") -> str:
     from app.core.i18n import t
+    from app.core.modules.ui_texts import module_hint_text
 
     prefix = agent_reply_prefix(user, lang)
+    ctx = get_agent_context(user.id)
+    user_message = user_message or str(ctx.get("user_message") or ctx.get("last_query") or "")
+
+    web_empty = any(
+        res.ok and res.tool == "web_research" and not (res.data or {}).get("context")
+        for res in results
+    )
+    research_done = any(res.ok and res.tool == "research_report" for res in results)
+
+    if web_empty and user_message and not research_done and settings.openai_api_key.strip():
+        module_id = "business" if "business" in (plan.intent or "") else "ai_assistant"
+        hint = module_hint_text(module_id, lang) + "\n" + personalization_system_note(user)
+        answer = await ask_ai(
+            user_message=user_message,
+            module_hint=hint,
+            language=lang,
+            session=session,
+            user=user,
+            bot=bot,
+            max_completion_tokens=2500,
+            module_id=module_id,
+            usage_source="agent_web_fallback",
+        )
+        if answer and not answer.startswith("⚠️"):
+            return f"{prefix}\n\n{answer}"
+
     done_lines = [prefix, ""]
     failed = []
     for res in results:
@@ -222,7 +250,7 @@ async def _compose_agent_reply(session, user, plan, results, *, lang, bot) -> st
 
     project = await get_active_project(session, user)
     project_ctx = await get_project_context(session, project.id) if project else ""
-    if plan.reply_hint in {"shopping", "travel", "finance"} and results and settings.openai_api_key.strip():
+    if plan.reply_hint in {"shopping", "travel", "finance", "business"} and results and settings.openai_api_key.strip():
         ctx = get_agent_context(user.id)
         extra = await ask_ai(
             user_message=(

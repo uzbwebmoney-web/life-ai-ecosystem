@@ -82,16 +82,25 @@ def analyze_intent(text: str, *, active_module: str | None = None) -> UnifiedInt
         goal = "search"
     elif "health" in actions:
         goal = "health"
+    elif re.search(r"бизнес|business|biznes|стартап|startup", t, re.I) and re.search(
+        r"иде[яи]|idea|g'oya|goya|нужен|kerak|need|подскаж|совет",
+        t,
+        re.I,
+    ):
+        goal = "business_idea"
     elif "research" in actions:
         goal = "research"
     elif "save" in actions:
         goal = "save"
 
+    if goal == "business_idea" and "business" not in modules:
+        modules = ["business"] + [m for m in modules if m != "business"]
+
     needs_agent = (
         should_route_to_agent(t)
         or goal in {"travel_prep", "purchase", "reminder", "search", "save", "research"}
         or len(actions) >= 2
-        or len(modules) >= 2
+        or (len(modules) >= 2 and goal not in {"business_idea", "chat"})
     )
 
     return UnifiedIntent(

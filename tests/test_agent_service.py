@@ -44,6 +44,14 @@ def test_extract_amount_million():
     assert _extract_amount("купил холодильник за 8 млн") == 8_000_000
 
 
+def test_build_plan_business_idea():
+    plan = build_plan_rule_based("нужен бизнес идея")
+    assert plan is not None
+    assert plan.intent == "business_ideas"
+    assert plan.steps[0].tool == "research_report"
+    assert plan.reply_hint == "business"
+
+
 def test_table_export_csv():
     rows = [["Name", "Price"], ["A", "100"]]
     data, name, mime = build_table_bytes(rows, fmt="csv", title="test")

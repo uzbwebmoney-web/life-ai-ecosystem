@@ -114,6 +114,16 @@ def build_plan_rule_based(text: str, *, user_now: datetime | None = None) -> Age
             ],
         )
 
+    if re.search(r"бизнес|business|biznes|стартап|startup", low) and re.search(
+        r"иде[яи]|idea|g'oya|goya|loyiha|нужен|kerak|need|подскаж|совет|maslahat|tavsiya",
+        low,
+    ):
+        return AgentPlan(
+            intent="business_ideas",
+            steps=[AgentStep("research_report", {"topic": t, "depth": "standard"})],
+            reply_hint="business",
+        )
+
     if re.search(r"найди|compare|сравни|solishtir|best|лучш|дешев", low) and re.search(
         r"ноутбук|laptop|телефон|phone|товар|product|модел|model|билет|ticket|flight",
         low,

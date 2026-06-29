@@ -46,6 +46,20 @@ def test_planner_travel_turkey():
     assert "add_task" in tools
 
 
+def test_intent_business_idea_no_agent():
+    intent = analyze_intent("нужен бизнес идея")
+    assert intent.goal == "business_idea"
+    assert "business" in intent.modules
+    assert not intent.needs_agent
+
+
+def test_planner_business_idea():
+    plan = build_plan_rule_based("нужен бизнес идея")
+    assert plan is not None
+    assert plan.intent == "business_ideas"
+    assert plan.steps[0].tool == "research_report"
+
+
 def test_file_router_receipt():
     cls = classify_upload("Receipt total 150000 UZS", caption="чек магазин")
     assert cls.doc_type == "receipt"
