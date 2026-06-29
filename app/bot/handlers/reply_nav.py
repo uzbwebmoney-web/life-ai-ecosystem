@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.filters.reply_nav import ReplyKeyboardNavFilter
 from app.bot.handlers.dashboard_view import send_dashboard
-from app.core.i18n import t
+from app.bot.keyboards import all_reply_menu_labels
 from app.models.entities import User
 from app.services.vault_lock_service import lock_vault_on_menu_exit
 
@@ -23,8 +23,7 @@ async def reply_keyboard_nav(
     session: AsyncSession,
 ) -> None:
     text = (message.text or "").strip()
-    lang = user.language
-    if text != t(lang, "rk_menu"):
+    if text not in all_reply_menu_labels():
         return
     await state.clear()
     lock_vault_on_menu_exit(user)

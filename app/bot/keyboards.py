@@ -345,3 +345,12 @@ def main_reply_kb(lang: str = "ru") -> ReplyKeyboardMarkup:
 
 def reply_keyboard_labels(lang: str) -> frozenset[str]:
     return frozenset({t(lang, "rk_menu")})
+
+
+def all_reply_menu_labels() -> frozenset[str]:
+    from app.core.i18n import SUPPORTED_LANGUAGES
+
+    labels: set[str] = set()
+    for lang in SUPPORTED_LANGUAGES:
+        labels.update(reply_keyboard_labels(lang))
+    return frozenset(labels)

@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from aiogram import Router
 from aiogram.filters import Filter
 from aiogram.types import Message
 
-from app.bot.keyboards import reply_keyboard_labels
-from app.models.entities import User
+from app.bot.keyboards import all_reply_menu_labels
 
 
 class ReplyKeyboardNavFilter(Filter):
-    async def __call__(self, message: Message, user: User) -> bool:
+    async def __call__(self, message: Message) -> bool:
         text = (message.text or "").strip()
-        return bool(text) and text in reply_keyboard_labels(user.language)
+        return bool(text) and text in all_reply_menu_labels()
