@@ -24,6 +24,7 @@ class Settings(BaseSettings):
         alias="DATABASE_URL",
     )
     default_language: str = Field(default="ru", alias="DEFAULT_LANGUAGE")
+    default_passport_country: str = Field(default="Узбекистан", alias="DEFAULT_PASSPORT_COUNTRY")
     webhook_url: str = Field(default="", alias="WEBHOOK_URL")
     webhook_path: str = Field(default="/webhook", alias="WEBHOOK_PATH")
     webhook_host: str = Field(default="0.0.0.0", alias="WEBHOOK_HOST")

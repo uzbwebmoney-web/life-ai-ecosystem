@@ -70,7 +70,8 @@ def _is_admin(user: User) -> bool:
 
 
 @router.callback_query(F.data == "hub:menu")
-async def hub_menu(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
+async def hub_menu(callback: CallbackQuery, user: User, session: AsyncSession, state: FSMContext) -> None:
+    await state.clear()
     lock_vault_on_menu_exit(user)
     await clear_active_module(session, user)
     await edit_dashboard(callback, user, session)

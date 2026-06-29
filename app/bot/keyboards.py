@@ -259,6 +259,25 @@ def submodule_kb(module_id: str, submodule_id: str, lang: str = "ru") -> InlineK
     )
 
 
+def ai_chat_kb(lang: str, actions: list | None = None) -> InlineKeyboardMarkup:
+    from app.services.proactive_service import ProactiveAction
+
+    rows: list[list[InlineKeyboardButton]] = []
+    for action in actions or []:
+        if isinstance(action, ProactiveAction):
+            rows.append([InlineKeyboardButton(text=action.label, callback_data=action.callback_data)])
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_end_ai_chat"), callback_data="ai:end")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def ai_chat_insufficient_kb(lang: str = "ru") -> InlineKeyboardMarkup:
+    from app.bot.keyboards_subscription import insufficient_credits_kb
+
+    rows = [list(row) for row in insufficient_credits_kb(lang).inline_keyboard]
+    rows.append([InlineKeyboardButton(text=t(lang, "btn_end_ai_chat"), callback_data="ai:end")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 def back_menu_kb(lang: str = "ru") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text=t(lang, "btn_back_menu"), callback_data="hub:menu")]]

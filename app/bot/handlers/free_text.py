@@ -22,7 +22,12 @@ from app.services.life_profile_service import extract_facts_from_text, parse_rem
 from app.services.module_context import active_module_label
 from app.services.media_ai import synthesize_speech
 from app.services.proactive_service import proactive_kb, suggest_actions
-from app.services.study_notes_service import prepare_study_notes_request
+from app.services.ai_chat_history import (
+    append_turn,
+    module_history_key,
+    normalize_history,
+    serialize_history,
+)
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -33,6 +38,7 @@ async def _answer_in_module(
     *,
     user: User,
     session: AsyncSession,
+    state: FSMContext,
     text: str,
     module_id: str,
     submodule_id: str | None = None,
@@ -41,6 +47,10 @@ async def _answer_in_module(
     mod = MODULE_BY_ID.get(module_id)
     if not mod:
         return
+
+    data = await state.get_data()
+    hist_key = module_history_key(module_id, submodule_id)
+    chat_history = normalize_history(data.get(hist_key))
 
     hint = module_hint(module_id, submodule_id, lang=lang)
     ai_message, ai_hint, token_limit = prepare_study_notes_request(module_id, submodule_id, text, hint)
@@ -64,6 +74,9 @@ async def _answer_in_module(
             user=user,
             bot=message.bot,
             max_completion_tokens=token_limit,
+            module_id=module_id,
+            submodule_id=submodule_id,
+            chat_history=chat_history,
         )
         header = active_module_label(module_id, submodule_id, lang=lang)
         actions = suggest_actions(text, answer, lang)
@@ -104,6 +117,8 @@ async def _answer_in_module(
                 module_id=module_id,
                 profile_id=user.active_profile_id,
             )
+        if not is_quota:
+            await state.update_data(**{hist_key: serialize_history(append_turn(chat_history, text, answer))})
     except Exception:
         logger.exception("Module AI reply failed module=%s sub=%s", module_id, submodule_id)
         kb = submodule_kb(module_id, submodule_id, lang) if submodule_id else module_kb(mod, lang)
@@ -147,6 +162,7 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
             message,
             user=user,
             session=session,
+            state=state,
             text=text,
             module_id=user.active_module_id,
             submodule_id=user.active_submodule_id,
@@ -155,7 +171,7 @@ async def free_text_router(message: Message, state: FSMContext, user: User, sess
 
     module_id = detect_module(text)
     if module_id and module_id in MODULE_BY_ID:
-        await _answer_in_module(message, user=user, session=session, text=text, module_id=module_id)
+        await _answer_in_module(message, user=user, session=session, state=state, text=text, module_id=module_id)
         return
 
     profile_ctx, memory_ctx = await build_ai_memory_context(session, user, text)

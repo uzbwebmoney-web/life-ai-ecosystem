@@ -118,9 +118,20 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_added": "✅ Профиль «{name}» добавлен.",
         "ai_thinking": "⏳ Думаю…",
         "ai_module_thinking": "{emoji} Думаю на тему «{module}»…",
-        "ai_ask_module": "💬 <b>{module}</b> — напишите ваш вопрос:",
+        "ai_ask_module": (
+            "💬 <b>{module}</b>\n\n"
+            "Напишите вопрос — можно задавать несколько подряд.\n"
+            "Когда закончите, нажмите «Завершить диалог»."
+        ),
         "ai_assistant_title": "🤖 <b>AI-ассистент</b>",
-        "ai_assistant_ask": "Задайте любой вопрос:",
+        "ai_assistant_ask": "Задайте любой вопрос. Можно писать подряд — завершение кнопкой ниже.",
+        "btn_end_ai_chat": "✅ Завершить диалог",
+        "ai_chat_continue": "Можете задать следующий вопрос.",
+        "ai_chat_ended": "Диалог с AI завершён.",
+        "ai_chat_quota_blocked": (
+            "Лимит исчерпан — ответ AI не отправлен, кредиты не списаны.\n"
+            "Пополните баланс и продолжите диалог или нажмите «Завершить диалог»."
+        ),
         "record_new": "➕ <b>Новая запись</b> ({module})",
         "record_send": "Отправьте текст записи.",
         "record_send_finance": "Отправьте текст записи.\nПосле этого бот спросит сумму.",
@@ -1039,9 +1050,20 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_added": "✅ «{name}» profili qo'shildi.",
         "ai_thinking": "⏳ O'ylayapman…",
         "ai_module_thinking": "{emoji} «{module}» mavzusida o'ylayapman…",
-        "ai_ask_module": "💬 <b>{module}</b> — savolingizni yozing:",
+        "ai_ask_module": (
+            "💬 <b>{module}</b>\n\n"
+            "Savol yozing — ketma-ket bir nechta berish mumkin.\n"
+            "Tugatganda «Suhbatni yakunlash» tugmasini bosing."
+        ),
         "ai_assistant_title": "🤖 <b>AI yordamchi</b>",
-        "ai_assistant_ask": "Har qanday savol bering:",
+        "ai_assistant_ask": "Savol bering. Ketma-ket yozish mumkin — tugatish quyidagi tugma bilan.",
+        "btn_end_ai_chat": "✅ Suhbatni yakunlash",
+        "ai_chat_continue": "Keyingi savolni yozishingiz mumkin.",
+        "ai_chat_ended": "AI suhbati yakunlandi.",
+        "ai_chat_quota_blocked": (
+            "Limit tugadi — AI javobi yuborilmadi, kreditlar yechilmadi.\n"
+            "Balansni to'ldiring va suhbatni davom eting yoki «Suhbatni yakunlash» tugmasini bosing."
+        ),
         "record_new": "➕ <b>Yangi yozuv</b> ({module})",
         "record_send": "Yozuv matnini yuboring.",
         "record_send_finance": "Yozuv matnini yuboring.\nKeyin summa so'raladi.",
@@ -1961,9 +1983,20 @@ _STRINGS: dict[str, dict[str, str]] = {
         "family_added": "✅ Profile «{name}» added.",
         "ai_thinking": "⏳ Thinking…",
         "ai_module_thinking": "{emoji} Thinking about «{module}»…",
-        "ai_ask_module": "💬 <b>{module}</b> — type your question:",
+        "ai_ask_module": (
+            "💬 <b>{module}</b>\n\n"
+            "Type your question — you can ask several in a row.\n"
+            "When done, tap «End chat»."
+        ),
         "ai_assistant_title": "🤖 <b>AI assistant</b>",
-        "ai_assistant_ask": "Ask anything:",
+        "ai_assistant_ask": "Ask anything. You can keep typing — end the chat with the button below.",
+        "btn_end_ai_chat": "✅ End chat",
+        "ai_chat_continue": "You can ask your next question.",
+        "ai_chat_ended": "AI chat ended.",
+        "ai_chat_quota_blocked": (
+            "Limit reached — no AI reply was sent and no credits were charged.\n"
+            "Top up and continue this chat, or tap «End chat»."
+        ),
         "record_new": "➕ <b>New record</b> ({module})",
         "record_send": "Send record text.",
         "record_send_finance": "Send record text.\nYou will be asked for the amount next.",

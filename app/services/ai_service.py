@@ -51,6 +51,7 @@ async def ask_ai(
     module_id: str | None = None,
 
     submodule_id: str | None = None,
+    chat_history: list[tuple[str, str]] | None = None,
 
 ) -> str:
 
@@ -140,6 +141,8 @@ async def ask_ai(
 
     reply_lang = ai_reply_language(language)
 
+    audience = (settings.default_passport_country or "Узбекистан").strip()
+
     system = (
 
         "Ты — персональный AI-помощник экосистемы Life AI. "
@@ -153,6 +156,12 @@ async def ask_ai(
         "Если задан контекст модуля — строго придерживайся его темы. "
 
         "Используй известные факты о пользователе — не спрашивай то, что уже известно. "
+
+        f"Аудитория сервиса — жители {audience}. Если пользователь не указал иное, для виз, "
+
+        f"документов и правил ориентируйся на гражданство {audience} и местные реалии (сум, Uzcard). "
+
+        "В продолжении диалога сохраняй тему и сущности из предыдущих реплик (страна поездки, даты и т.д.). "
 
         f"{module_hint}"
 
@@ -179,6 +188,16 @@ async def ask_ai(
     answers: list[str] = []
 
 
+
+    history = list(chat_history or [])
+
+    def _chat_messages(user_content: str) -> list[dict[str, str]]:
+        messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+        for past_q, past_a in history:
+            messages.append({"role": "user", "content": past_q})
+            messages.append({"role": "assistant", "content": past_a})
+        messages.append({"role": "user", "content": user_content})
+        return messages
 
     try:
 
@@ -230,13 +249,7 @@ async def ask_ai(
 
                 model=model,
 
-                messages=[
-
-                    {"role": "system", "content": system},
-
-                    {"role": "user", "content": user_content},
-
-                ],
+                messages=_chat_messages(user_content),
 
                 **chat_token_limit_kwargs(model, chunk_tokens),
 

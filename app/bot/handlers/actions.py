@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.ai_reply_ui import deliver_ai_reply
 from app.bot.message_ui import deliver_long_text
-from app.bot.keyboards import back_menu_kb, record_saved_kb
+from app.bot.keyboards import ai_chat_insufficient_kb, ai_chat_kb, back_menu_kb, record_saved_kb
 from app.bot.states import AiChatStates, MemoryStates, RecordStates, ReminderStates
 from app.core.i18n import t
 from app.core.modules.catalog import MODULE_BY_ID
@@ -20,9 +20,9 @@ from app.services.export_service import build_user_export
 from app.services.intent_router import module_hint
 from app.services.life_data import add_memory, add_record, add_reminder, set_active_module
 from app.services.media_ai import synthesize_speech
-from app.services.proactive_service import proactive_kb, suggest_actions
+from app.services.proactive_service import suggest_actions
 from app.services.study_notes_service import prepare_study_notes_request
-from app.services.subscription_service import parse_insufficient_credits_reply
+from app.services.ai_chat_history import append_turn, module_history_key, normalize_history, serialize_history
 
 router = Router()
 
@@ -36,6 +36,14 @@ async def _maybe_send_voice(message: Message, user: User, text: str) -> None:
     if not audio:
         return
     await message.answer_voice(BufferedInputFile(audio, filename="reply.ogg"))
+
+
+@router.callback_query(F.data == "ai:end")
+async def ai_chat_end(callback: CallbackQuery, state: FSMContext, user: User) -> None:
+    lang = user.language
+    await state.clear()
+    await callback.message.answer(t(lang, "ai_chat_ended"), reply_markup=back_menu_kb(lang))
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("ai:"))
@@ -57,23 +65,33 @@ async def ai_from_module(callback: CallbackQuery, state: FSMContext, user: User,
         return
     mod = MODULE_BY_ID.get(module_id)
     hint = module_hint(module_id, sub_id or None, lang=lang)
-    await state.update_data(ai_module_hint=hint, ai_module_id=module_id, ai_submodule_id=sub_id)
+    prior = await state.get_data()
+    carried = normalize_history(prior.get(module_history_key(module_id, sub_id or None)))
+    await state.update_data(
+        ai_module_hint=hint,
+        ai_module_id=module_id,
+        ai_submodule_id=sub_id,
+        ai_chat_history=serialize_history(carried),
+    )
     await state.set_state(AiChatStates.waiting_question)
     mod_title = mod.title(lang) if mod else "AI"
     if sub_id and mod:
         sub = next((s for s in mod.submodules if s.id == sub_id), None)
         if sub:
             mod_title = f"{mod_title} → {sub.title(lang)}"
-    await callback.message.answer(t(lang, "ai_ask_module", module=mod_title))
+    await callback.message.answer(t(lang, "ai_ask_module", module=mod_title), reply_markup=ai_chat_kb(lang))
     await callback.answer()
 
 
 @router.message(Command("ask"))
 async def cmd_ask(message: Message, state: FSMContext, user: User) -> None:
     lang = user.language
-    await state.update_data(ai_module_hint="", ai_module_id="ai_assistant")
+    await state.update_data(ai_module_hint="", ai_module_id="ai_assistant", ai_chat_history=[])
     await state.set_state(AiChatStates.waiting_question)
-    await message.answer(f"{t(lang, 'ai_assistant_title')}\n\n{t(lang, 'ai_assistant_ask')}")
+    await message.answer(
+        f"{t(lang, 'ai_assistant_title')}\n\n{t(lang, 'ai_assistant_ask')}",
+        reply_markup=ai_chat_kb(lang),
+    )
 
 
 @router.message(AiChatStates.waiting_question)
@@ -84,6 +102,7 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
         return
     data = await state.get_data()
     sub_id = str(data.get("ai_submodule_id") or "")
+    chat_history = normalize_history(data.get("ai_chat_history"))
     if sub_id == "images":
         from app.bot.handlers.assistant import reply_with_generated_image
 
@@ -116,10 +135,20 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
         user=user,
         bot=message.bot,
         max_completion_tokens=token_limit,
+        module_id=module_id,
+        submodule_id=sub_id or None,
+        chat_history=chat_history,
     )
     actions = suggest_actions(text, answer, lang)
-    kb = proactive_kb(actions, lang) or back_menu_kb(lang)
-    is_quota = await deliver_ai_reply(loading, answer, lang=lang, prefix="🤖 ", reply_markup=kb)
+    kb = ai_chat_kb(lang, actions)
+    is_quota = await deliver_ai_reply(
+        loading,
+        answer,
+        lang=lang,
+        prefix="🤖 ",
+        reply_markup=kb,
+        quota_reply_markup=ai_chat_insufficient_kb(lang),
+    )
     from app.bot.handlers.study_export import after_study_ai_response
 
     if not is_quota:
@@ -141,7 +170,11 @@ async def ai_question(message: Message, state: FSMContext, user: User, session: 
             module_id=module_id,
             profile_id=user.active_profile_id,
         )
-    await state.clear()
+    if not is_quota:
+        updated = append_turn(chat_history, text, answer)
+        await state.update_data(ai_chat_history=serialize_history(updated))
+        await state.update_data(**{module_history_key(module_id, sub_id or None): serialize_history(updated)})
+    # Stay in dialog; on quota the user can top up and continue or tap «End chat».
 
 
 @router.callback_query(F.data.startswith("rec:"))
