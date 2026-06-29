@@ -4,7 +4,6 @@ from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards import dashboard_kb
-from app.bot.reply_menu import refresh_reply_menu
 from app.models.entities import User
 from app.services.dashboard_service import build_dashboard
 
@@ -20,7 +19,6 @@ async def send_dashboard(message: Message, user: User, session: AsyncSession) ->
     lang = user.language
     text = (await build_dashboard(session, user, lang, display_name=_display_name(message))).text
     await message.answer(text, reply_markup=dashboard_kb(lang))
-    await refresh_reply_menu(message, lang)
 
 
 async def edit_dashboard(callback: CallbackQuery, user: User, session: AsyncSession) -> None:
