@@ -17,7 +17,7 @@ INTENT_KEYWORDS: dict[str, tuple[str, ...]] = {
     "education": ("учеб", "экзамен", "дз", "домашн", "конспект", "урок", "формул", "язык", "граммат", "o'qish", "imtihon", "dars", "konspekt"),
     "organizer": ("задач", "календар", "напомин", "встреч", "день рожд", "заметк", "органайзер", "vazifa", "eslatma", "uchrashuv"),
     "ai_assistant": ("перевод", "translate", "tarjima", "программ", "python", "код", "debug", "dasturlash"),
-    "vault": ("хранилищ", "ombor", "vault", "паспорт", "полис", "гарант", "чек", "архив", "pasport", "polis", "chek", "seyf"),
+    "vault": ("хранилищ", "ombor", "fayllar", "vault", "паспорт", "полис", "гарант", "чек", "архив", "pasport", "polis", "chek", "seyf"),
     "nutrition": ("калори", "диет", "рецепт", "еда", "рацион", "белок", "вода", "питани", "kaloriya", "retsept", "ovqat"),
     "fitness": ("трениров", "фитнес", "зал", "подход", "повторен", "прогресс", "workout", "mashq", "sportzal"),
 }

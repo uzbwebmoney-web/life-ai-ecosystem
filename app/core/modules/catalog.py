@@ -397,7 +397,7 @@ MODULES: tuple[ModuleDef, ...] = (
 
     ModuleDef(
 
-        "vault", "🔐", "Личное хранилище", "Shaxsiy ombor", "Personal vault", 1, "AI",
+        "vault", "🔐", "Личное хранилище", "Shaxsiy fayllar", "Personal vault", 1, "AI",
 
         "Документы, паспорт, полисы, гарантии, чеки, важные заметки.",
 

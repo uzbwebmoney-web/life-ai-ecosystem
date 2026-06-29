@@ -1113,7 +1113,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "search_records": "Yozuvlar:",
         "search_memory": "AI xotira:",
         "search_nothing": "Hech narsa topilmadi. Kerakli bo'limda yozuv qo'shing.",
-        "search_vault_hidden": "🔐 Shaxsiy ombor yozuvlari yashirilgan — omborni ochib parol kiriting.",
+        "search_vault_hidden": "🔐 Shaxsiy fayllar yozuvlari yashirilgan — bo'limni ochib parol kiriting.",
         "family_title": "👨‍👩‍👧 <b>Oilaviy rejim</b>",
         "family_desc": "Salomatlik, taqvim va eslatmalar uchun profillar.",
         "family_active": "Faol profil: <b>{name}</b>",
@@ -1690,7 +1690,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ast_doc_saved": "📎 «{name}» hujjati saqlandi.",
         "ast_doc_caption_note": "Hujjat bo'yicha savol yozing — AI yordam beradi.",
         "vlt_module_intro": (
-            "🔐 <b>Shaxsiy ombor</b> — hujjatlar va qaydlaringiz.\n\n"
+            "🔐 <b>Shaxsiy fayllar</b> — hujjatlar va qaydlaringiz.\n\n"
             "Qo'shish tartibi:\n"
             "1️⃣ Bo'limni oching (cheklar, hujjatlar…)\n"
             "2️⃣ ➕ <b>Qo'shish</b> tugmasini bosing\n"
@@ -1727,7 +1727,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_lock_settings_on": "🔐 Ombor himoyasi ✅",
         "vlt_lock_settings_intro_off": (
             "🔐 <b>Himoyalangan seyf</b>\n\n"
-            "«Shaxsiy ombor»da pasport, polislar, cheklar va hujjat skanlarini saqlashingiz mumkin. "
+            "«Shaxsiy fayllar»da pasport, polislar, cheklar va hujjat skanlarini saqlashingiz mumkin. "
             "Parol o'rnating — bo'limsiz ochilmaydi, yozuvlar umumiy qidiruvda ko'rinmaydi.\n\n"
             "Parol faqat bot bazasida shifrlangan holda saqlanadi."
         ),
@@ -1745,7 +1745,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "vlt_lock_confirm_prompt": "Parolni takrorlang:",
         "vlt_lock_old_prompt": "Joriy parolni kiriting:",
         "vlt_lock_remove_prompt": "Himoyani o'chirish uchun parolni kiriting:",
-        "vlt_lock_prompt": "🔐 Shaxsiy ombor parol bilan himoyalangan.\n\nParolni kiriting:",
+        "vlt_lock_prompt": "🔐 Shaxsiy fayllar parol bilan himoyalangan.\n\nParolni kiriting:",
         "vlt_lock_weak": "Parol 4–64 belgidan iborat bo'lishi kerak.",
         "vlt_lock_mismatch": "Parollar mos kelmadi. Qayta urinib ko'ring.",
         "vlt_lock_wrong": "❌ Noto'g'ri parol.",

@@ -583,7 +583,7 @@ EXTRA_UZ: dict[str, str] = {
     "quota_music_separate_monthly": "⚠️ Vokal ajratish limiti {used}/{limit}. /subscription",
     "quota_vault_lock": (
         "🔐 <b>Himoyalangan seyf — Student tarifidan</b>\n\n"
-        "«Shaxsiy ombor»da pasport, polislar, cheklar va boshqa hujjatlarni saqlashingiz mumkin. "
+        "«Shaxsiy fayllar»da pasport, polislar, cheklar va boshqa hujjatlarni saqlashingiz mumkin. "
         "Pullik tariflarda seyf <b>parol bilan himoyalanadi</b>: parolsiz bo'lim ochilmaydi "
         "va yozuvlar umumiy qidiruvda ko'rinmaydi.\n\n"
         "Free tarifida ombor ishlaydi, lekin parolsiz."
@@ -616,7 +616,7 @@ EXTRA_UZ: dict[str, str] = {
     "sub_gpt55_monthly": "GPT-5.5: {used} / {limit}",
     "sub_btn_share_referral": "📤 Havolani ulashish",
     "pay_already_processed": "✅ Bu to'lov allaqachon qayta ishlangan.",
-    "plan_limit_vault_basic": "Shaxsiy ombor: hujjat yuklash",
+    "plan_limit_vault_basic": "Shaxsiy fayllar: hujjat yuklash",
     "plan_limit_vault_lock": "🔐 Himoyalangan seyf: parol bilan",
     "plan_limit_music_unlimited": "Musiqa: cheksiz",
     "plan_limit_music_monthly": "Musiqa: {n}/oy",
