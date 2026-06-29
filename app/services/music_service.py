@@ -128,7 +128,8 @@ def clean_whisper_lyrics(text: str) -> str:
     return cleaned.strip()
 
 
-def compact_repeated_lines(text: str, *, max_same_line: int = 2) -> str:
+def compact_repeated_lines(text: str, *, max_same_line: int = 4) -> str:
+    """Drop only excessive identical lines; keep most of the song intact."""
     parts = re.split(r"(?<=[.!?])\s+|\n+", text)
     lines = [p.strip() for p in parts if p.strip()]
     counts: dict[str, int] = {}
@@ -183,6 +184,7 @@ def normalize_song_language(detected: str | None, text: str, *, hint: str | None
 
 def _score_transcription(metrics: WhisperLyricsResult, song_lang: str, whisper_lang: str | None) -> float:
     score = float(len(metrics.text or ""))
+    score += len(metrics.text or "") * 0.35
     if metrics.avg_logprob is not None:
         score += (metrics.avg_logprob + 1.0) * 40
     if whisper_lang is None:
@@ -209,14 +211,16 @@ def build_polish_lyrics_prompt(raw: str, lang: str) -> str:
         target = "English"
     else:
         target = "русском"
+    body = raw[:12000]
     return (
-        f"Ниже — шумная расшифровка песни (Whisper). Приведи к читаемому тексту на {target}.\n"
+        f"Ниже — расшифровка песни (Whisper), возможно по частям. Приведи к полному читаемому тексту на {target}.\n"
         "Правила:\n"
-        "- Исправь фонетику по смыслу (elvan→Alvon, güllerin→gullaring, ko'k jiguli, qo'shni Guli)\n"
-        "- Удали служебные вставки и повторы припева (оставь 1–2 раза)\n"
-        "- Не придумывай новые куплеты — только то, что есть в расшифровке\n"
-        "- Формат: строки песни, пустая строка между куплетами\n\n"
-        f"Расшифровка:\n{raw[:5000]}"
+        "- Сохрани ВСЕ уникальные строки и куплеты из расшифровки — ничего не пропускай и не сокращай\n"
+        "- Исправь фонетику (elvan→Alvon, güllerin→gullaring, ko'k jiguli, qo'shni Guli, eslatadi)\n"
+        "- Одинаковый припев оставь максимум 2 раза; уникальные куплеты — все\n"
+        "- Не придумывай новые куплеты, которых нет в расшифровке\n"
+        "- Формат: по строке, пустая строка между куплетами\n\n"
+        f"Расшифровка:\n{body}"
     )
 
 
@@ -250,7 +254,7 @@ async def polish_lyrics_with_ai(
         bot=bot,
         module_id="music",
         submodule_id="lyrics",
-        max_completion_tokens=2000,
+        max_completion_tokens=4500,
         usage_source="music_lyrics",
         admin_preview=admin_preview,
     )
@@ -269,7 +273,7 @@ async def finalize_song_lyrics(
     user,
     bot,
 ) -> str:
-    cleaned = compact_repeated_lines(clean_whisper_lyrics(raw))
+    cleaned = clean_whisper_lyrics(raw)
     if not cleaned:
         return raw
     return await polish_lyrics_with_ai(
@@ -280,6 +284,119 @@ async def finalize_song_lyrics(
         user=user,
         bot=bot,
     )
+
+
+async def _audio_duration_seconds(data: bytes, filename: str) -> float | None:
+    if not shutil.which("ffprobe"):
+        return None
+    ext = Path(filename).suffix.lower() or ".mp3"
+    if ext not in AUDIO_EXTENSIONS:
+        ext = ".mp3"
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / f"in{ext}"
+        src.write_bytes(data)
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                str(src),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            stdout, _ = await proc.communicate()
+            if proc.returncode != 0 or not stdout.strip():
+                return None
+            return float(stdout.decode().strip())
+        except (ValueError, OSError):
+            return None
+
+
+async def _split_audio_to_chunks(data: bytes, filename: str, *, segment_sec: int = 70) -> list[bytes]:
+    if not shutil.which("ffmpeg"):
+        return [data]
+    ext = Path(filename).suffix.lower() or ".mp3"
+    if ext not in AUDIO_EXTENSIONS:
+        ext = ".mp3"
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp) / f"in{ext}"
+        src.write_bytes(data)
+        out_tpl = str(Path(tmp) / "part_%03d.mp3")
+        ok = await _run_ffmpeg(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(src),
+                "-f",
+                "segment",
+                "-segment_time",
+                str(segment_sec),
+                "-reset_timestamps",
+                "1",
+                "-codec:a",
+                "libmp3lame",
+                "-q:a",
+                "4",
+                out_tpl,
+            ]
+        )
+        if not ok:
+            return [data]
+        parts = sorted(Path(tmp).glob("part_*.mp3"))
+        if len(parts) <= 1:
+            return [data]
+        return [p.read_bytes() for p in parts]
+
+
+async def _transcribe_buffer_attempts(buffer: io.BytesIO, filename: str) -> SongLyricsTranscription | None:
+    best: SongLyricsTranscription | None = None
+    best_score = float("-inf")
+    for prompt, whisper_lang in _whisper_attempts():
+        buffer.seek(0)
+        try:
+            metrics = await transcribe_lyrics_detailed(buffer, prompt=prompt, lang=whisper_lang)
+        except Exception:
+            logger.exception("Whisper attempt failed (lang=%s)", whisper_lang)
+            continue
+        if not metrics.text:
+            continue
+        song_lang = normalize_song_language(metrics.detected_language, metrics.text, hint=whisper_lang)
+        cleaned = clean_whisper_lyrics(metrics.text)
+        validated = validate_lyrics_transcription(cleaned, song_lang=song_lang, metrics=metrics)
+        if not validated:
+            continue
+        score = _score_transcription(metrics, song_lang, whisper_lang)
+        if score > best_score:
+            best_score = score
+            best = SongLyricsTranscription(text=validated, song_lang=song_lang)
+    return best
+
+
+async def _transcribe_chunked(data: bytes, filename: str) -> SongLyricsTranscription | None:
+    chunks = await _split_audio_to_chunks(data, filename)
+    if len(chunks) <= 1:
+        return None
+    parts: list[str] = []
+    for idx, chunk in enumerate(chunks):
+        buf = io.BytesIO(chunk)
+        buf.name = f"{Path(filename).stem}_part{idx}.mp3"
+        piece = await _transcribe_buffer_attempts(buf, buf.name)
+        if piece and piece.text:
+            parts.append(piece.text)
+    if not parts:
+        return None
+    merged = "\n".join(parts)
+    song_lang = normalize_song_language(None, merged, hint="uz")
+    cleaned = clean_whisper_lyrics(merged)
+    validated = validate_lyrics_transcription(cleaned, song_lang=song_lang)
+    if not validated:
+        return None
+    return SongLyricsTranscription(text=validated, song_lang=song_lang)
 
 
 def validate_lyrics_transcription(
@@ -361,30 +478,17 @@ async def download_audio_bytes(bot: Bot, file_id: str) -> bytes:
 
 async def transcribe_song_lyrics(bot: Bot, file_id: str, filename: str) -> SongLyricsTranscription | None:
     data = await download_audio_bytes(bot, file_id)
+    filename = filename or "audio.mp3"
     buffer = io.BytesIO(data)
-    buffer.name = filename or "audio.mp3"
+    buffer.name = filename
 
-    best: SongLyricsTranscription | None = None
-    best_score = float("-inf")
+    best = await _transcribe_buffer_attempts(buffer, filename)
 
-    for prompt, whisper_lang in _whisper_attempts():
-        buffer.seek(0)
-        try:
-            metrics = await transcribe_lyrics_detailed(buffer, prompt=prompt, lang=whisper_lang)
-        except Exception:
-            logger.exception("Whisper attempt failed (lang=%s)", whisper_lang)
-            continue
-        if not metrics.text:
-            continue
-        song_lang = normalize_song_language(metrics.detected_language, metrics.text, hint=whisper_lang)
-        cleaned = clean_whisper_lyrics(metrics.text)
-        validated = validate_lyrics_transcription(cleaned, song_lang=song_lang, metrics=metrics)
-        if not validated:
-            continue
-        score = _score_transcription(metrics, song_lang, whisper_lang)
-        if score > best_score:
-            best_score = score
-            best = SongLyricsTranscription(text=validated, song_lang=song_lang)
+    duration = await _audio_duration_seconds(data, filename)
+    if duration is None or duration > 90:
+        chunked = await _transcribe_chunked(data, filename)
+        if chunked and (not best or len(chunked.text) > len(best.text) * 1.1):
+            return chunked
     return best
 
 
