@@ -26,8 +26,12 @@ from app.services.subscription_service import (
 from app.services.text_format import format_ai_reply
 
 from app.services.web_search_service import (
+    append_links_footer,
     call_ai_with_web_search,
+    collect_links_from_text,
     enrich_system_with_web_context,
+    fetch_web_context,
+    merge_unique_links,
     should_use_web_search,
 )
 
@@ -226,6 +230,15 @@ async def ask_ai(
 
     mod_id = module_id or (getattr(user, "active_module_id", None) if user is not None else None)
     use_web_search, force_web_search = should_use_web_search(user_message, module_id=mod_id)
+    web_context_str = ""
+    web_links: list[str] = []
+    if use_web_search:
+        web_context_str, web_links = await fetch_web_context(
+            user_message,
+            language=language,
+            country=audience,
+            max_results=8,
+        )
 
     def _chat_messages(user_content: str, *, system_prompt: str | None = None) -> list[dict[str, str]]:
         prompt = system_prompt if system_prompt is not None else system
@@ -302,6 +315,8 @@ async def ask_ai(
                                 force=force_web_search,
                                 language=language,
                                 country=audience,
+                                web_context=web_context_str,
+                                web_links=web_links,
                             )
                         except Exception as web_exc:
                             logger.warning(
@@ -321,6 +336,12 @@ async def ask_ai(
                                 **chat_token_limit_kwargs(model, attempt_tokens),
                             )
                             raw = (response.choices[0].message.content or "").strip()
+                            if raw:
+                                links = merge_unique_links(
+                                    web_links,
+                                    collect_links_from_text(raw),
+                                )
+                                raw = append_links_footer(raw, links, language=language)
                     else:
                         response = await client.chat.completions.create(
                             model=model,
@@ -405,6 +426,13 @@ async def ask_ai(
 
 
 
-    return "\n\n".join(answers)
+    final = "\n\n".join(answers)
+    if use_web_search and web_links:
+        final = append_links_footer(
+            final,
+            merge_unique_links(web_links, collect_links_from_text(final)),
+            language=language,
+        )
+    return final
 
 

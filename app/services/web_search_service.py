@@ -12,7 +12,9 @@ from app.core.i18n import normalize_lang
 
 logger = logging.getLogger(__name__)
 
-_TME_RE = re.compile(r"https?://(?:t\.me|telegram\.me)/[^\s<>\"']+", re.IGNORECASE)
+_TME_BARE_RE = re.compile(r"(?<![/\w@])(?:t\.me|telegram\.me)/([a-zA-Z0-9_+]{3,})", re.IGNORECASE)
+_TG_HANDLE_RE = re.compile(r"(?<![/\w])@([a-zA-Z][a-zA-Z0-9_]{3,})")
+_HTTP_URL_RE = re.compile(r"https?://[^\s<>\"']+", re.IGNORECASE)
 
 _WEB_HINT_RE = re.compile(
     r"|".join(
@@ -70,30 +72,26 @@ _MODULE_WEB_HINTS = frozenset(
 _WEB_SEARCH_INSTRUCTIONS: dict[str, str] = {
     "ru": (
         "Если пользователь просит Telegram-канал/группу, сайт, телефон или контакты — "
-        "обязательно используй веб-поиск и блок «Актуальные результаты из интернета». "
-        "Давай конкретные ссылки (особенно t.me/…), если они есть в результатах. "
-        "Запрещено отвечать общими советами «откройте Telegram и ищите сами», если поиск уже дал ссылки. "
-        "Если ссылок нет — честно скажи, что не нашёл, и предложи официальные сайты."
+        "обязательно используй веб-поиск. В ответе укажи полные ссылки (https://t.me/…). "
+        "Запрещено давать только названия без ссылок, если ссылки есть в результатах поиска. "
+        "Запрещены общие советы «откройте Telegram и ищите сами», если поиск уже дал ссылки."
     ),
     "uz": (
         "Foydalanuvchi Telegram kanal/guruh, sayt, telefon yoki kontaktlarni so'rasa — "
-        "albatta veb-qidiruv va «Aktual internet natijalari» blokidan foydalaning. "
-        "Aniq havolalarni (ayniqsa t.me/…) bering, agar natijalarda bo'lsa. "
-        "«Telegramni oching va o'zingiz qidiring» kabi umumiy maslahat berish taqiqlanadi, "
-        "agar qidiruvda havolalar topilgan bo'lsa. Topilmasa — topilmadi deb ayting."
+        "veb-qidiruvdan foydalaning. Javobda to'liq havolalarni (https://t.me/…) yozing. "
+        "Havolalar topilgan bo'lsa, faqat nom berish taqiqlanadi. "
+        "«Telegramni oching va qidiring» kabi umumiy maslahat taqiqlanadi."
     ),
     "en": (
-        "If the user asks for a Telegram channel/group, website, phone, or contacts — "
-        "you must use web search and the «Current web results» block. "
-        "Provide concrete links (especially t.me/…) when present in results. "
-        "Do not reply with generic advice like «open Telegram and search yourself» when links were found. "
-        "If nothing was found, say so honestly."
+        "If the user asks for Telegram channels/groups, websites, phones, or contacts — "
+        "use web search. Include full links (https://t.me/…) in the answer. "
+        "Do not give names only when links are available. "
+        "Do not reply with generic «open Telegram and search yourself» when links were found."
     ),
 }
 
 
 def should_use_web_search(user_message: str, *, module_id: str | None = None) -> tuple[bool, bool]:
-    """Return (use_web_search, force_search)."""
     if not settings.web_search_enabled:
         return False, False
     text = (user_message or "").strip()
@@ -142,6 +140,57 @@ def build_search_queries(
             seen.add(key)
             unique.append(q[:200])
     return unique[:4]
+
+
+def collect_links_from_text(text: str) -> list[str]:
+    if not text:
+        return []
+    found: list[str] = []
+    seen: set[str] = set()
+
+    def _add(url: str) -> None:
+        clean = url.rstrip(".,;:!?)\"'")
+        key = clean.lower().rstrip("/")
+        if clean and key not in seen:
+            seen.add(key)
+            found.append(clean)
+
+    for url in _HTTP_URL_RE.findall(text):
+        _add(url)
+    for match in _TME_BARE_RE.finditer(text):
+        _add(f"https://t.me/{match.group(1)}")
+    for handle in _TG_HANDLE_RE.findall(text):
+        _add(f"https://t.me/{handle}")
+    return found
+
+
+def merge_unique_links(*groups: list[str]) -> list[str]:
+    seen: set[str] = set()
+    merged: list[str] = []
+    for group in groups:
+        for link in group:
+            key = link.lower().rstrip("/")
+            if key not in seen:
+                seen.add(key)
+                merged.append(link)
+    return merged
+
+
+def append_links_footer(answer: str, links: list[str], *, language: str = "ru") -> str:
+    if not links:
+        return answer
+    existing = {u.lower().rstrip("/") for u in collect_links_from_text(answer)}
+    extra = [link for link in links if link.lower().rstrip("/") not in existing]
+    if not extra:
+        return answer
+    lang = normalize_lang(language)
+    title = {
+        "ru": "🔗 Ссылки",
+        "uz": "🔗 Havolalar",
+        "en": "🔗 Links",
+    }.get(lang, "🔗 Ссылки")
+    lines = "\n".join(f"• {link}" for link in extra[:12])
+    return f"{answer.rstrip()}\n\n{title}:\n{lines}"
 
 
 def _build_responses_input(
@@ -210,24 +259,20 @@ async def _ddg_search_once(query: str, *, max_results: int = 5) -> list[tuple[st
         return []
 
 
-async def fetch_ddg_context(query: str, *, max_results: int = 5) -> str:
-    return await fetch_web_context(query, language="ru", max_results=max_results)
-
-
 async def fetch_web_context(
     user_message: str,
     *,
     language: str = "ru",
     country: str | None = None,
     max_results: int = 6,
-) -> str:
+) -> tuple[str, list[str]]:
     queries = build_search_queries(user_message, language=language, country=country)
     if not queries:
-        return ""
+        return "", []
 
     seen_urls: set[str] = set()
     lines: list[str] = []
-    tme_links: list[str] = []
+    all_links: list[str] = []
 
     for query in queries:
         for title, url, snippet in await _ddg_search_once(query, max_results=max_results):
@@ -238,16 +283,17 @@ async def fetch_web_context(
             if snippet:
                 block += f"\n  {snippet[:280]}"
             lines.append(block)
-            for match in _TME_RE.findall(f"{url} {snippet} {title}"):
-                if match not in tme_links:
-                    tme_links.append(match)
+            chunk_text = f"{url} {snippet} {title}"
+            for link in collect_links_from_text(chunk_text):
+                if link not in all_links:
+                    all_links.append(link)
             if len(lines) >= max_results:
                 break
         if len(lines) >= max_results:
             break
 
-    if not lines and not tme_links:
-        return ""
+    if not lines and not all_links:
+        return "", []
 
     lang = normalize_lang(language)
     header = {
@@ -257,16 +303,23 @@ async def fetch_web_context(
     }.get(lang, "Актуальные результаты из интернета")
 
     parts = [header + ":"]
-    if tme_links:
+    if all_links:
         tme_header = {
             "ru": "Telegram-ссылки (t.me)",
             "uz": "Telegram havolalar (t.me)",
             "en": "Telegram links (t.me)",
         }.get(lang, "Telegram-ссылки (t.me)")
-        parts.append(tme_header + ":\n" + "\n".join(f"• {link}" for link in tme_links[:8]))
+        tme_only = [l for l in all_links if "t.me/" in l.lower() or "telegram.me/" in l.lower()]
+        show = tme_only or all_links
+        parts.append(tme_header + ":\n" + "\n".join(f"• {link}" for link in show[:10]))
     if lines:
         parts.append("\n\n".join(lines))
-    return "\n\n".join(parts)
+    return "\n\n".join(parts), all_links
+
+
+async def fetch_ddg_context(query: str, *, max_results: int = 5) -> str:
+    context, _ = await fetch_web_context(query, language="ru", max_results=max_results)
+    return context
 
 
 async def call_ai_with_web_search(
@@ -280,14 +333,9 @@ async def call_ai_with_web_search(
     force: bool,
     language: str,
     country: str | None = None,
+    web_context: str = "",
+    web_links: list[str] | None = None,
 ):
-    """OpenAI Responses API with web_search; returns (text, response)."""
-    web_context = await fetch_web_context(
-        user_content,
-        language=language,
-        country=country,
-        max_results=8,
-    )
     note = web_search_system_note(language)
     instructions = system + "\n\n" + note
     if web_context:
@@ -303,6 +351,8 @@ async def call_ai_with_web_search(
     }
     response = await client.responses.create(**payload)
     text = (getattr(response, "output_text", None) or "").strip()
+    links = merge_unique_links(web_links or [], collect_links_from_text(text))
+    text = append_links_footer(text, links, language=language)
     return text, response
 
 
@@ -313,12 +363,12 @@ async def enrich_system_with_web_context(
     language: str,
     country: str | None = None,
 ) -> str:
-    context = await fetch_web_context(query, language=language, country=country)
+    context, _ = await fetch_web_context(query, language=language, country=country)
     if not context:
         return system + "\n\n" + web_search_system_note(language)
     use_note = {
-        "ru": "Используй эти данные в ответе. Если есть t.me — обязательно укажи их пользователю.",
-        "uz": "Bu ma'lumotlardan foydalaning. t.me havolalar bo'lsa — foydalanuvchiga yozing.",
-        "en": "Use this data in your answer. If t.me links exist — include them for the user.",
+        "ru": "Используй эти данные в ответе. Укажи полные URL, особенно t.me.",
+        "uz": "Bu ma'lumotlardan foydalaning. To'liq URL yozing, ayniqsa t.me.",
+        "en": "Use this data in your answer. Include full URLs, especially t.me.",
     }.get(normalize_lang(language), "Используй эти данные в ответе.")
     return system + "\n\n" + context + "\n\n" + use_note + "\n\n" + web_search_system_note(language)

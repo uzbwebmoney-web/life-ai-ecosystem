@@ -79,11 +79,4 @@ async def start_begin(callback: CallbackQuery, user: User, session: AsyncSession
     await callback.message.edit_text(t(lang, "onb_done"))
     await callback.message.answer(t(lang, "sub_trial_welcome", days=TRIAL_DAYS, bonus=WELCOME_AI_BONUS))
     await edit_dashboard(callback, user, session)
-    from app.services.admin_notify_service import notify_admins_new_user
-
-    await notify_admins_new_user(
-        callback.bot,
-        user,
-        telegram_lang=callback.from_user.language_code if callback.from_user else None,
-    )
     await callback.answer()

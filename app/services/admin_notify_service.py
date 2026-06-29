@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import html
+import logging
 
 from aiogram import Bot
+from aiogram.enums import ParseMode
 
 from app.core.config import settings
 from app.core.i18n import t
 from app.models.entities import User
+
+logger = logging.getLogger(__name__)
 
 
 def _format_utc_offset(minutes: int | None) -> str:
@@ -49,9 +53,9 @@ async def notify_admins_new_user(
     )
     for admin_tid in admin_ids:
         try:
-            await bot.send_message(admin_tid, text)
-        except Exception:
-            continue
+            await bot.send_message(admin_tid, text, parse_mode=ParseMode.HTML)
+        except Exception as exc:
+            logger.warning("Failed to notify admin %s about new user: %s", admin_tid, exc)
 
 
 async def notify_admins_ai_request(
@@ -88,6 +92,6 @@ async def notify_admins_ai_request(
     )
     for admin_tid in admin_ids:
         try:
-            await bot.send_message(admin_tid, text)
-        except Exception:
-            continue
+            await bot.send_message(admin_tid, text, parse_mode=ParseMode.HTML)
+        except Exception as exc:
+            logger.warning("Failed to notify admin %s about AI request: %s", admin_tid, exc)

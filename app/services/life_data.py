@@ -19,13 +19,13 @@ async def get_or_create_user(
     username: str | None,
     *,
     language_code: str | None = None,
-) -> User:
+) -> tuple[User, bool]:
     user = (await session.execute(select(User).where(User.telegram_id == telegram_id))).scalar_one_or_none()
     if user:
         if username and user.username != username:
             user.username = username
             await session.commit()
-        return user
+        return user, False
     from app.core.i18n import normalize_lang
 
     default_lang = normalize_lang(language_code)
@@ -41,7 +41,7 @@ async def get_or_create_user(
     await session.commit()
     await session.refresh(user)
     await ensure_user_subscription_fields(session, user)
-    return user
+    return user, True
 
 
 async def get_active_profile(session: AsyncSession, user: User) -> FamilyProfile | None:
